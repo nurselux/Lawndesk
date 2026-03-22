@@ -54,7 +54,7 @@ export default function LoginPage() {
       <main className="min-h-screen bg-gray-50 flex items-center justify-center p-5">
         <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
           <div className="bg-green-700 px-6 sm:px-10 py-8 text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">🌿 LawnDesk</h1>
+            <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 hover:opacity-80 transition-opacity cursor-pointer">🌿 LawnDesk</h1></Link>
             <p className="text-green-200 text-sm">Less paperwork, more yardwork</p>
           </div>
           <div className="px-6 sm:px-10 pt-6 pb-8">
@@ -111,7 +111,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-green-700 flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl p-6 sm:p-10 w-full max-w-md shadow-xl">
-        <h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2">🌿 LawnDesk</h1>
+        <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2 hover:opacity-70 transition-opacity cursor-pointer">🌿 LawnDesk</h1></Link>
         <p className="text-center text-gray-500 mb-8">Less paperwork, more yardwork</p>
         <h2 className="text-xl font-bold text-gray-800 text-center mb-6">Welcome back</h2>
         <input
