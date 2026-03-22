@@ -1,0 +1,254 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/useAuth'
+
+interface Invoice {
+  id: string
+  client_name: string
+  amount: number
+  status: string
+  due_date: string
+  description: string
+  user_id: string
+}
+
+interface Client {
+  id: string
+  name: string
+}
+
+export default function InvoicesPage() {
+  const { user, loading } = useAuth()
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [clients, setClients] = useState<Client[]>([])
+  const [clientName, setClientName] = useState('')
+  const [amount, setAmount] = useState('')
+  const [status, setStatus] = useState('Unpaid')
+  const [dueDate, setDueDate] = useState('')
+  const [description, setDescription] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    if (user) {
+      fetchInvoices()
+      fetchClients()
+    }
+  }, [user])
+
+  const fetchInvoices = async () => {
+    const { data } = await supabase
+      .from('Invoices')
+      .select('*')
+      .eq('user_id', user?.id)
+      .order('created_at', { ascending: false })
+    if (data) setInvoices(data as Invoice[])
+  }
+
+  const fetchClients = async () => {
+    const { data } = await supabase
+      .from('Clients')
+      .select('id, name')
+      .eq('user_id', user?.id)
+      .order('name', { ascending: true })
+    if (data) setClients(data as Client[])
+  }
+
+  const handleAddInvoice = async () => {
+    if (!clientName || !amount) {
+      setErrorMessage('Client and amount are required')
+      setTimeout(() => setErrorMessage(''), 3000)
+      return
+    }
+    setSaving(true)
+    const { error } = await supabase
+      .from('Invoices')
+      .insert([{ client_name: clientName, amount: parseFloat(amount), status, due_date: dueDate, description, user_id: user?.id }] as any)
+    if (!error) {
+      setClientName('')
+      setAmount('')
+      setStatus('Unpaid')
+      setDueDate('')
+      setDescription('')
+      setShowForm(false)
+      setSuccessMessage('🎉 Invoice created successfully!')
+      setTimeout(() => setSuccessMessage(''), 3000)
+      fetchInvoices()
+    } else {
+      setErrorMessage(`❌ Failed to save: ${error.message}`)
+      setTimeout(() => setErrorMessage(''), 3000)
+    }
+    setSaving(false)
+  }
+
+  const handleDeleteInvoice = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this invoice?')) return
+    await supabase.from('Invoices').delete().eq('id', id)
+    fetchInvoices()
+  }
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    await supabase.from('Invoices').update({ status: newStatus }).eq('id', id)
+    fetchInvoices()
+  }
+
+  const totalRevenue = invoices
+    .filter(inv => inv.status === '🟢 Paid')
+    .reduce((sum, inv) => sum + inv.amount, 0)
+
+  const totalUnpaid = invoices
+    .filter(inv => inv.status === '🟡 Unpaid')
+    .reduce((sum, inv) => sum + inv.amount, 0)
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    </div>
+  )
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">📄 Invoices</h2>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-green-700 text-white font-bold py-2 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+        >
+          + Create Invoice
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-6 shadow text-center">
+          <p className="text-gray-500 mb-2">💰 Total Revenue</p>
+          <p className="text-3xl font-bold text-green-700">${totalRevenue.toFixed(2)}</p>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow text-center">
+          <p className="text-gray-500 mb-2">⏳ Outstanding Balance</p>
+          <p className="text-3xl font-bold text-yellow-600">${totalUnpaid.toFixed(2)}</p>
+        </div>
+      </div>
+
+      {successMessage && (
+        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-lg mb-4">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-lg mb-4">
+          {errorMessage}
+        </div>
+      )}
+
+      {showForm && (
+        <div className="bg-white rounded-xl p-6 shadow mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">📄 New Invoice</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+            >
+              <option value="">👤 Select a Client *</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.name}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+            <div className="relative">
+              <span className="absolute left-3 top-3 text-gray-500 font-bold">$</span>
+              <input
+                placeholder="0.00"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="border border-gray-300 rounded-lg p-3 pl-7 text-gray-800 w-full"
+              />
+            </div>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+            />
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+            >
+              <option>🟡 Unpaid</option>
+              <option>🟢 Paid</option>
+              <option>🔴 Overdue</option>
+            </select>
+            <textarea
+              placeholder="📝 Description (e.g. Lawn mowing - front and back yard)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+            />
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleAddInvoice}
+              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+            >
+              {saving ? '⏳ Saving...' : '💾 Save Invoice'}
+            </button>
+            <button
+              onClick={() => setShowForm(false)}
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {invoices.length === 0 ? (
+          <div className="col-span-3 text-center py-12">
+            <p className="text-5xl mb-4">📄</p>
+            <p className="text-gray-500 text-lg font-bold">No invoices yet</p>
+            <p className="text-gray-400">Click Create Invoice to get started!</p>
+          </div>
+        ) : (
+          invoices.map((invoice) => (
+            <div key={invoice.id} className="bg-white rounded-xl p-6 shadow">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-bold text-gray-800">👤 {invoice.client_name}</h3>
+                <button
+                  onClick={() => handleDeleteInvoice(invoice.id)}
+                  className="text-red-400 hover:text-red-600 transition-all duration-200 cursor-pointer text-sm"
+                >
+                  🗑️
+                </button>
+              </div>
+              <p className="text-2xl font-bold text-green-700 mb-2">💵 ${invoice.amount.toFixed(2)}</p>
+              {invoice.due_date && <p className="text-gray-500">📅 Due: {invoice.due_date}</p>}
+              {invoice.description && <p className="text-gray-400 text-sm mt-2">📝 {invoice.description}</p>}
+              <select
+                value={invoice.status}
+                onChange={(e) => handleStatusChange(invoice.id, e.target.value)}
+                className={`mt-3 text-xs font-bold py-1 px-3 rounded-full border-0 cursor-pointer ${
+                  invoice.status === '🟢 Paid' ? 'bg-green-100 text-green-700' :
+                  invoice.status === '🔴 Overdue' ? 'bg-red-100 text-red-700' :
+                  'bg-yellow-100 text-yellow-700'
+                }`}
+              >
+                <option>🟡 Unpaid</option>
+                <option>🟢 Paid</option>
+                <option>🔴 Overdue</option>
+              </select>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
