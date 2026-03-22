@@ -10,7 +10,7 @@ export default function Home() {
           <Link href="/" className="text-2xl font-bold text-green-700">🌿 LawnDesk</Link>
           <div className="flex gap-4 items-center">
             <Link href="/login" className="text-gray-600 font-semibold hover:text-green-700 transition-colors">Log In</Link>
-            <Link href="/login">
+            <Link href="/login?signup=true">
               <button className="bg-green-700 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-800 transition-colors cursor-pointer">
                 Get Started
               </button>
@@ -32,7 +32,7 @@ export default function Home() {
             LawnDesk handles your clients, jobs, and invoices so you can focus on what you do best — making yards look great.
           </p>
           <div className="flex gap-4 flex-wrap justify-center">
-            <Link href="/login">
+            <Link href="/login?signup=true">
               <button className="bg-white text-green-700 font-bold py-4 px-10 rounded-lg text-lg hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer">
                 Get Started Free
               </button>
@@ -85,7 +85,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link href="/login">
+              <Link href="/login?signup=true">
                 <button className="w-full border-2 border-green-700 text-green-700 font-bold py-3 rounded-lg hover:bg-green-50 transition-colors cursor-pointer">
                   Get Started
                 </button>
@@ -103,7 +103,7 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link href="/login">
+              <Link href="/login?signup=true">
                 <button className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors cursor-pointer">
                   Get Started
                 </button>

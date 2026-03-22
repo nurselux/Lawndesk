@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 
@@ -10,7 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
+  const searchParams = useSearchParams()
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true')
   const router = useRouter()
 
   const handleLogin = async () => {
