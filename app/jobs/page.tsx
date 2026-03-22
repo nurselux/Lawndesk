@@ -250,26 +250,27 @@ export default function JobsPage() {
       const job = jobs.find(j => j.id === id)
       if (!job?.client_id) return
 
-      const [{ data: clientData }, { data: invoiceData }] = await Promise.all([
+      const [{ data: clientData }, { data: invoicesData }] = await Promise.all([
         supabase.from('Clients').select('name, phone').eq('id', job.client_id).single(),
-        (supabase.from('Invoices') as any)
+        supabase.from('Invoices')
           .select('share_token, amount, invoice_number')
           .eq('client_id', job.client_id)
           .eq('user_id', user?.id)
           .in('status', ['🟡 Unpaid', '🔴 Overdue'])
           .order('created_at', { ascending: false })
-          .limit(1)
-          .single(),
+          .limit(1),
       ])
 
-      if (clientData?.phone && invoiceData?.share_token) {
-        const invoiceUrl = `${window.location.origin}/invoice/${invoiceData.share_token}`
-        const message = `Hi ${clientData.name}! Your lawn service is complete ✅ Here's your invoice for $${Number(invoiceData.amount).toFixed(2)}: ${invoiceUrl}`
+      const invoice = invoicesData?.[0]
+
+      if (clientData?.phone && invoice?.share_token) {
+        const invoiceUrl = `${window.location.origin}/invoice/${invoice.share_token}`
+        const message = `Hi ${clientData.name}! Your lawn service is complete ✅ Here's your invoice for $${Number(invoice.amount).toFixed(2)}: ${invoiceUrl}`
         setSmsPrompt({
           clientName: clientData.name,
           phone: clientData.phone,
-          amount: invoiceData.amount,
-          invoiceNumber: invoiceData.invoice_number,
+          amount: invoice.amount,
+          invoiceNumber: invoice.invoice_number,
           message,
         })
       }
