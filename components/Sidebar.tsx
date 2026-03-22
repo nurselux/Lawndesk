@@ -49,7 +49,7 @@ export default function Sidebar() {
           {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
               <div className={`p-3 rounded-lg mb-2 font-medium transition-all duration-200 cursor-pointer hover:bg-green-700 ${
-                pathname === item.href ? 'bg-green-600' : ''
+                pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)) ? 'bg-green-600' : ''
               }`}>
                 {item.label}
               </div>
@@ -70,17 +70,20 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-green-800 text-white flex justify-around p-3 z-50">
-        {navItems.map((item) => (
-          <Link key={item.href} href={item.href}>
-            <div className={`text-center p-2 rounded-lg transition-all duration-200 ${
-              pathname === item.href ? 'bg-green-600' : ''
-            }`}>
-              <p className="text-xl">{item.label.split(' ')[0]}</p>
-              <p className="text-xs">{item.label.split(' ')[1]}</p>
-            </div>
-          </Link>
-        ))}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-green-800 text-white flex justify-around px-2 pt-2 pb-4 z-50">
+        {navItems.map((item) => {
+          const [icon, ...words] = item.label.split(' ')
+          const label = words.join(' ')
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          return (
+            <Link key={item.href} href={item.href}>
+              <div className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 min-w-[48px] ${isActive ? 'bg-green-600' : ''}`}>
+                <p className="text-xl leading-none">{icon}</p>
+                <p className="text-xs mt-1 font-medium">{label}</p>
+              </div>
+            </Link>
+          )
+        })}
       </nav>
     </>
   )

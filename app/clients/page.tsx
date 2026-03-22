@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 
@@ -30,6 +31,8 @@ export default function ClientsPage() {
   const [editPhone, setEditPhone] = useState('')
   const [editAddress, setEditAddress] = useState('')
   const [editNotes, setEditNotes] = useState('')
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('All')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -112,6 +115,21 @@ export default function ClientsPage() {
     fetchClients()
   }
 
+  const filteredClients = clients.filter((c) => {
+    const q = search.toLowerCase()
+    const matchesSearch = !q ||
+      c.name.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.phone?.toLowerCase().includes(q) ||
+      c.address?.toLowerCase().includes(q)
+    const matchesFilter =
+      filter === 'All' ||
+      (filter === 'Has Email' && !!c.email) ||
+      (filter === 'Has Phone' && !!c.phone) ||
+      (filter === 'Has Address' && !!c.address)
+    return matchesSearch && matchesFilter
+  })
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
@@ -119,7 +137,7 @@ export default function ClientsPage() {
   )
 
   return (
-    <div className="p-6">
+    <div className="p-6 pb-24 md:pb-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Clients</h2>
         <button
@@ -128,6 +146,25 @@ export default function ClientsPage() {
         >
           + Add Client
         </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <input
+          placeholder="🔍 Search by name, email, phone, address..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border border-gray-300 rounded-lg p-3 text-gray-800 flex-1"
+        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border border-gray-300 rounded-lg p-3 text-gray-800"
+        >
+          <option>All</option>
+          <option>Has Email</option>
+          <option>Has Phone</option>
+          <option>Has Address</option>
+        </select>
       </div>
 
       {successMessage && (
@@ -253,11 +290,17 @@ export default function ClientsPage() {
             <p className="text-gray-500 text-lg font-bold">No clients yet</p>
             <p className="text-gray-400">Click Add Client to get started!</p>
           </div>
+        ) : filteredClients.length === 0 ? (
+          <div className="col-span-3 text-center py-12">
+            <p className="text-5xl mb-4">🔍</p>
+            <p className="text-gray-500 text-lg font-bold">No clients match your search</p>
+            <p className="text-gray-400">Try a different name or filter.</p>
+          </div>
         ) : (
-          clients.map((client) => (
+          filteredClients.map((client) => (
             <div key={client.id} className="bg-white rounded-xl p-6 shadow">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-bold text-gray-800">{client.name}</h3>
+                <Link href={`/clients/${client.id}`} className="text-lg font-bold text-gray-800 hover:text-green-700 transition-colors">{client.name}</Link>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEditClient(client)}

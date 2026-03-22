@@ -1,4 +1,7 @@
+import type { Metadata } from 'next'
 import Sidebar from '../../components/Sidebar'
+
+export const metadata: Metadata = { title: 'Jobs | LawnDesk' }
 
 export default function AppLayout({
   children,
