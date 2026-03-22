@@ -142,7 +142,7 @@ export default function ClientDetailPage() {
   if (!client) return null
 
   return (
-    <div className="p-6 pb-24 md:pb-6 max-w-4xl mx-auto">
+    <div className="p-6 pb-6 max-w-4xl mx-auto">
       <Link href="/clients" className="text-green-700 font-semibold hover:underline text-sm mb-6 inline-block">
         ← Back to Clients
       </Link>

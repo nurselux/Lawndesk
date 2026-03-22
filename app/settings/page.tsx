@@ -75,7 +75,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 pb-24 md:pb-6 bg-gray-50 min-h-screen max-w-2xl mx-auto">
+    <div className="p-6 pb-6 bg-gray-50 min-h-screen max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-gradient-to-br from-gray-600 to-gray-800 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">⚙️</div>
         <div>
