@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import AuthRedirect from '../components/AuthRedirect'
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-800">
+      <AuthRedirect />
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white shadow-sm">
