@@ -7,12 +7,12 @@ export default function Home() {
       <AuthRedirect />
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white shadow-sm">
+      <nav className="sticky top-0 z-50 bg-green-700 shadow-md">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-green-700">🌿 LawnDesk</Link>
+          <Link href="/" className="bg-green-900 text-white text-2xl font-bold px-4 py-1.5 rounded-lg hover:bg-green-950 transition-all duration-200">🌿 LawnDesk</Link>
           <div className="flex gap-3 items-center">
-            <Link href="/login" className="text-green-700 font-semibold hover:underline hidden sm:block">Log In</Link>
-            <Link href="/login?signup=true" className="bg-green-700 text-white font-bold py-2 px-5 rounded-lg hover:bg-green-800 transition-all duration-200 text-sm">Try Free for 14 Days</Link>
+            <Link href="/login" className="text-green-100 font-semibold hover:text-white transition-colors hidden sm:block">Log In</Link>
+            <Link href="/login?signup=true" className="bg-white text-green-700 font-bold py-2 px-5 rounded-lg hover:scale-105 hover:shadow-md transition-all duration-200 text-sm">Try Free for 14 Days</Link>
           </div>
         </div>
       </nav>
