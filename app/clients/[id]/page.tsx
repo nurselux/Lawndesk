@@ -134,7 +134,7 @@ export default function ClientDetailPage() {
   }
 
   if (loading || dataLoading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>
   )

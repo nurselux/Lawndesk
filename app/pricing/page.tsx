@@ -71,7 +71,7 @@ export default function PricingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <main className="min-h-dvh bg-gradient-to-b from-gray-50 to-white">
       <nav className="bg-green-700 text-white p-4 flex justify-between items-center">
         <Link href={isLoggedIn ? '/dashboard' : '/'}>
           <h1 className="text-2xl font-bold cursor-pointer hover:text-green-200 transition-all duration-200">🌿 LawnDesk</h1>

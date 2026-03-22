@@ -45,7 +45,7 @@ export default function Sidebar() {
   return (
     <>
       {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex flex-col w-64 min-h-screen bg-green-800 text-white fixed left-0 top-0">
+      <aside className="hidden md:flex flex-col w-64 min-h-dvh bg-green-800 text-white fixed left-0 top-0">
         <div className="p-6 border-b border-green-700">
           <Link href={isLoggedIn ? '/dashboard' : '/'}>
             <h1 className="text-2xl font-bold cursor-pointer hover:text-green-200 transition-all duration-200">🌿 LawnDesk</h1>

@@ -38,7 +38,7 @@ function CallbackHandler() {
   }, [router, searchParams])
 
   return (
-    <main className="min-h-screen bg-green-700 flex items-center justify-center">
+    <main className="min-h-dvh bg-green-700 flex items-center justify-center">
       <div className="text-white text-center">
         <p className="text-5xl mb-4">🌿</p>
         <p className="text-2xl font-bold mb-2">Confirming your account...</p>

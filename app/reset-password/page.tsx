@@ -37,7 +37,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-green-700 flex items-center justify-center p-5">
+    <main className="min-h-dvh bg-green-700 flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl p-10 w-full max-w-md shadow-xl">
         <h1 className="text-3xl font-bold text-green-700 text-center mb-2">🌿 LawnDesk</h1>
         <p className="text-center text-gray-500 mb-8">Less paperwork, more yardwork</p>

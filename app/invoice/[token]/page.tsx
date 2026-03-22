@@ -41,7 +41,7 @@ export default function PublicInvoicePage() {
 
   if (notFound) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <main className="min-h-dvh bg-gray-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-10 text-center shadow-xl max-w-sm w-full">
           <p className="text-5xl mb-4">🔍</p>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Invoice Not Found</h1>
@@ -53,7 +53,7 @@ export default function PublicInvoicePage() {
 
   if (!invoice) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <main className="min-h-dvh bg-gray-100 flex items-center justify-center">
         <p className="text-green-700 text-xl font-bold">Loading invoice...</p>
       </main>
     )
@@ -68,7 +68,7 @@ export default function PublicInvoicePage() {
   const createdDate = new Date(invoice.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
-    <main className="min-h-screen bg-gray-100 flex flex-col items-center justify-start p-6 print:bg-white print:p-0">
+    <main className="min-h-dvh bg-gray-100 flex flex-col items-center justify-start p-6 print:bg-white print:p-0">
 
       {/* Print button — hidden when printing */}
       <div className="w-full max-w-xl mb-4 flex justify-between items-center print:hidden">

@@ -62,7 +62,7 @@ function LoginContent() {
 
   if (isSignUp) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-5">
+      <main className="min-h-dvh bg-gray-50 flex items-center justify-center p-5">
         <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
           <div className="bg-green-700 px-6 sm:px-10 py-8 text-center">
             <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 hover:opacity-80 transition-opacity cursor-pointer">🌿 LawnDesk</h1></Link>
@@ -120,7 +120,7 @@ function LoginContent() {
   }
 
   return (
-    <main className="min-h-screen bg-green-700 flex items-center justify-center p-5">
+    <main className="min-h-dvh bg-green-700 flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl p-6 sm:p-10 w-full max-w-md shadow-xl">
         <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2 hover:opacity-70 transition-opacity cursor-pointer">🌿 LawnDesk</h1></Link>
         <p className="text-center text-gray-500 mb-8">Less paperwork, more yardwork</p>

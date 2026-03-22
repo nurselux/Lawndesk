@@ -3,7 +3,7 @@ import AuthRedirect from '../components/AuthRedirect'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white text-gray-800">
+    <main className="min-h-dvh bg-white text-gray-800">
       <AuthRedirect />
 
       {/* Navbar */}

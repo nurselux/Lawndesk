@@ -100,7 +100,7 @@ function DashboardContent() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>
   )
@@ -113,7 +113,7 @@ function DashboardContent() {
   }
 
   return (
-    <div className="p-6 pb-6 min-h-screen bg-gray-50">
+    <div className="p-6 pb-6 min-h-dvh bg-gray-50">
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
           🎉 Payment successful! Welcome to LawnDesk Pro. Your subscription is now active.

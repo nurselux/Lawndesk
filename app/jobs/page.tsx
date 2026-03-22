@@ -288,13 +288,13 @@ export default function JobsPage() {
   })
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>
   )
 
   return (
-    <div className="p-6 pb-6 bg-gray-50 min-h-screen">
+    <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📅</div>

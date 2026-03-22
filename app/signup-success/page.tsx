@@ -9,7 +9,7 @@ function SignupSuccessContent() {
   const email = searchParams.get('email') || 'your email'
 
   return (
-    <main className="min-h-screen bg-green-700 flex items-center justify-center p-5">
+    <main className="min-h-dvh bg-green-700 flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden text-center">
         {/* Top banner */}
         <div className="bg-green-700 px-6 py-12">
