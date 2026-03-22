@@ -53,8 +53,8 @@ export default function Home() {
               { icon: '📄', title: 'Invoicing', desc: 'Create and send invoices in seconds and track who owes you.' },
               { icon: '🔄', title: 'Recurring Jobs', desc: 'Set weekly, biweekly, or monthly jobs and let LawnDesk handle the rest.' },
             ].map((f) => (
-              <div key={f.title} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-4xl mb-4">{f.icon}</div>
+              <div key={f.title} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-3xl mb-4 bg-green-100 w-14 h-14 rounded-xl flex items-center justify-center">{f.icon}</div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">{f.title}</h3>
                 <p className="text-gray-500">{f.desc}</p>
               </div>
