@@ -144,8 +144,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* ── Mobile top bar spacer (pushes page content down) ── */}
-      <div className="md:hidden h-14" />
     </>
   )
 }
