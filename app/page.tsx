@@ -10,11 +10,6 @@ export default function Home() {
           <Link href="/" className="text-2xl font-bold text-green-700">🌿 LawnDesk</Link>
           <div className="flex gap-4 items-center">
             <Link href="/login" className="text-gray-600 font-semibold hover:text-green-700 transition-colors">Log In</Link>
-            <Link href="/login?signup=true">
-              <button className="bg-green-700 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-800 transition-colors cursor-pointer">
-                Get Started
-              </button>
-            </Link>
           </div>
         </div>
       </nav>
