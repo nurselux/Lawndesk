@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [signUpSuccess, setSignUpSuccess] = useState(false)
   const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true')
   const router = useRouter()
@@ -44,9 +45,40 @@ export default function LoginPage() {
     if (error) {
       setMessage(error.message)
     } else {
-      setMessage('Check your email to confirm your account!')
+      setSignUpSuccess(true)
     }
     setLoading(false)
+  }
+
+  if (signUpSuccess) {
+    return (
+      <main className="min-h-screen bg-green-700 flex items-center justify-center p-5">
+        <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden text-center">
+          <div className="bg-green-700 px-6 py-10">
+            <div className="text-7xl mb-4">📬</div>
+            <h1 className="text-3xl font-bold text-white mb-2">Check Your Email!</h1>
+            <p className="text-green-200 text-lg">Your account is almost ready.</p>
+          </div>
+          <div className="px-8 py-8">
+            <p className="text-gray-700 text-lg mb-2">We sent a confirmation link to:</p>
+            <p className="text-green-700 font-bold text-xl mb-6 break-all">{email}</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left space-y-2">
+              <p className="text-gray-700 font-semibold text-sm">Next steps:</p>
+              <p className="text-gray-600 text-sm">1. Open your email inbox</p>
+              <p className="text-gray-600 text-sm">2. Click the confirmation link</p>
+              <p className="text-gray-600 text-sm">3. Come back and log in — you're all set! 🌿</p>
+            </div>
+            <p className="text-gray-400 text-xs mb-6">Don't see it? Check your spam or junk folder.</p>
+            <button
+              onClick={() => { setIsSignUp(false); setSignUpSuccess(false); setMessage('') }}
+              className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+            >
+              Go to Log In
+            </button>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   if (isSignUp) {
