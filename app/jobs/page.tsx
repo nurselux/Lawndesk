@@ -74,6 +74,13 @@ export default function JobsPage() {
   const [editCustomRecurring, setEditCustomRecurring] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [smsPrompt, setSmsPrompt] = useState<{
+    clientName: string
+    phone: string
+    amount: number
+    invoiceNumber: number
+    message: string
+  } | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -238,6 +245,35 @@ export default function JobsPage() {
   const handleStatusChange = async (id: string, newStatus: string) => {
     await supabase.from('Jobs').update({ status: newStatus }).eq('id', id)
     fetchJobs()
+
+    if (newStatus === '🟢 Completed') {
+      const job = jobs.find(j => j.id === id)
+      if (!job?.client_id) return
+
+      const [{ data: clientData }, { data: invoiceData }] = await Promise.all([
+        supabase.from('Clients').select('name, phone').eq('id', job.client_id).single(),
+        (supabase.from('Invoices') as any)
+          .select('share_token, amount, invoice_number')
+          .eq('client_id', job.client_id)
+          .eq('user_id', user?.id)
+          .in('status', ['🟡 Unpaid', '🔴 Overdue'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single(),
+      ])
+
+      if (clientData?.phone && invoiceData?.share_token) {
+        const invoiceUrl = `${window.location.origin}/invoice/${invoiceData.share_token}`
+        const message = `Hi ${clientData.name}! Your lawn service is complete ✅ Here's your invoice for $${Number(invoiceData.amount).toFixed(2)}: ${invoiceUrl}`
+        setSmsPrompt({
+          clientName: clientData.name,
+          phone: clientData.phone,
+          amount: invoiceData.amount,
+          invoiceNumber: invoiceData.invoice_number,
+          message,
+        })
+      }
+    }
   }
 
   const filteredJobs = jobs.filter((j) => {
@@ -299,6 +335,39 @@ export default function JobsPage() {
       )}
       {errorMessage && (
         <div className="bg-red-100 text-red-700 font-bold p-4 rounded-lg mb-4">{errorMessage}</div>
+      )}
+
+      {smsPrompt && (
+        <div className="bg-white border-2 border-green-400 rounded-2xl p-5 mb-6 shadow-lg">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-green-100 text-green-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center">📱</div>
+            <div>
+              <p className="font-bold text-gray-800">Job complete! Text {smsPrompt.clientName}?</p>
+              <p className="text-gray-400 text-sm">INV-{String(smsPrompt.invoiceNumber).padStart(3, '0')} · ${Number(smsPrompt.amount).toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-xl p-3 mb-4 border border-gray-100">
+            <p className="text-gray-500 text-xs font-semibold mb-1">Message preview:</p>
+            <p className="text-gray-700 text-sm">{smsPrompt.message}</p>
+          </div>
+          <div className="flex gap-3">
+            <a
+              href={`sms:${smsPrompt.phone}?body=${encodeURIComponent(smsPrompt.message)}`}
+              onClick={() => setSmsPrompt(null)}
+              className="flex-1"
+            >
+              <button className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 transition cursor-pointer">
+                📲 Open SMS App
+              </button>
+            </a>
+            <button
+              onClick={() => setSmsPrompt(null)}
+              className="border-2 border-gray-200 text-gray-500 font-bold py-3 px-5 rounded-xl hover:bg-gray-50 transition cursor-pointer"
+            >
+              Skip
+            </button>
+          </div>
+        </div>
       )}
 
       {showForm && (
