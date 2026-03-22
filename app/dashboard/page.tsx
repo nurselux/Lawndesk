@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
@@ -23,7 +23,7 @@ interface Invoice {
   due_date: string
 }
 
-export default function Dashboard() {
+function DashboardContent() {
   const { user, loading } = useAuth()
   const searchParams = useSearchParams()
   const stripeSuccess = searchParams.get('success') === 'true'
@@ -58,18 +58,18 @@ export default function Dashboard() {
       { data: upcoming },
       { data: overdue },
     ] = await Promise.all([
-      supabase.from('Clients').select('*', { count: 'exact', head: true }).eq('user_id', user!.id),
-      supabase.from('Jobs').select('*', { count: 'exact', head: true })
+      (supabase as any).from('Clients').select('*', { count: 'exact', head: true }).eq('user_id', user!.id),
+      (supabase as any).from('Jobs').select('*', { count: 'exact', head: true })
         .eq('user_id', user!.id)
         .gte('date', weekStartStr)
         .lte('date', weekEndStr),
-      supabase.from('Invoices').select('amount, status').eq('user_id', user!.id),
-      supabase.from('Jobs').select('id, title, client_name, date, time, status')
+      (supabase as any).from('Invoices').select('amount, status').eq('user_id', user!.id),
+      (supabase as any).from('Jobs').select('id, title, client_name, date, time, status')
         .eq('user_id', user!.id)
         .gte('date', todayStr)
         .order('date', { ascending: true })
         .limit(5),
-      supabase.from('Invoices').select('id, client_name, amount, status, due_date')
+      (supabase as any).from('Invoices').select('id, client_name, amount, status, due_date')
         .eq('user_id', user!.id)
         .eq('status', '🔴 Overdue')
         .order('due_date', { ascending: true })
@@ -80,10 +80,10 @@ export default function Dashboard() {
     setJobsThisWeek(thisWeek ?? 0)
 
     if (invoiceData) {
-      const unpaid = invoiceData.filter(inv => inv.status === '🟡 Unpaid')
-      const paid = invoiceData.filter(inv => inv.status === '🟢 Paid')
+      const unpaid = invoiceData.filter((inv: any) => inv.status === '🟡 Unpaid')
+      const paid = invoiceData.filter((inv: any) => inv.status === '🟢 Paid')
       setUnpaidCount(unpaid.length)
-      setTotalRevenue(paid.reduce((sum, inv) => sum + inv.amount, 0))
+      setTotalRevenue(paid.reduce((sum: number, inv: any) => sum + inv.amount, 0))
     }
 
     if (upcoming) setUpcomingJobs(upcoming as Job[])
@@ -220,5 +220,13 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense>
+      <DashboardContent />
+    </Suspense>
   )
 }

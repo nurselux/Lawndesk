@@ -110,8 +110,7 @@ export default function InvoicesPage() {
       return
     }
     setSaving(true)
-    const { error } = await supabase
-      .from('Invoices')
+    const { error } = await (supabase.from('Invoices') as any)
       .update({ client_name: editClientName, amount: parseFloat(editAmount), status: editStatus, due_date: editDueDate || null, description: editDescription })
       .eq('id', editingInvoice!.id)
     if (!error) {
@@ -358,13 +357,11 @@ export default function InvoicesPage() {
             <p className="text-gray-400">Try a different client or status.</p>
           </div>
         ) : (
-          filteredInvoices.map((invoice) => {
-            const invoiceNumber = `INV-${String(invoices.indexOf(invoice) + 1).padStart(3, '0')}`
-            return (
+          filteredInvoices.map((invoice) => (
             <div key={invoice.id} className="bg-white rounded-xl p-6 shadow">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <p className="text-xs text-gray-400 font-mono mb-1">{invoiceNumber}</p>
+                  <p className="text-xs text-gray-400 font-mono mb-1">{`INV-${String(invoices.indexOf(invoice) + 1).padStart(3, '0')}`}</p>
                   <h3 className="text-lg font-bold text-gray-800">👤 {invoice.client_name}</h3>
                 </div>
                 <div className="flex gap-2">
@@ -399,7 +396,7 @@ export default function InvoicesPage() {
                 <option>🔴 Overdue</option>
               </select>
             </div>
-          )}))
+          ))
         )}
       </div>
     </div>

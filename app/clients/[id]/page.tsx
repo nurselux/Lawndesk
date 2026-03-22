@@ -60,7 +60,7 @@ export default function ClientDetailPage() {
     const { data: clientData } = await supabase
       .from('Clients')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', params.id as string)
       .eq('user_id', user!.id)
       .single()
 
@@ -68,16 +68,17 @@ export default function ClientDetailPage() {
       router.push('/clients')
       return
     }
-    setClient(clientData as Client)
+    const typedClient = clientData as Client
+    setClient(typedClient)
 
     const [{ data: jobData }, { data: invoiceData }] = await Promise.all([
       supabase.from('Jobs').select('id, title, date, time, status, recurring')
         .eq('user_id', user!.id)
-        .eq('client_name', clientData.name)
+        .eq('client_name', typedClient.name)
         .order('date', { ascending: false }),
       supabase.from('Invoices').select('id, amount, status, due_date, description')
         .eq('user_id', user!.id)
-        .eq('client_name', clientData.name)
+        .eq('client_name', typedClient.name)
         .order('created_at', { ascending: false }),
     ])
 
@@ -102,10 +103,8 @@ export default function ClientDetailPage() {
       return
     }
     setSaving(true)
-    const { error } = await supabase
-      .from('Clients')
-      .update({ name: editName, email: editEmail, phone: editPhone, address: editAddress, notes: editNotes })
-      .eq('id', client!.id)
+    const updateData = { name: editName, email: editEmail, phone: editPhone, address: editAddress, notes: editNotes }
+    const { error } = await (supabase.from('Clients') as any).update(updateData).eq('id', client!.id)
     if (!error) {
       setEditing(false)
       setSuccessMessage('Client updated!')

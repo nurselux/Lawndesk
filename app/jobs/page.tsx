@@ -203,8 +203,7 @@ export default function JobsPage() {
     }
     setSaving(true)
     const finalRecurring = editRecurring === '✏️ Custom' ? editCustomRecurring : editRecurring
-    const { error } = await supabase
-      .from('Jobs')
+    const { error } = await (supabase.from('Jobs') as any)
       .update({ title: finalTitle, client_name: editClientName, date: editDate, time: editTime, status: editStatus, notes: editNotes, recurring: finalRecurring })
       .eq('id', editingJob!.id)
     if (!error) {
