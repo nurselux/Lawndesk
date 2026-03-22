@@ -303,7 +303,7 @@ export default function ClientsPage() {
           </div>
         ) : (
           filteredClients.map((client) => (
-            <div key={client.id} className="bg-white rounded-2xl p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+            <div key={client.id} className="bg-amber-50 rounded-2xl p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
                   <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold text-lg w-11 h-11 rounded-xl flex items-center justify-center shadow-sm shrink-0">

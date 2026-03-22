@@ -74,7 +74,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Account */}
-      <div className="bg-white rounded-2xl p-6 shadow-md mb-5">
+      <div className="bg-amber-50 rounded-2xl p-6 shadow-md mb-5">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xl">👤</span>
           <h3 className="text-lg font-bold text-gray-800">Account</h3>
@@ -91,7 +91,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Change Password */}
-      <div className="bg-white rounded-2xl p-6 shadow-md mb-5">
+      <div className="bg-amber-50 rounded-2xl p-6 shadow-md mb-5">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xl">🔑</span>
           <h3 className="text-lg font-bold text-gray-800">Change Password</h3>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Subscription */}
-      <div className="bg-white rounded-2xl p-6 shadow-md mb-5">
+      <div className="bg-amber-50 rounded-2xl p-6 shadow-md mb-5">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xl">💳</span>
           <h3 className="text-lg font-bold text-gray-800">Subscription</h3>
@@ -149,7 +149,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Help */}
-      <div className="bg-white rounded-2xl p-6 shadow-md mb-5">
+      <div className="bg-amber-50 rounded-2xl p-6 shadow-md mb-5">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xl">💬</span>
           <h3 className="text-lg font-bold text-gray-800">Need Help?</h3>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-2xl p-6 shadow-md border-2 border-red-100">
+      <div className="bg-amber-50 rounded-2xl p-6 shadow-md border-2 border-red-100">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xl">⚠️</span>
           <h3 className="text-lg font-bold text-red-600">Danger Zone</h3>

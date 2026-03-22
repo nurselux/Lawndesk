@@ -184,7 +184,7 @@ function DashboardContent() {
         <div className="flex flex-col gap-6">
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl p-6 shadow-md">
+          <div className="bg-amber-50 rounded-2xl p-6 shadow-md">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
               <Link href="/clients">
@@ -206,7 +206,7 @@ function DashboardContent() {
           </div>
 
           {/* Overdue Invoices */}
-          <div className="bg-white rounded-2xl p-6 shadow-md">
+          <div className="bg-amber-50 rounded-2xl p-6 shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">Overdue Invoices</h3>
               <Link href="/invoices" className="text-sm text-green-600 hover:underline">View all →</Link>
