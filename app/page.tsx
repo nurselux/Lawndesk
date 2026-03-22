@@ -74,7 +74,8 @@ export default function Home() {
       <section className="bg-white py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-gray-500 text-lg mb-12">No hidden fees. Cancel anytime.</p>
+          <p className="text-gray-500 text-lg mb-2">No hidden fees. Cancel anytime.</p>
+          <p className="text-green-700 font-semibold mb-12">✨ Every plan includes a 14-day free trial — no credit card required.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="border-2 border-gray-200 rounded-xl p-8 text-left">
               <h3 className="text-xl font-bold text-gray-800 mb-1">Starter</h3>
@@ -89,9 +90,10 @@ export default function Home() {
               </ul>
               <Link href="/login?signup=true">
                 <button className="w-full border-2 border-green-700 text-green-700 font-bold py-3 rounded-lg hover:bg-green-50 transition-colors cursor-pointer">
-                  Get Started
+                  Try Free for 14 Days
                 </button>
               </Link>
+              <p className="text-center text-gray-400 text-xs mt-2">No credit card required</p>
             </div>
             <div className="border-2 border-green-700 rounded-xl p-8 text-left relative">
               <span className="absolute top-4 right-4 bg-green-700 text-white text-xs font-bold py-1 px-3 rounded-full">Most Popular</span>
@@ -107,9 +109,10 @@ export default function Home() {
               </ul>
               <Link href="/login?signup=true">
                 <button className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors cursor-pointer">
-                  Get Started
+                  Try Free for 14 Days
                 </button>
               </Link>
+              <p className="text-center text-gray-400 text-xs mt-2">No credit card required</p>
             </div>
           </div>
           <Link href="/pricing" className="text-green-700 font-semibold hover:underline text-lg">
