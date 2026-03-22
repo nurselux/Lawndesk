@@ -9,7 +9,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-green-700">🌿 LawnDesk</Link>
           <div className="flex gap-4 items-center">
-            <Link href="/login" className="text-gray-600 font-semibold hover:text-green-700 transition-colors">Log In</Link>
+            <Link href="/login" className="border-2 border-green-700 text-green-700 font-bold py-2 px-5 rounded-lg hover:bg-green-700 hover:text-white transition-all duration-200">Log In</Link>
           </div>
         </div>
       </nav>
