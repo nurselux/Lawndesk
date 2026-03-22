@@ -70,7 +70,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-green-800 text-white flex justify-around px-1 pt-2 pb-4 z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-green-800 text-white flex justify-around px-1 pt-2 z-50" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
         {navItems.map((item) => {
           const [icon, ...words] = item.label.split(' ')
           const label = words.join(' ')

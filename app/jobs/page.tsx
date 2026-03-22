@@ -339,7 +339,7 @@ export default function JobsPage() {
       )}
 
       {smsPrompt && (
-        <div className="bg-white border-2 border-green-400 rounded-2xl p-5 mb-6 shadow-lg">
+        <div className="fixed md:relative bottom-24 md:bottom-auto left-4 right-4 md:left-auto md:right-auto z-40 md:z-auto md:mb-6 bg-white border-2 border-green-400 rounded-2xl p-5 shadow-2xl md:shadow-lg">
           <div className="flex items-center gap-3 mb-3">
             <div className="bg-green-100 text-green-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center">📱</div>
             <div>
