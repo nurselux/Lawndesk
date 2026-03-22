@@ -53,8 +53,8 @@ export default function Home() {
               { icon: '📄', title: 'Invoicing', desc: 'Create and send invoices in seconds and track who owes you.' },
               { icon: '🔄', title: 'Recurring Jobs', desc: 'Set weekly, biweekly, or monthly jobs and let LawnDesk handle the rest.' },
             ].map((f) => (
-              <div key={f.title} className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-4 bg-green-100 w-14 h-14 rounded-xl flex items-center justify-center">{f.icon}</div>
+              <div key={f.title} className="bg-amber-50 rounded-xl p-6 border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-3xl mb-4 bg-white w-14 h-14 rounded-xl flex items-center justify-center border border-amber-200">{f.icon}</div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">{f.title}</h3>
                 <p className="text-gray-500">{f.desc}</p>
               </div>
@@ -133,10 +133,10 @@ export default function Home() {
                 business: "Riverside Landscaping, Denver CO",
               },
             ].map((t) => (
-              <div key={t.name} className="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+              <div key={t.name} className="bg-amber-50 rounded-xl p-6 border border-amber-200 shadow-md">
                 <p className="text-green-600 text-4xl font-serif leading-none mb-2">"</p>
                 <p className="text-gray-600 italic mb-5">{t.quote}</p>
-                <div className="border-t border-gray-100 pt-4">
+                <div className="border-t border-amber-200 pt-4">
                   <p className="font-bold text-gray-800">{t.name}</p>
                   <p className="text-gray-400 text-sm">{t.business}</p>
                 </div>
