@@ -159,12 +159,12 @@ export default function ClientDetailPage() {
         {editing ? (
           <>
             <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Client</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input placeholder="Full Name *" value={editName} onChange={(e) => setEditName(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <input placeholder="Full Name *" value={editName} onChange={(e) => setEditName(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
               <input placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
               <input placeholder="Phone" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
               <input placeholder="Address" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-              <textarea placeholder="Notes" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2" />
+              <textarea placeholder="Notes" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2" />
             </div>
             <div className="flex gap-3 mt-4">
               <button onClick={handleUpdateClient} className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
@@ -195,18 +195,18 @@ export default function ClientDetailPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+            <div className="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-gray-100">
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-700">{jobs.length}</p>
-                <p className="text-gray-400 text-sm">Total Jobs</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-700">{jobs.length}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">Total Jobs</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-700">${totalRevenue.toFixed(0)}</p>
-                <p className="text-gray-400 text-sm">Revenue</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-700 truncate">${totalRevenue.toFixed(0)}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">Revenue</p>
               </div>
               <div className="text-center">
-                <p className={`text-2xl font-bold ${totalOwed > 0 ? 'text-yellow-600' : 'text-green-700'}`}>${totalOwed.toFixed(0)}</p>
-                <p className="text-gray-400 text-sm">Outstanding</p>
+                <p className={`text-xl sm:text-2xl font-bold truncate ${totalOwed > 0 ? 'text-yellow-600' : 'text-green-700'}`}>${totalOwed.toFixed(0)}</p>
+                <p className="text-gray-400 text-xs sm:text-sm">Outstanding</p>
               </div>
             </div>
           </>
@@ -260,7 +260,7 @@ export default function ClientDetailPage() {
                 <div key={inv.id} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0">
                   <div>
                     <p className="font-bold text-gray-800">${inv.amount.toFixed(2)}</p>
-                    {inv.description && <p className="text-xs text-gray-400 truncate max-w-[160px]">{inv.description}</p>}
+                    {inv.description && <p className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[160px]">{inv.description}</p>}
                     {inv.due_date && <p className="text-xs text-gray-400">Due {inv.due_date}</p>}
                   </div>
                   <span className={`text-xs font-bold py-1 px-2 rounded-full ${invoiceStatusColor(inv.status)}`}>

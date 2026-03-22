@@ -113,25 +113,25 @@ function DashboardContent() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-sm">Total Clients</p>
-          <p className="text-4xl font-bold text-green-700">{clientCount}</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
+          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Total Clients</p>
+          <p className="text-3xl sm:text-4xl font-bold text-green-700">{clientCount}</p>
           <Link href="/clients" className="text-xs text-green-600 hover:underline mt-1 inline-block">View all →</Link>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-sm">Jobs This Week</p>
-          <p className="text-4xl font-bold text-green-700">{jobsThisWeek}</p>
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
+          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Jobs This Week</p>
+          <p className="text-3xl sm:text-4xl font-bold text-green-700">{jobsThisWeek}</p>
           <Link href="/jobs" className="text-xs text-green-600 hover:underline mt-1 inline-block">View all →</Link>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-sm">Unpaid Invoices</p>
-          <p className={`text-4xl font-bold ${unpaidCount > 0 ? 'text-yellow-600' : 'text-green-700'}`}>{unpaidCount}</p>
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
+          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Unpaid Invoices</p>
+          <p className={`text-3xl sm:text-4xl font-bold ${unpaidCount > 0 ? 'text-yellow-600' : 'text-green-700'}`}>{unpaidCount}</p>
           <Link href="/invoices" className="text-xs text-green-600 hover:underline mt-1 inline-block">View all →</Link>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-sm">Total Revenue</p>
-          <p className="text-4xl font-bold text-green-700">${totalRevenue.toFixed(0)}</p>
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
+          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Total Revenue</p>
+          <p className="text-3xl sm:text-4xl font-bold text-green-700">${totalRevenue.toFixed(0)}</p>
           <Link href="/invoices" className="text-xs text-green-600 hover:underline mt-1 inline-block">View invoices →</Link>
         </div>
       </div>

@@ -157,7 +157,7 @@ export default function ClientsPage() {
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg p-3 text-gray-800"
+          className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full sm:w-auto"
         >
           <option>All</option>
           <option>Has Email</option>
@@ -181,7 +181,7 @@ export default function ClientsPage() {
       {showForm && (
         <div className="bg-white rounded-xl p-6 shadow mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">New Client</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               placeholder="Full Name *"
               value={name}
@@ -210,7 +210,7 @@ export default function ClientsPage() {
               placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
           <div className="flex gap-3 mt-4">
@@ -233,7 +233,7 @@ export default function ClientsPage() {
       {editingClient && (
         <div className="bg-white rounded-xl p-6 shadow mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Client</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               placeholder="Full Name *"
               value={editName}
@@ -262,7 +262,7 @@ export default function ClientsPage() {
               placeholder="Notes"
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
           <div className="flex gap-3 mt-4">

@@ -269,7 +269,7 @@ export default function JobsPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="border border-gray-300 rounded-lg p-3 text-gray-800"
+          className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full sm:w-auto"
         >
           <option>All</option>
           <option>🔵 Scheduled</option>
@@ -294,7 +294,7 @@ export default function JobsPage() {
       {showForm && (
         <div className="bg-white rounded-xl p-6 shadow mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">🌿 New Job</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <select
                 value={title}
@@ -365,14 +365,14 @@ export default function JobsPage() {
                 placeholder="Describe your schedule (e.g. Every 10 days)"
                 value={customRecurring}
                 onChange={(e) => setCustomRecurring(e.target.value)}
-                className="border border-green-400 rounded-lg p-3 text-gray-800 md:col-span-2"
+                className="border border-green-400 rounded-lg p-3 text-gray-800 sm:col-span-2"
               />
             )}
             <textarea
               placeholder="📝 Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
           {recurring !== '🔂 One-time' && recurring !== '✏️ Custom' && (
@@ -409,7 +409,7 @@ export default function JobsPage() {
       {editingJob && (
         <div className="bg-white rounded-xl p-6 shadow mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Edit Job</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <select
                 value={editTitle}
@@ -478,14 +478,14 @@ export default function JobsPage() {
                 placeholder="Describe your schedule (e.g. Every 10 days)"
                 value={editCustomRecurring}
                 onChange={(e) => setEditCustomRecurring(e.target.value)}
-                className="border border-green-400 rounded-lg p-3 text-gray-800 md:col-span-2"
+                className="border border-green-400 rounded-lg p-3 text-gray-800 sm:col-span-2"
               />
             )}
             <textarea
               placeholder="📝 Notes"
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
           <div className="flex gap-3 mt-4">

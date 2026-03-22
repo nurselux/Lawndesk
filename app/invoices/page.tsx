@@ -194,7 +194,7 @@ export default function InvoicesPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="border border-gray-300 rounded-lg p-3 text-gray-800"
+          className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full sm:w-auto"
         >
           <option>All</option>
           <option>🟡 Unpaid</option>
@@ -218,7 +218,7 @@ export default function InvoicesPage() {
       {showForm && (
         <div className="bg-white rounded-xl p-6 shadow mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">📄 New Invoice</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <select
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
@@ -260,7 +260,7 @@ export default function InvoicesPage() {
               placeholder="📝 Description (e.g. Lawn mowing - front and back yard)"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
           <div className="flex gap-3 mt-4">
@@ -283,7 +283,7 @@ export default function InvoicesPage() {
       {editingInvoice && (
         <div className="bg-white rounded-xl p-6 shadow mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Edit Invoice</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <select
               value={editClientName}
               onChange={(e) => setEditClientName(e.target.value)}
@@ -323,7 +323,7 @@ export default function InvoicesPage() {
               placeholder="📝 Description (e.g. Lawn mowing - front and back yard)"
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 md:col-span-2"
+              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
           <div className="flex gap-3 mt-4">
