@@ -42,7 +42,7 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="bg-gray-50 py-20 px-6">
+      <section className="bg-gray-100 py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4">Everything You Need to Run Your Business</h2>
           <p className="text-center text-gray-500 mb-12 text-lg">Built specifically for landscaping professionals.</p>
@@ -133,10 +133,13 @@ export default function Home() {
                 business: "Riverside Landscaping, Denver CO",
               },
             ].map((t) => (
-              <div key={t.name} className="bg-white rounded-xl p-6 shadow-sm">
-                <p className="text-gray-600 italic mb-4">"{t.quote}"</p>
-                <p className="font-bold text-gray-800">{t.name}</p>
-                <p className="text-gray-400 text-sm">{t.business}</p>
+              <div key={t.name} className="bg-white rounded-xl p-6 border border-green-200 shadow-md">
+                <p className="text-green-600 text-4xl font-serif leading-none mb-2">"</p>
+                <p className="text-gray-600 italic mb-5">{t.quote}</p>
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="font-bold text-gray-800">{t.name}</p>
+                  <p className="text-gray-400 text-sm">{t.business}</p>
+                </div>
               </div>
             ))}
           </div>
