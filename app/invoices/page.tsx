@@ -14,6 +14,7 @@ interface Invoice {
   description: string
   user_id: string
   invoice_number: number
+  share_token: string
 }
 
 interface Client {
@@ -42,6 +43,7 @@ export default function InvoicesPage() {
   const [filterStatus, setFilterStatus] = useState('All')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -383,7 +385,19 @@ export default function InvoicesPage() {
                   </p>
                   <h3 className="text-base font-bold text-gray-800">👤 {invoice.client_name}</h3>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/invoice/${invoice.share_token}`
+                      navigator.clipboard.writeText(url)
+                      setCopiedId(invoice.id)
+                      setTimeout(() => setCopiedId(null), 2000)
+                    }}
+                    title="Copy shareable link"
+                    className="text-green-500 hover:text-green-700 hover:scale-110 transition-all duration-200 cursor-pointer text-lg"
+                  >
+                    {copiedId === invoice.id ? '✅' : '🔗'}
+                  </button>
                   <button onClick={() => handleEditInvoice(invoice)} className="text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">✏️</button>
                   <button onClick={() => handleDeleteInvoice(invoice.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
                 </div>
