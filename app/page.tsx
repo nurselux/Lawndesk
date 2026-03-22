@@ -71,49 +71,88 @@ export default function Home() {
       </section>
 
       {/* Pricing Preview */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-gradient-to-b from-gray-50 to-white py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
           <p className="text-gray-500 text-lg mb-2">No hidden fees. Cancel anytime.</p>
           <p className="text-green-700 font-semibold mb-12">✨ Every plan includes a 14-day free trial — no credit card required.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="border-2 border-gray-200 rounded-xl p-8 text-left">
-              <h3 className="text-xl font-bold text-gray-800 mb-1">Starter</h3>
-              <p className="text-4xl font-bold text-green-700 mb-1">$19<span className="text-lg text-gray-400 font-normal">/mo</span></p>
-              <p className="text-gray-400 mb-6">Perfect for solo operators</p>
-              <ul className="space-y-3 mb-8">
-                {['Up to 25 clients', 'Unlimited jobs', 'Basic invoicing'].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-gray-600">
-                    <span className="text-green-600 font-bold">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/login?signup=true">
-                <button className="w-full border-2 border-green-700 text-green-700 font-bold py-3 rounded-lg hover:bg-green-50 transition-colors cursor-pointer">
-                  Try Free for 14 Days
-                </button>
-              </Link>
-              <p className="text-center text-gray-400 text-xs mt-2">No credit card required</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+
+            {/* Starter */}
+            <div className="relative rounded-2xl p-px bg-gradient-to-br from-green-300 via-emerald-200 to-teal-300 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="bg-white rounded-2xl p-8 text-left h-full flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-emerald-100 text-emerald-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center">🌱</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800 leading-none">Starter</h3>
+                    <p className="text-gray-400 text-sm">Perfect for solo operators</p>
+                  </div>
+                </div>
+                <div className="mb-6">
+                  <span className="text-5xl font-extrabold text-gray-800">$19</span>
+                  <span className="text-gray-400 font-normal text-lg">/mo</span>
+                  <p className="text-emerald-600 text-sm font-semibold mt-1">First 14 days free</p>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    { icon: '👥', text: 'Up to 25 clients' },
+                    { icon: '📅', text: 'Unlimited jobs' },
+                    { icon: '📄', text: 'Basic invoicing' },
+                  ].map((f) => (
+                    <li key={f.text} className="flex items-center gap-3 text-gray-600">
+                      <span className="bg-emerald-50 text-emerald-600 w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0">✓</span>
+                      <span>{f.icon} {f.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/login?signup=true">
+                  <button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md">
+                    Try Free for 14 Days
+                  </button>
+                </Link>
+                <p className="text-center text-gray-400 text-xs mt-2">No credit card required</p>
+              </div>
             </div>
-            <div className="border-2 border-green-700 rounded-xl p-8 text-left relative">
-              <span className="absolute top-4 right-4 bg-green-700 text-white text-xs font-bold py-1 px-3 rounded-full">Most Popular</span>
-              <h3 className="text-xl font-bold text-gray-800 mb-1">Pro</h3>
-              <p className="text-4xl font-bold text-green-700 mb-1">$39<span className="text-lg text-gray-400 font-normal">/mo</span></p>
-              <p className="text-gray-400 mb-6">For growing landscaping crews</p>
-              <ul className="space-y-3 mb-8">
-                {['Unlimited clients', 'Recurring job automation', 'Advanced invoicing & reports'].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-gray-600">
-                    <span className="text-green-600 font-bold">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/login?signup=true">
-                <button className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors cursor-pointer">
-                  Try Free for 14 Days
-                </button>
-              </Link>
-              <p className="text-center text-gray-400 text-xs mt-2">No credit card required</p>
+
+            {/* Pro */}
+            <div className="relative rounded-2xl p-px bg-gradient-to-br from-green-500 via-green-600 to-teal-500 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-8 text-left h-full flex flex-col">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-yellow-400 text-yellow-900 text-xs font-extrabold py-1 px-4 rounded-full shadow-md tracking-wide uppercase">Most Popular</span>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-green-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center">🌿</div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white leading-none">Pro</h3>
+                    <p className="text-green-300 text-sm">For growing landscaping crews</p>
+                  </div>
+                </div>
+                <div className="mb-6">
+                  <span className="text-5xl font-extrabold text-white">$39</span>
+                  <span className="text-green-300 font-normal text-lg">/mo</span>
+                  <p className="text-yellow-300 text-sm font-semibold mt-1">First 14 days free</p>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    { icon: '👥', text: 'Unlimited clients' },
+                    { icon: '🔄', text: 'Recurring job automation' },
+                    { icon: '📊', text: 'Advanced invoicing & reports' },
+                  ].map((f) => (
+                    <li key={f.text} className="flex items-center gap-3 text-green-100">
+                      <span className="bg-green-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0">✓</span>
+                      <span>{f.icon} {f.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/login?signup=true">
+                  <button className="w-full bg-white text-green-700 font-bold py-3 rounded-xl hover:bg-green-50 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md">
+                    Try Free for 14 Days
+                  </button>
+                </Link>
+                <p className="text-center text-green-400 text-xs mt-2">No credit card required</p>
+              </div>
             </div>
+
           </div>
           <Link href="/pricing" className="text-green-700 font-semibold hover:underline text-lg">
             See full pricing details →
