@@ -8,6 +8,7 @@ interface Job {
   id: string
   title: string
   client_name: string
+  client_id: string
   date: string
   time: string
   status: string
@@ -50,12 +51,12 @@ export default function JobsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [title, setTitle] = useState('')
   const [customTitle, setCustomTitle] = useState('')
-  const [clientName, setClientName] = useState('')
+  const [clientId, setClientId] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
-  const [status, setStatus] = useState('Scheduled')
+  const [status, setStatus] = useState('🔵 Scheduled')
   const [notes, setNotes] = useState('')
-  const [recurring, setRecurring] = useState('One-time')
+  const [recurring, setRecurring] = useState('🔂 One-time')
   const [customRecurring, setCustomRecurring] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
@@ -64,7 +65,7 @@ export default function JobsPage() {
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCustomTitle, setEditCustomTitle] = useState('')
-  const [editClientName, setEditClientName] = useState('')
+  const [editClientId, setEditClientId] = useState('')
   const [editDate, setEditDate] = useState('')
   const [editTime, setEditTime] = useState('')
   const [editStatus, setEditStatus] = useState('🔵 Scheduled')
@@ -108,11 +109,11 @@ export default function JobsPage() {
 
     while (current <= endDate) {
       dates.push(current.toISOString().split('T')[0])
-      if (recurringType === 'Weekly') {
+      if (recurringType === '📅 Weekly') {
         current.setDate(current.getDate() + 7)
-      } else if (recurringType === 'Biweekly') {
+      } else if (recurringType === '🗓️ Biweekly') {
         current.setDate(current.getDate() + 14)
-      } else if (recurringType === 'Monthly') {
+      } else if (recurringType === '📆 Monthly') {
         current.setMonth(current.getMonth() + 1)
       } else {
         break
@@ -123,50 +124,50 @@ export default function JobsPage() {
 
   const handleAddJob = async () => {
     const finalTitle = title === '✏️ Custom' ? customTitle : title
-    if (!finalTitle || !clientName || !date) {
+    if (!finalTitle || !clientId || !date) {
       setErrorMessage('Job title, client and date are required')
       setTimeout(() => setErrorMessage(''), 3000)
       return
     }
-    if (recurring === 'Custom' && !customRecurring) {
+    if (recurring === '✏️ Custom' && !customRecurring) {
       setErrorMessage('Please describe your custom schedule')
       setTimeout(() => setErrorMessage(''), 3000)
       return
     }
     setSaving(true)
 
-    const finalRecurring = recurring === 'Custom' ? customRecurring : recurring
+    const selectedClient = clients.find(c => c.id === clientId)
+    const finalRecurring = recurring === '✏️ Custom' ? customRecurring : recurring
     const dates = generateRecurringDates(date, recurring)
 
     const jobsToInsert = dates.map((d) => ({
       title: finalTitle,
-      client_name: clientName,
+      client_name: selectedClient?.name || '',
+      client_id: clientId,
       date: d,
       time,
-      status: 'Scheduled',
+      status,
       notes,
       recurring: finalRecurring,
       user_id: user?.id,
     }))
 
-    const { error } = await supabase
-      .from('Jobs')
-      .insert(jobsToInsert as any)
+    const { error } = await supabase.from('Jobs').insert(jobsToInsert as any)
 
     if (!error) {
       setTitle('')
       setCustomTitle('')
-      setClientName('')
+      setClientId('')
       setDate('')
       setTime('')
-      setStatus('Scheduled')
+      setStatus('🔵 Scheduled')
       setNotes('')
-      setRecurring('One-time')
+      setRecurring('🔂 One-time')
       setCustomRecurring('')
       setShowForm(false)
       const count = jobsToInsert.length
       setSuccessMessage(
-        recurring === 'One-time'
+        recurring === '🔂 One-time'
           ? '🎉 Job scheduled successfully!'
           : `🎉 ${count} recurring jobs scheduled for the next 3 months!`
       )
@@ -184,7 +185,7 @@ export default function JobsPage() {
     setEditingJob(job)
     setEditTitle(isKnownType ? job.title : '✏️ Custom')
     setEditCustomTitle(isKnownType ? '' : job.title)
-    setEditClientName(job.client_name)
+    setEditClientId(job.client_id || '')
     setEditDate(job.date)
     setEditTime(job.time)
     setEditStatus(job.status)
@@ -196,15 +197,25 @@ export default function JobsPage() {
 
   const handleUpdateJob = async () => {
     const finalTitle = editTitle === '✏️ Custom' ? editCustomTitle : editTitle
-    if (!finalTitle || !editClientName || !editDate) {
+    if (!finalTitle || !editClientId || !editDate) {
       setErrorMessage('Job title, client and date are required')
       setTimeout(() => setErrorMessage(''), 3000)
       return
     }
     setSaving(true)
+    const selectedClient = clients.find(c => c.id === editClientId)
     const finalRecurring = editRecurring === '✏️ Custom' ? editCustomRecurring : editRecurring
     const { error } = await (supabase.from('Jobs') as any)
-      .update({ title: finalTitle, client_name: editClientName, date: editDate, time: editTime, status: editStatus, notes: editNotes, recurring: finalRecurring })
+      .update({
+        title: finalTitle,
+        client_name: selectedClient?.name || '',
+        client_id: editClientId,
+        date: editDate,
+        time: editTime,
+        status: editStatus,
+        notes: editNotes,
+        recurring: finalRecurring,
+      })
       .eq('id', editingJob!.id)
     if (!error) {
       setEditingJob(null)
@@ -235,9 +246,7 @@ export default function JobsPage() {
       j.title.toLowerCase().includes(q) ||
       j.client_name.toLowerCase().includes(q) ||
       j.notes?.toLowerCase().includes(q)
-    const matchesStatus =
-      filterStatus === 'All' ||
-      j.status === filterStatus
+    const matchesStatus = filterStatus === 'All' || j.status === filterStatus
     return matchesSearch && matchesStatus
   })
 
@@ -286,15 +295,10 @@ export default function JobsPage() {
       </div>
 
       {successMessage && (
-        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-lg mb-4">
-          {successMessage}
-        </div>
+        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-lg mb-4">{successMessage}</div>
       )}
-
       {errorMessage && (
-        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-lg mb-4">
-          {errorMessage}
-        </div>
+        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-lg mb-4">{errorMessage}</div>
       )}
 
       {showForm && (
@@ -322,45 +326,25 @@ export default function JobsPage() {
               )}
             </div>
             <select
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
               className="border border-gray-300 rounded-lg p-3 text-gray-800"
             >
               <option value="">👤 Select a Client *</option>
               {clients.map((client) => (
-                <option key={client.id} value={client.name}>
-                  {client.name}
-                </option>
+                <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            />
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            />
-            <select
-              value={recurring}
-              onChange={(e) => setRecurring(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            >
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔂 One-time</option>
               <option>📅 Weekly</option>
               <option>🗓️ Biweekly</option>
               <option>📆 Monthly</option>
               <option>✏️ Custom</option>
             </select>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            >
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔵 Scheduled</option>
               <option>🟡 In Progress</option>
               <option>🟢 Completed</option>
@@ -383,29 +367,19 @@ export default function JobsPage() {
           </div>
           {recurring !== '🔂 One-time' && recurring !== '✏️ Custom' && (
             <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-bold text-sm">
-                📅 This will automatically schedule jobs for the next 3 months!
-              </p>
+              <p className="text-green-700 font-bold text-sm">📅 This will automatically schedule jobs for the next 3 months!</p>
             </div>
           )}
           {recurring === '✏️ Custom' && (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-700 font-bold text-sm">
-                📝 Custom schedule will be saved as a note on the job.
-              </p>
+              <p className="text-blue-700 font-bold text-sm">📝 Custom schedule will be saved as a note on the job.</p>
             </div>
           )}
           <div className="flex gap-3 mt-4">
-            <button
-              onClick={handleAddJob}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
-            >
+            <button onClick={handleAddJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow">
               {saving ? '⏳ Saving...' : '💾 Save Job'}
             </button>
-            <button
-              onClick={() => setShowForm(false)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
-            >
+            <button onClick={() => setShowForm(false)} className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer">
               Cancel
             </button>
           </div>
@@ -417,11 +391,7 @@ export default function JobsPage() {
           <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Edit Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <select
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
-              >
+              <select value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
                 <option value="">Select Job Type *</option>
                 {JOB_TYPES.map((type) => (
                   <option key={type} value={type}>{type}</option>
@@ -436,44 +406,22 @@ export default function JobsPage() {
                 />
               )}
             </div>
-            <select
-              value={editClientName}
-              onChange={(e) => setEditClientName(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            >
+            <select value={editClientId} onChange={(e) => setEditClientId(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option value="">👤 Select a Client *</option>
               {clients.map((client) => (
-                <option key={client.id} value={client.name}>{client.name}</option>
+                <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
-            <input
-              type="date"
-              value={editDate}
-              onChange={(e) => setEditDate(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            />
-            <input
-              type="time"
-              value={editTime}
-              onChange={(e) => setEditTime(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            />
-            <select
-              value={editRecurring}
-              onChange={(e) => setEditRecurring(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            >
+            <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <select value={editRecurring} onChange={(e) => setEditRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔂 One-time</option>
               <option>📅 Weekly</option>
               <option>🗓️ Biweekly</option>
               <option>📆 Monthly</option>
               <option>✏️ Custom</option>
             </select>
-            <select
-              value={editStatus}
-              onChange={(e) => setEditStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            >
+            <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔵 Scheduled</option>
               <option>🟡 In Progress</option>
               <option>🟢 Completed</option>
@@ -495,16 +443,10 @@ export default function JobsPage() {
             />
           </div>
           <div className="flex gap-3 mt-4">
-            <button
-              onClick={handleUpdateJob}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
-            >
+            <button onClick={handleUpdateJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow">
               {saving ? '⏳ Saving...' : '💾 Save Changes'}
             </button>
-            <button
-              onClick={() => setEditingJob(null)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
-            >
+            <button onClick={() => setEditingJob(null)} className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer">
               Cancel
             </button>
           </div>
@@ -513,10 +455,16 @@ export default function JobsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {jobs.length === 0 ? (
-          <div className="col-span-3 text-center py-12">
-            <p className="text-5xl mb-4">📅</p>
-            <p className="text-gray-500 text-lg font-bold">No jobs yet</p>
-            <p className="text-gray-400">Click Schedule Job to get started!</p>
+          <div className="col-span-3 text-center py-16">
+            <p className="text-6xl mb-4">📅</p>
+            <p className="text-gray-700 text-xl font-bold mb-2">No jobs scheduled yet</p>
+            <p className="text-gray-400 mb-6">Schedule your first job to start tracking your work.</p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow-md"
+            >
+              + Schedule Your First Job
+            </button>
           </div>
         ) : filteredJobs.length === 0 ? (
           <div className="col-span-3 text-center py-12">

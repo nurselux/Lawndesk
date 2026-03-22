@@ -42,6 +42,15 @@ function DashboardContent() {
     const today = new Date()
     const todayStr = today.toISOString().split('T')[0]
 
+    // Auto-mark overdue invoices
+    await supabase
+      .from('Invoices')
+      .update({ status: '🔴 Overdue' })
+      .eq('user_id', user!.id)
+      .eq('status', '🟡 Unpaid')
+      .lt('due_date', todayStr)
+      .not('due_date', 'is', null)
+
     // Start and end of current week (Mon–Sun)
     const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1
     const weekStart = new Date(today)
@@ -117,6 +126,35 @@ function DashboardContent() {
           <p className="text-gray-500 text-sm">Welcome back! Here's your business at a glance.</p>
         </div>
       </div>
+
+      {/* Onboarding — shown only when account is brand new */}
+      {clientCount === 0 && upcomingJobs.length === 0 && (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8">
+          <h3 className="text-xl font-bold text-gray-800 mb-1">Welcome to LawnDesk! 🌿</h3>
+          <p className="text-gray-500 mb-5">Let's get your business set up. Follow these steps to get started:</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { step: '1', icon: '👥', title: 'Add Your First Client', desc: 'Store their name, phone, and address.', href: '/clients', label: 'Add Client' },
+              { step: '2', icon: '📅', title: 'Schedule a Job', desc: 'Set a date, time, and job type.', href: '/jobs', label: 'Schedule Job' },
+              { step: '3', icon: '📄', title: 'Create an Invoice', desc: 'Send it and get paid faster.', href: '/invoices', label: 'Create Invoice' },
+            ].map((item) => (
+              <div key={item.step} className="bg-white rounded-xl p-4 border border-green-100 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="bg-green-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">{item.step}</span>
+                  <span className="text-xl">{item.icon}</span>
+                  <p className="font-bold text-gray-800 text-sm">{item.title}</p>
+                </div>
+                <p className="text-gray-400 text-xs mb-3">{item.desc}</p>
+                <Link href={item.href}>
+                  <button className="w-full bg-green-700 text-white text-xs font-bold py-2 rounded-lg hover:bg-green-800 transition cursor-pointer">
+                    {item.label} →
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">

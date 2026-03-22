@@ -7,21 +7,22 @@ import { supabase } from '../../lib/supabase'
 
 export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState('')
-  const [loading, setLoading] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [pwSaving, setPwSaving] = useState(false)
   const [pwSuccess, setPwSuccess] = useState('')
   const [pwError, setPwError] = useState('')
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const router = useRouter()
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-        return
-      }
+      if (!session) { router.push('/login'); return }
       setUserEmail(session.user.email || '')
     }
     getUser()
@@ -57,10 +58,20 @@ export default function SettingsPage() {
     setPwSaving(false)
   }
 
-  const handleManageBilling = async () => {
-    setLoading(true)
-    router.push('/pricing')
-    setLoading(false)
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      setDeleteError('Please type DELETE to confirm.')
+      return
+    }
+    setDeleteLoading(true)
+    const { error } = await supabase.rpc('delete_user')
+    if (error) {
+      setDeleteError(`Failed to delete account: ${error.message}`)
+      setDeleteLoading(false)
+      return
+    }
+    await supabase.auth.signOut()
+    router.push('/')
   }
 
   return (
@@ -96,12 +107,8 @@ export default function SettingsPage() {
           <span className="text-xl">🔑</span>
           <h3 className="text-lg font-bold text-gray-800">Change Password</h3>
         </div>
-        {pwSuccess && (
-          <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4">✅ {pwSuccess}</div>
-        )}
-        {pwError && (
-          <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4">❌ {pwError}</div>
-        )}
+        {pwSuccess && <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4">✅ {pwSuccess}</div>}
+        {pwError && <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4">❌ {pwError}</div>}
         <div className="flex flex-col gap-3">
           <input
             type="password"
@@ -140,12 +147,34 @@ export default function SettingsPage() {
             </button>
           </Link>
           <button
-            onClick={handleManageBilling}
-            className="border-2 border-green-700 text-green-700 font-bold py-3 px-6 rounded-xl hover:bg-green-50 hover:scale-105 transition-all duration-200 cursor-pointer"
+            onClick={() => setShowCancelConfirm(true)}
+            className="border-2 border-red-300 text-red-500 font-bold py-3 px-6 rounded-xl hover:bg-red-50 hover:scale-105 transition-all duration-200 cursor-pointer"
           >
-            {loading ? '⏳ Loading...' : '💳 Manage Billing'}
+            🚫 Cancel Subscription
           </button>
         </div>
+        {showCancelConfirm && (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-4">
+            <p className="text-gray-800 font-bold mb-1">Cancel your subscription?</p>
+            <p className="text-gray-500 text-sm mb-3">
+              To cancel, email us at{' '}
+              <a href="mailto:support@lawndesk.com?subject=Cancel%20Subscription" className="text-red-600 font-bold hover:underline">
+                support@lawndesk.com
+              </a>{' '}
+              and we'll take care of it within 24 hours. You won't be charged again.
+            </p>
+            <div className="flex gap-3">
+              <a href="mailto:support@lawndesk.com?subject=Cancel%20Subscription&body=Hi%2C%20I%20would%20like%20to%20cancel%20my%20LawnDesk%20subscription.%20My%20email%20is%3A">
+                <button className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg text-sm hover:bg-red-700 transition cursor-pointer">
+                  📧 Email Support
+                </button>
+              </a>
+              <button onClick={() => setShowCancelConfirm(false)} className="border border-gray-300 text-gray-500 font-bold py-2 px-4 rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer">
+                Never mind
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Help */}
@@ -168,10 +197,49 @@ export default function SettingsPage() {
           <span className="text-xl">⚠️</span>
           <h3 className="text-lg font-bold text-red-600">Danger Zone</h3>
         </div>
-        <p className="text-gray-500 mb-4">Once you cancel your subscription you will lose access to all LawnDesk features.</p>
-        <button className="bg-red-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-red-700 hover:scale-105 transition-all duration-200 cursor-pointer shadow">
-          🚫 Cancel Subscription
-        </button>
+        <p className="text-gray-500 mb-4">Permanently delete your account and all your data. This cannot be undone.</p>
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="bg-red-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-red-700 hover:scale-105 transition-all duration-200 cursor-pointer shadow"
+          >
+            🗑️ Delete My Account
+          </button>
+        ) : (
+          <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+            <p className="text-red-700 font-bold mb-1">This will permanently delete:</p>
+            <ul className="text-red-600 text-sm mb-3 space-y-1">
+              <li>• All your clients</li>
+              <li>• All your jobs</li>
+              <li>• All your invoices</li>
+              <li>• Your account</li>
+            </ul>
+            <p className="text-gray-700 text-sm mb-3">Type <strong>DELETE</strong> to confirm:</p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => { setDeleteConfirmText(e.target.value); setDeleteError('') }}
+              placeholder="Type DELETE"
+              className="border border-red-300 rounded-lg p-2 text-gray-800 w-full mb-3"
+            />
+            {deleteError && <p className="text-red-600 text-sm mb-3">{deleteError}</p>}
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg text-sm hover:bg-red-700 transition cursor-pointer disabled:opacity-50"
+              >
+                {deleteLoading ? '⏳ Deleting...' : '🗑️ Yes, Delete Everything'}
+              </button>
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(''); setDeleteError('') }}
+                className="border border-gray-300 text-gray-500 font-bold py-2 px-4 rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

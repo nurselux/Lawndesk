@@ -74,11 +74,11 @@ export default function ClientDetailPage() {
     const [{ data: jobData }, { data: invoiceData }] = await Promise.all([
       supabase.from('Jobs').select('id, title, date, time, status, recurring')
         .eq('user_id', user!.id)
-        .eq('client_name', typedClient.name)
+        .eq('client_id', typedClient.id)
         .order('date', { ascending: false }),
       supabase.from('Invoices').select('id, amount, status, due_date, description')
         .eq('user_id', user!.id)
-        .eq('client_name', typedClient.name)
+        .eq('client_id', typedClient.id)
         .order('created_at', { ascending: false }),
     ])
 
