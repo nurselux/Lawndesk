@@ -21,7 +21,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-20 pb-0 px-6 text-center overflow-hidden">
+      <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-20 pb-0 px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-green-600 bg-opacity-60 border border-green-400 rounded-full px-4 py-1.5 mb-6">
             <span className="text-yellow-300 font-bold text-xs sm:text-sm">✨ 14-Day Free Trial</span>
@@ -50,43 +50,9 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Floating app preview cards */}
-        <div className="max-w-4xl mx-auto relative">
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm border border-white border-opacity-20 rounded-t-2xl px-4 pt-6 pb-0 mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-              {[
-                { icon: '👥', label: 'Clients', value: '24', color: 'from-green-400 to-emerald-500' },
-                { icon: '📅', label: 'Jobs This Week', value: '9', color: 'from-blue-400 to-cyan-500' },
-                { icon: '⚠️', label: 'Unpaid', value: '3', color: 'from-amber-400 to-orange-400' },
-                { icon: '💰', label: 'Revenue', value: '$2,840', color: 'from-purple-400 to-violet-500' },
-              ].map((s) => (
-                <div key={s.label} className={`bg-gradient-to-br ${s.color} rounded-xl p-3 text-white text-center shadow-md`}>
-                  <div className="text-xl mb-1">{s.icon}</div>
-                  <div className="text-xs text-white text-opacity-80">{s.label}</div>
-                  <div className="text-lg font-bold">{s.value}</div>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white bg-opacity-10 rounded-xl p-3 mb-4 text-left">
-              <p className="text-white text-opacity-70 text-xs font-semibold mb-2">📅 Upcoming Jobs</p>
-              {[
-                { name: 'Tom Harrington', job: '🌿 Lawn Mowing', date: 'Today 9:00am', color: 'bg-blue-400' },
-                { name: 'Linda Cortez', job: '✂️ Hedge Trimming', date: 'Tomorrow 8:00am', color: 'bg-green-400' },
-                { name: 'Sandra Nguyen', job: '🧹 Spring Cleanup', date: 'Fri 9:30am', color: 'bg-purple-400' },
-              ].map((j) => (
-                <div key={j.name} className="flex items-center justify-between py-1.5 border-b border-white border-opacity-10 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${j.color}`} />
-                    <div>
-                      <p className="text-white text-xs font-semibold leading-none">{j.job}</p>
-                      <p className="text-white text-opacity-60 text-xs">{j.name}</p>
-                    </div>
-                  </div>
-                  <span className="text-white text-opacity-60 text-xs">{j.date}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* App mockup */}
+        <div className="max-w-4xl mx-auto mt-2 px-2 sm:px-0">
+          <img src="/hero-mockup.svg" alt="LawnDesk dashboard on laptop and phone" className="w-full drop-shadow-2xl" />
         </div>
       </section>
 

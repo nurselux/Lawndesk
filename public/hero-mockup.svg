@@ -1,0 +1,171 @@
+<svg width="100%" viewBox="0 0 680 410" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="ls"><rect x="33" y="30" width="464" height="300" rx="3"/></clipPath>
+    <clipPath id="ps"><rect x="483" y="94" width="139" height="282" rx="16"/></clipPath>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="#10b981"/></linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+    <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+    <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient>
+    <linearGradient id="sidebar" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#14532d"/><stop offset="100%" stop-color="#166534"/></linearGradient>
+  </defs>
+
+  <!-- Laptop body -->
+  <rect x="15" y="15" width="500" height="335" rx="12" fill="#1c1c1e"/>
+  <circle cx="265" cy="23" r="2.5" fill="#3a3a3a"/>
+  <rect x="26" y="24" width="478" height="314" rx="6" fill="#0d0d0d"/>
+
+  <!-- Laptop screen content -->
+  <g clip-path="url(#ls)">
+    <rect x="33" y="30" width="464" height="300" fill="#f8f7f4"/>
+
+    <!-- Sidebar -->
+    <rect x="33" y="30" width="92" height="300" fill="url(#sidebar)"/>
+    <rect x="33" y="30" width="92" height="36" fill="#0f3d20"/>
+    <text x="79" y="53" text-anchor="middle" font-size="8" font-weight="700" font-family="system-ui,sans-serif" fill="#dcfce7">🌿 LawnDesk</text>
+    <rect x="37" y="74" width="84" height="16" rx="4" fill="#15803d"/>
+    <text x="79" y="86" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" fill="white">📊 Dashboard</text>
+    <text x="79" y="107" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" fill="#86efac">👥 Clients</text>
+    <text x="79" y="121" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" fill="#86efac">📅 Jobs</text>
+    <text x="79" y="135" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" fill="#86efac">📄 Invoices</text>
+    <text x="79" y="149" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" fill="#86efac">⚙️ Settings</text>
+    <rect x="37" y="298" width="84" height="16" rx="4" fill="#15803d"/>
+    <text x="79" y="309" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" fill="white">🚪 Logout</text>
+
+    <!-- Top bar -->
+    <rect x="125" y="30" width="372" height="26" fill="#166534"/>
+    <text x="142" y="46" font-size="8" font-weight="600" font-family="system-ui,sans-serif" fill="white">🌿 LawnDesk</text>
+    <text x="484" y="46" text-anchor="end" font-size="7" font-family="system-ui,sans-serif" fill="#bbf7d0">Welcome back!</text>
+
+    <!-- Dashboard title -->
+    <text x="140" y="72" font-size="10" font-weight="600" font-family="system-ui,sans-serif" fill="#111827">Dashboard</text>
+
+    <!-- Stat cards - colorful gradients -->
+    <rect x="140" y="80" width="88" height="50" rx="6" fill="url(#g1)"/>
+    <text x="184" y="97" text-anchor="middle" font-size="11" font-family="system-ui,sans-serif" fill="white">👥</text>
+    <text x="184" y="108" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.8)">Total Clients</text>
+    <text x="184" y="121" text-anchor="middle" font-size="14" font-weight="700" font-family="system-ui,sans-serif" fill="white">24</text>
+
+    <rect x="234" y="80" width="88" height="50" rx="6" fill="url(#g2)"/>
+    <text x="278" y="97" text-anchor="middle" font-size="11" font-family="system-ui,sans-serif" fill="white">📅</text>
+    <text x="278" y="108" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.8)">Jobs This Week</text>
+    <text x="278" y="121" text-anchor="middle" font-size="14" font-weight="700" font-family="system-ui,sans-serif" fill="white">9</text>
+
+    <rect x="328" y="80" width="88" height="50" rx="6" fill="url(#g3)"/>
+    <text x="372" y="97" text-anchor="middle" font-size="11" font-family="system-ui,sans-serif" fill="white">⚠️</text>
+    <text x="372" y="108" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.8)">Unpaid Invoices</text>
+    <text x="372" y="121" text-anchor="middle" font-size="14" font-weight="700" font-family="system-ui,sans-serif" fill="white">3</text>
+
+    <rect x="422" y="80" width="88" height="50" rx="6" fill="url(#g4)"/>
+    <text x="466" y="97" text-anchor="middle" font-size="11" font-family="system-ui,sans-serif" fill="white">💰</text>
+    <text x="466" y="108" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.8)">Revenue</text>
+    <text x="466" y="121" text-anchor="middle" font-size="11" font-weight="700" font-family="system-ui,sans-serif" fill="white">$2,840</text>
+
+    <!-- Upcoming Jobs card -->
+    <rect x="140" y="140" width="215" height="150" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="0.5"/>
+    <text x="153" y="157" font-size="8" font-weight="600" font-family="system-ui,sans-serif" fill="#111827">📅 Upcoming Jobs</text>
+    <!-- Job rows -->
+    <rect x="148" y="162" width="4" height="20" rx="2" fill="#3b82f6"/>
+    <text x="157" y="172" font-size="7" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">🌿 Lawn Mowing</text>
+    <text x="157" y="180" font-size="6" font-family="system-ui,sans-serif" fill="#6b7280">Tom Harrington · Today 9am</text>
+    <rect x="148" y="186" width="4" height="20" rx="2" fill="#22c55e"/>
+    <text x="157" y="196" font-size="7" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">✂️ Hedge Trimming</text>
+    <text x="157" y="204" font-size="6" font-family="system-ui,sans-serif" fill="#6b7280">Linda Cortez · Tomorrow 8am</text>
+    <rect x="148" y="210" width="4" height="20" rx="2" fill="#a855f7"/>
+    <text x="157" y="220" font-size="7" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">🧹 Spring Cleanup</text>
+    <text x="157" y="228" font-size="6" font-family="system-ui,sans-serif" fill="#6b7280">Sandra Nguyen · Fri 9:30am</text>
+    <rect x="148" y="234" width="4" height="20" rx="2" fill="#f59e0b"/>
+    <text x="157" y="244" font-size="7" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">💨 Leaf Blowing</text>
+    <text x="157" y="252" font-size="6" font-family="system-ui,sans-serif" fill="#6b7280">Marcus Webb · Sat 10am</text>
+
+    <!-- Quick Actions card -->
+    <rect x="363" y="140" width="130" height="90" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="0.5"/>
+    <text x="376" y="157" font-size="8" font-weight="600" font-family="system-ui,sans-serif" fill="#111827">⚡ Quick Actions</text>
+    <rect x="372" y="162" width="112" height="16" rx="4" fill="url(#g1)"/>
+    <text x="428" y="173" text-anchor="middle" font-size="6.5" font-family="system-ui,sans-serif" fill="white">+ Add Client</text>
+    <rect x="372" y="182" width="112" height="16" rx="4" fill="url(#g2)"/>
+    <text x="428" y="193" text-anchor="middle" font-size="6.5" font-family="system-ui,sans-serif" fill="white">+ Schedule Job</text>
+    <rect x="372" y="202" width="112" height="16" rx="4" fill="url(#g4)"/>
+    <text x="428" y="213" text-anchor="middle" font-size="6.5" font-family="system-ui,sans-serif" fill="white">+ Create Invoice</text>
+
+    <!-- Overdue card -->
+    <rect x="363" y="238" width="130" height="52" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="0.5"/>
+    <text x="376" y="253" font-size="8" font-weight="600" font-family="system-ui,sans-serif" fill="#111827">🔴 Overdue</text>
+    <text x="376" y="268" font-size="7" font-family="system-ui,sans-serif" fill="#374151">Tom Harrington</text>
+    <text x="487" y="268" text-anchor="end" font-size="7" font-weight="700" font-family="system-ui,sans-serif" fill="#ef4444">$65.00</text>
+    <text x="376" y="281" font-size="6" font-family="system-ui,sans-serif" fill="#9ca3af">Due Mar 28</text>
+  </g>
+
+  <!-- Laptop base -->
+  <rect x="0" y="350" width="530" height="24" rx="4" fill="#1c1c1e"/>
+  <line x1="0" y1="350" x2="530" y2="350" stroke="#333" stroke-width="1"/>
+  <rect x="210" y="357" width="120" height="10" rx="3" fill="#282828"/>
+
+  <!-- Phone body -->
+  <rect x="475" y="65" width="155" height="330" rx="24" fill="#1c1c1e"/>
+  <rect x="471" y="128" width="4" height="24" rx="2" fill="#2d2d2d"/>
+  <rect x="471" y="158" width="4" height="24" rx="2" fill="#2d2d2d"/>
+  <rect x="630" y="148" width="4" height="36" rx="2" fill="#2d2d2d"/>
+
+  <!-- Phone screen -->
+  <g clip-path="url(#ps)">
+    <rect x="483" y="94" width="139" height="282" fill="#f8f7f4"/>
+    <!-- Phone top bar -->
+    <rect x="483" y="94" width="139" height="26" fill="#166534"/>
+    <rect x="536" y="97" width="32" height="10" rx="5" fill="#0d0d0d"/>
+    <text x="552" y="113" text-anchor="middle" font-size="7" font-weight="700" font-family="system-ui,sans-serif" fill="white">🌿 LawnDesk</text>
+    <text x="552" y="128" text-anchor="middle" font-size="8" font-weight="600" font-family="system-ui,sans-serif" fill="#111827">Dashboard</text>
+
+    <!-- Phone stat cards -->
+    <rect x="488" y="133" width="60" height="38" rx="6" fill="url(#g1)"/>
+    <text x="518" y="146" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="white">👥</text>
+    <text x="518" y="155" text-anchor="middle" font-size="5.5" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.85)">Clients</text>
+    <text x="518" y="164" text-anchor="middle" font-size="11" font-weight="700" font-family="system-ui,sans-serif" fill="white">24</text>
+
+    <rect x="554" y="133" width="60" height="38" rx="6" fill="url(#g2)"/>
+    <text x="584" y="146" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="white">📅</text>
+    <text x="584" y="155" text-anchor="middle" font-size="5.5" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.85)">Jobs</text>
+    <text x="584" y="164" text-anchor="middle" font-size="11" font-weight="700" font-family="system-ui,sans-serif" fill="white">9</text>
+
+    <rect x="488" y="177" width="60" height="38" rx="6" fill="url(#g3)"/>
+    <text x="518" y="190" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="white">⚠️</text>
+    <text x="518" y="199" text-anchor="middle" font-size="5.5" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.85)">Unpaid</text>
+    <text x="518" y="208" text-anchor="middle" font-size="11" font-weight="700" font-family="system-ui,sans-serif" fill="white">3</text>
+
+    <rect x="554" y="177" width="60" height="38" rx="6" fill="url(#g4)"/>
+    <text x="584" y="190" text-anchor="middle" font-size="9" font-family="system-ui,sans-serif" fill="white">💰</text>
+    <text x="584" y="199" text-anchor="middle" font-size="5.5" font-family="system-ui,sans-serif" fill="rgba(255,255,255,0.85)">Revenue</text>
+    <text x="584" y="208" text-anchor="middle" font-size="9" font-weight="700" font-family="system-ui,sans-serif" fill="white">$2,840</text>
+
+    <!-- Phone jobs list -->
+    <rect x="488" y="221" width="126" height="100" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="0.5"/>
+    <text x="496" y="233" font-size="7" font-weight="600" font-family="system-ui,sans-serif" fill="#111827">📅 Upcoming Jobs</text>
+    <rect x="491" y="238" width="3" height="16" rx="1.5" fill="#3b82f6"/>
+    <text x="498" y="246" font-size="6" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">🌿 Lawn Mowing</text>
+    <text x="498" y="253" font-size="5.5" font-family="system-ui,sans-serif" fill="#6b7280">Tom H. · Today 9am</text>
+    <rect x="491" y="258" width="3" height="16" rx="1.5" fill="#22c55e"/>
+    <text x="498" y="266" font-size="6" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">✂️ Hedge Trimming</text>
+    <text x="498" y="273" font-size="5.5" font-family="system-ui,sans-serif" fill="#6b7280">Linda C. · Tomorrow</text>
+    <rect x="491" y="278" width="3" height="16" rx="1.5" fill="#a855f7"/>
+    <text x="498" y="286" font-size="6" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">🧹 Spring Cleanup</text>
+    <text x="498" y="293" font-size="5.5" font-family="system-ui,sans-serif" fill="#6b7280">Sandra N. · Fri</text>
+    <rect x="491" y="298" width="3" height="16" rx="1.5" fill="#f59e0b"/>
+    <text x="498" y="306" font-size="6" font-weight="600" font-family="system-ui,sans-serif" fill="#1f2937">💨 Leaf Blowing</text>
+    <text x="498" y="313" font-size="5.5" font-family="system-ui,sans-serif" fill="#6b7280">Marcus W. · Sat</text>
+
+    <!-- Phone bottom nav -->
+    <rect x="483" y="328" width="139" height="48" fill="#166534"/>
+    <circle cx="503" cy="346" r="6" fill="#dcfce7" opacity="0.9"/>
+    <circle cx="527" cy="346" r="5" fill="#4ade80" opacity="0.5"/>
+    <circle cx="552" cy="346" r="5" fill="#4ade80" opacity="0.5"/>
+    <circle cx="577" cy="346" r="5" fill="#4ade80" opacity="0.5"/>
+    <circle cx="601" cy="346" r="5" fill="#4ade80" opacity="0.5"/>
+    <text x="503" y="362" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="#dcfce7">Home</text>
+    <text x="527" y="362" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="#86efac">Clients</text>
+    <text x="552" y="362" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="#86efac">Jobs</text>
+    <text x="577" y="362" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="#86efac">Invoice</text>
+    <text x="601" y="362" text-anchor="middle" font-size="6" font-family="system-ui,sans-serif" fill="#86efac">Settings</text>
+  </g>
+
+  <!-- Phone home indicator -->
+  <rect x="525" y="382" width="58" height="4" rx="2" fill="#3a3a3a"/>
+</svg>
