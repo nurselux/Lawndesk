@@ -6,10 +6,10 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 
 function LoginContent() {
-  const [email, setEmail] = useState('')
+  const searchParams = useSearchParams()
+  const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const searchParams = useSearchParams()
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true')
   const [message, setMessage] = useState(
     searchParams.get('error') === 'confirmation_failed'
@@ -44,7 +44,7 @@ function LoginContent() {
       return
     }
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
@@ -52,6 +52,9 @@ function LoginContent() {
     if (error) {
       setMessage(error.message)
       setLoading(false)
+    } else if (data.user?.identities?.length === 0) {
+      // Supabase returns success but empty identities when the email is already registered
+      router.push(`/account-exists?email=${encodeURIComponent(email)}`)
     } else {
       router.push(`/signup-success?email=${encodeURIComponent(email)}`)
     }
