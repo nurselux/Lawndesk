@@ -104,42 +104,52 @@ function DashboardContent() {
   }
 
   return (
-    <div className="p-6 pb-24 md:pb-6">
+    <div className="p-6 pb-24 md:pb-6 min-h-screen bg-gray-50">
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
           🎉 Payment successful! Welcome to LawnDesk Pro. Your subscription is now active.
         </div>
       )}
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="bg-green-700 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📊</div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 leading-none">Dashboard</h2>
+          <p className="text-gray-500 text-sm">Welcome back! Here's your business at a glance.</p>
+        </div>
+      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Total Clients</p>
-          <p className="text-3xl sm:text-4xl font-bold text-green-700">{clientCount}</p>
-          <Link href="/clients" className="text-xs text-green-600 hover:underline mt-1 inline-block">View all →</Link>
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 sm:p-6 shadow text-center text-white">
+          <p className="text-4xl mb-1">👥</p>
+          <p className="text-white/80 mb-1 text-xs sm:text-sm">Total Clients</p>
+          <p className="text-3xl sm:text-4xl font-bold">{clientCount}</p>
+          <Link href="/clients" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View all →</Link>
         </div>
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Jobs This Week</p>
-          <p className="text-3xl sm:text-4xl font-bold text-green-700">{jobsThisWeek}</p>
-          <Link href="/jobs" className="text-xs text-green-600 hover:underline mt-1 inline-block">View all →</Link>
+        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl p-4 sm:p-6 shadow text-center text-white">
+          <p className="text-4xl mb-1">📅</p>
+          <p className="text-white/80 mb-1 text-xs sm:text-sm">Jobs This Week</p>
+          <p className="text-3xl sm:text-4xl font-bold">{jobsThisWeek}</p>
+          <Link href="/jobs" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View all →</Link>
         </div>
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Unpaid Invoices</p>
-          <p className={`text-3xl sm:text-4xl font-bold ${unpaidCount > 0 ? 'text-yellow-600' : 'text-green-700'}`}>{unpaidCount}</p>
-          <Link href="/invoices" className="text-xs text-green-600 hover:underline mt-1 inline-block">View all →</Link>
+        <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl p-4 sm:p-6 shadow text-center text-white">
+          <p className="text-4xl mb-1">⚠️</p>
+          <p className="text-white/80 mb-1 text-xs sm:text-sm">Unpaid Invoices</p>
+          <p className="text-3xl sm:text-4xl font-bold">{unpaidCount}</p>
+          <Link href="/invoices" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View all →</Link>
         </div>
-        <div className="bg-white rounded-xl p-4 sm:p-6 shadow text-center">
-          <p className="text-gray-500 mb-1 text-xs sm:text-sm">Total Revenue</p>
-          <p className="text-3xl sm:text-4xl font-bold text-green-700">${totalRevenue.toFixed(0)}</p>
-          <Link href="/invoices" className="text-xs text-green-600 hover:underline mt-1 inline-block">View invoices →</Link>
+        <div className="bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl p-4 sm:p-6 shadow text-center text-white">
+          <p className="text-4xl mb-1">💰</p>
+          <p className="text-white/80 mb-1 text-xs sm:text-sm">Total Revenue</p>
+          <p className="text-3xl sm:text-4xl font-bold">${totalRevenue.toFixed(0)}</p>
+          <Link href="/invoices" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View invoices →</Link>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Upcoming Jobs */}
-        <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800">Upcoming Jobs</h3>
             <Link href="/jobs" className="text-sm text-green-600 hover:underline">View all →</Link>
@@ -155,7 +165,11 @@ function DashboardContent() {
                 <div key={job.id} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0">
                   <div>
                     <p className="font-semibold text-gray-800">{job.title}</p>
-                    <p className="text-sm text-gray-500">👤 {job.client_name} · 📅 {job.date}{job.time ? ` · 🕐 ${job.time}` : ''}</p>
+                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                      <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">📅 {job.date}</span>
+                      <span className="text-xs text-gray-500">👤 {job.client_name}</span>
+                      {job.time && <span className="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full">🕐 {job.time}</span>}
+                    </div>
                   </div>
                   <span className={`text-xs font-bold py-1 px-3 rounded-full ${statusColor(job.status)}`}>
                     {job.status}
@@ -170,21 +184,21 @@ function DashboardContent() {
         <div className="flex flex-col gap-6">
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl p-6 shadow">
+          <div className="bg-white rounded-2xl p-6 shadow-md">
             <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
               <Link href="/clients">
-                <button className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
+                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
                   + Add Client
                 </button>
               </Link>
               <Link href="/jobs">
-                <button className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
+                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
                   + Schedule Job
                 </button>
               </Link>
               <Link href="/invoices">
-                <button className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
+                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
                   + Create Invoice
                 </button>
               </Link>
@@ -192,7 +206,7 @@ function DashboardContent() {
           </div>
 
           {/* Overdue Invoices */}
-          <div className="bg-white rounded-xl p-6 shadow">
+          <div className="bg-white rounded-2xl p-6 shadow-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">Overdue Invoices</h3>
               <Link href="/invoices" className="text-sm text-green-600 hover:underline">View all →</Link>

@@ -71,7 +71,7 @@ export default function PricingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <nav className="bg-green-700 text-white p-4 flex justify-between items-center">
         <Link href={isLoggedIn ? '/dashboard' : '/'}>
           <h1 className="text-2xl font-bold cursor-pointer hover:text-green-200 transition-all duration-200">🌿 LawnDesk</h1>
@@ -84,7 +84,7 @@ export default function PricingPage() {
         </button>
       </nav>
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 pt-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
           <p className="text-gray-500 text-lg mb-2">No hidden fees. No contracts. Cancel anytime.</p>
           <span className="bg-green-100 text-green-700 font-bold py-2 px-6 rounded-full text-sm">
@@ -92,27 +92,24 @@ export default function PricingPage() {
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`bg-white rounded-2xl p-8 shadow border-2 ${plan.color} relative`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-green-600 text-white text-sm font-bold py-1 px-4 rounded-full">
-                    Most Popular
-                  </span>
+
+          {/* Starter */}
+          <div className="relative rounded-2xl p-px bg-gradient-to-br from-green-300 via-emerald-200 to-teal-300 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="bg-white rounded-2xl p-8 text-left h-full flex flex-col">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-emerald-100 text-emerald-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center">🌱</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 leading-none">{plans[0].name}</h3>
+                  <p className="text-gray-400 text-sm">{plans[0].description}</p>
                 </div>
-              )}
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">{plan.name}</h3>
-              <p className="text-gray-500 mb-4">{plan.description}</p>
-              <div className="flex items-end mb-2">
-                <span className="text-5xl font-bold text-green-700">{plan.price}</span>
-                <span className="text-gray-500 ml-1">{plan.period}</span>
               </div>
-              <p className="text-green-600 text-sm font-bold mb-6">14 days free then {plan.price}/mo</p>
-              <ul className="mb-8">
-                {plan.features.map((feature) => (
+              <div className="flex items-end mb-1">
+                <span className="text-5xl font-bold text-green-700">{plans[0].price}</span>
+                <span className="text-gray-500 ml-1">{plans[0].period}</span>
+              </div>
+              <p className="text-green-600 text-sm font-bold mb-6">14 days free then {plans[0].price}/mo</p>
+              <ul className="mb-8 flex-1">
+                {plans[0].features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2 mb-3 text-gray-600">
                     <span className="text-green-600 font-bold">✓</span>
                     {feature}
@@ -120,18 +117,51 @@ export default function PricingPage() {
                 ))}
               </ul>
               <button
-                onClick={() => handleSubscribe(plan.priceId)}
-                className={`w-full font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer ${
-                  plan.popular
-                    ? 'bg-green-700 text-white'
-                    : 'border-2 border-green-700 text-green-700'
-                }`}
+                onClick={() => handleSubscribe(plans[0].priceId)}
+                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
               >
-                {loading === plan.priceId ? 'Loading...' : 'Start Free Trial'}
+                {loading === plans[0].priceId ? 'Loading...' : 'Start Free Trial'}
               </button>
               <p className="text-center text-gray-400 text-xs mt-3">No credit card required</p>
             </div>
-          ))}
+          </div>
+
+          {/* Pro */}
+          <div className="relative rounded-2xl p-px bg-gradient-to-br from-green-500 via-green-600 to-teal-500 shadow-xl hover:shadow-2xl transition-shadow">
+            <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-8 text-left h-full flex flex-col">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-yellow-400 text-yellow-900 text-xs font-extrabold py-1 px-4 rounded-full shadow-md tracking-wide uppercase">Most Popular</span>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-green-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center">🌿</div>
+                <div>
+                  <h3 className="text-xl font-bold text-white leading-none">{plans[1].name}</h3>
+                  <p className="text-green-300 text-sm">{plans[1].description}</p>
+                </div>
+              </div>
+              <div className="flex items-end mb-1">
+                <span className="text-5xl font-bold text-white">{plans[1].price}</span>
+                <span className="text-green-300 ml-1">{plans[1].period}</span>
+              </div>
+              <p className="text-green-300 text-sm font-bold mb-6">14 days free then {plans[1].price}/mo</p>
+              <ul className="mb-8 flex-1">
+                {plans[1].features.map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 mb-3 text-green-100">
+                    <span className="text-green-300 font-bold">✓</span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => handleSubscribe(plans[1].priceId)}
+                className="w-full bg-white text-green-800 font-bold py-3 rounded-xl hover:bg-green-50 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
+              >
+                {loading === plans[1].priceId ? 'Loading...' : 'Start Free Trial'}
+              </button>
+              <p className="text-center text-green-400 text-xs mt-3">No credit card required</p>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>

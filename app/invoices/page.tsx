@@ -162,25 +162,33 @@ export default function InvoicesPage() {
   )
 
   return (
-    <div className="p-6 pb-24 md:pb-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">📄 Invoices</h2>
+    <div className="p-6 pb-24 md:pb-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📄</div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 leading-none">Invoices</h2>
+            <p className="text-gray-500 text-sm">Track payments and outstanding balances</p>
+          </div>
+        </div>
         <button
           onClick={() => { setShowForm(!showForm); setEditingInvoice(null) }}
-          className="bg-green-700 text-white font-bold py-2 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+          className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
         >
           + Create Invoice
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-6 shadow text-center">
-          <p className="text-gray-500 mb-2">💰 Total Revenue</p>
-          <p className="text-3xl font-bold text-green-700">${totalRevenue.toFixed(2)}</p>
+        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 shadow-lg text-white text-center">
+          <div className="text-3xl mb-1">💰</div>
+          <p className="text-green-100 mb-1 text-sm font-medium">Total Revenue</p>
+          <p className="text-3xl font-bold">${totalRevenue.toFixed(2)}</p>
         </div>
-        <div className="bg-white rounded-xl p-6 shadow text-center">
-          <p className="text-gray-500 mb-2">⏳ Outstanding Balance</p>
-          <p className="text-3xl font-bold text-yellow-600">${totalUnpaid.toFixed(2)}</p>
+        <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-6 shadow-lg text-white text-center">
+          <div className="text-3xl mb-1">⏳</div>
+          <p className="text-amber-100 mb-1 text-sm font-medium">Outstanding Balance</p>
+          <p className="text-3xl font-bold">${totalUnpaid.toFixed(2)}</p>
         </div>
       </div>
 
@@ -216,7 +224,7 @@ export default function InvoicesPage() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">📄 New Invoice</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <select
@@ -266,13 +274,13 @@ export default function InvoicesPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleAddInvoice}
-              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
             >
               {saving ? '⏳ Saving...' : '💾 Save Invoice'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -281,7 +289,7 @@ export default function InvoicesPage() {
       )}
 
       {editingInvoice && (
-        <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Edit Invoice</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <select
@@ -329,13 +337,13 @@ export default function InvoicesPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleUpdateInvoice}
-              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
             >
               {saving ? '⏳ Saving...' : '💾 Save Changes'}
             </button>
             <button
               onClick={() => setEditingInvoice(null)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -358,34 +366,38 @@ export default function InvoicesPage() {
           </div>
         ) : (
           filteredInvoices.map((invoice) => (
-            <div key={invoice.id} className="bg-white rounded-xl p-6 shadow">
-              <div className="flex justify-between items-start mb-2">
+            <div key={invoice.id} className={`bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-l-4 ${
+              invoice.status === '🟢 Paid' ? 'border-green-500' :
+              invoice.status === '🔴 Overdue' ? 'border-red-500' :
+              'border-yellow-500'
+            }`}>
+              <div className="flex justify-between items-start mb-3">
                 <div>
-                  <p className="text-xs text-gray-400 font-mono mb-1">{`INV-${String(invoices.indexOf(invoice) + 1).padStart(3, '0')}`}</p>
-                  <h3 className="text-lg font-bold text-gray-800">👤 {invoice.client_name}</h3>
+                  <p className="text-xs text-gray-400 font-mono mb-0.5">{`INV-${String(invoices.indexOf(invoice) + 1).padStart(3, '0')}`}</p>
+                  <h3 className="text-base font-bold text-gray-800">👤 {invoice.client_name}</h3>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditInvoice(invoice)}
-                    className="text-blue-400 hover:text-blue-600 transition-all duration-200 cursor-pointer text-sm"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDeleteInvoice(invoice.id)}
-                    className="text-red-400 hover:text-red-600 transition-all duration-200 cursor-pointer text-sm"
-                  >
-                    🗑️
-                  </button>
+                  <button onClick={() => handleEditInvoice(invoice)} className="text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">✏️</button>
+                  <button onClick={() => handleDeleteInvoice(invoice.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-green-700 mb-2">💵 ${invoice.amount.toFixed(2)}</p>
-              {invoice.due_date && <p className="text-gray-500">📅 Due: {invoice.due_date}</p>}
-              {invoice.description && <p className="text-gray-400 text-sm mt-2">📝 {invoice.description}</p>}
+              <div className={`rounded-xl px-4 py-3 mb-3 ${
+                invoice.status === '🟢 Paid' ? 'bg-green-50' :
+                invoice.status === '🔴 Overdue' ? 'bg-red-50' :
+                'bg-amber-50'
+              }`}>
+                <p className={`text-2xl font-bold ${
+                  invoice.status === '🟢 Paid' ? 'text-green-700' :
+                  invoice.status === '🔴 Overdue' ? 'text-red-600' :
+                  'text-amber-600'
+                }`}>💵 ${invoice.amount.toFixed(2)}</p>
+                {invoice.due_date && <p className="text-gray-500 text-xs mt-1">📅 Due: {invoice.due_date}</p>}
+              </div>
+              {invoice.description && <p className="text-gray-400 text-xs mb-3 bg-gray-50 rounded-lg px-3 py-2">📝 {invoice.description}</p>}
               <select
                 value={invoice.status}
                 onChange={(e) => handleStatusChange(invoice.id, e.target.value)}
-                className={`mt-3 text-xs font-bold py-1 px-3 rounded-full border-0 cursor-pointer ${
+                className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer ${
                   invoice.status === '🟢 Paid' ? 'bg-green-100 text-green-700' :
                   invoice.status === '🔴 Overdue' ? 'bg-red-100 text-red-700' :
                   'bg-yellow-100 text-yellow-700'

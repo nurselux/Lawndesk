@@ -248,12 +248,18 @@ export default function JobsPage() {
   )
 
   return (
-    <div className="p-6 pb-24 md:pb-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">📅 Jobs</h2>
+    <div className="p-6 pb-24 md:pb-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📅</div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 leading-none">Jobs</h2>
+            <p className="text-gray-500 text-sm">Schedule and track your work</p>
+          </div>
+        </div>
         <button
           onClick={() => { setShowForm(!showForm); setEditingJob(null) }}
-          className="bg-green-700 text-white font-bold py-2 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+          className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
         >
           + Schedule Job
         </button>
@@ -292,7 +298,7 @@ export default function JobsPage() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">🌿 New Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
@@ -392,13 +398,13 @@ export default function JobsPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleAddJob}
-              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
             >
               {saving ? '⏳ Saving...' : '💾 Save Job'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -407,7 +413,7 @@ export default function JobsPage() {
       )}
 
       {editingJob && (
-        <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Edit Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
@@ -491,13 +497,13 @@ export default function JobsPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleUpdateJob}
-              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
             >
               {saving ? '⏳ Saving...' : '💾 Save Changes'}
             </button>
             <button
               onClick={() => setEditingJob(null)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -520,35 +526,31 @@ export default function JobsPage() {
           </div>
         ) : (
           filteredJobs.map((job) => (
-            <div key={job.id} className="bg-white rounded-xl p-6 shadow">
+            <div key={job.id} className={`bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4 ${
+              job.status === '🟢 Completed' ? 'border-green-500' :
+              job.status === '🟡 In Progress' ? 'border-yellow-500' :
+              job.status === '🔴 Cancelled' ? 'border-red-500' :
+              'border-blue-500'
+            }`}>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-bold text-gray-800">{job.title}</h3>
+                <h3 className="text-base font-bold text-gray-800">{job.title}</h3>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditJob(job)}
-                    className="text-blue-400 hover:text-blue-600 transition-all duration-200 cursor-pointer text-sm"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDeleteJob(job.id)}
-                    className="text-red-400 hover:text-red-600 transition-all duration-200 cursor-pointer text-sm"
-                  >
-                    🗑️
-                  </button>
+                  <button onClick={() => handleEditJob(job)} className="text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">✏️</button>
+                  <button onClick={() => handleDeleteJob(job.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
                 </div>
               </div>
-              <p className="text-gray-500">👤 {job.client_name}</p>
-              {job.date && <p className="text-gray-500">📅 {job.date}</p>}
-              {job.time && <p className="text-gray-500">🕐 {job.time}</p>}
-              {job.recurring && job.recurring !== '🔂 One-time' && (
-                <p className="text-blue-500 text-sm">🔄 {job.recurring}</p>
-              )}
-              {job.notes && <p className="text-gray-400 text-sm mt-2">📝 {job.notes}</p>}
+              <div className="space-y-1 mb-3">
+                <p className="text-gray-500 text-sm">👤 {job.client_name}</p>
+                {job.date && <p className="text-sm"><span className="bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full text-xs">📅 {job.date}</span>{job.time && <span className="ml-1 bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full text-xs">🕐 {job.time}</span>}</p>}
+                {job.recurring && job.recurring !== '🔂 One-time' && (
+                  <p className="text-xs"><span className="bg-cyan-50 text-cyan-600 font-semibold px-2 py-0.5 rounded-full">🔄 {job.recurring}</span></p>
+                )}
+                {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {job.notes}</p>}
+              </div>
               <select
                 value={job.status}
                 onChange={(e) => handleStatusChange(job.id, e.target.value)}
-                className={`mt-3 text-xs font-bold py-1 px-3 rounded-full border-0 cursor-pointer ${
+                className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer ${
                   job.status === '🟢 Completed' ? 'bg-green-100 text-green-700' :
                   job.status === '🟡 In Progress' ? 'bg-yellow-100 text-yellow-700' :
                   job.status === '🔴 Cancelled' ? 'bg-red-100 text-red-700' :

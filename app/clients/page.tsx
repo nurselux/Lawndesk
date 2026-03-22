@@ -136,12 +136,18 @@ export default function ClientsPage() {
   )
 
   return (
-    <div className="p-6 pb-24 md:pb-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Clients</h2>
+    <div className="p-6 pb-24 md:pb-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">👥</div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 leading-none">Clients</h2>
+            <p className="text-gray-500 text-sm">Manage your client roster</p>
+          </div>
+        </div>
         <button
           onClick={() => { setShowForm(!showForm); setEditingClient(null) }}
-          className="bg-green-700 text-white font-bold py-2 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+          className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
         >
           + Add Client
         </button>
@@ -179,7 +185,7 @@ export default function ClientsPage() {
       )}
 
       {showForm && (
-        <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">New Client</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
@@ -216,13 +222,13 @@ export default function ClientsPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleAddClient}
-              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
             >
               {saving ? 'Saving...' : 'Save Client'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -231,7 +237,7 @@ export default function ClientsPage() {
       )}
 
       {editingClient && (
-        <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Client</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
@@ -268,13 +274,13 @@ export default function ClientsPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleUpdateClient}
-              className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               onClick={() => setEditingClient(null)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -297,28 +303,25 @@ export default function ClientsPage() {
           </div>
         ) : (
           filteredClients.map((client) => (
-            <div key={client.id} className="bg-white rounded-xl p-6 shadow">
-              <div className="flex justify-between items-start mb-2">
-                <Link href={`/clients/${client.id}`} className="text-lg font-bold text-gray-800 hover:text-green-700 transition-colors">{client.name}</Link>
+            <div key={client.id} className="bg-white rounded-2xl p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold text-lg w-11 h-11 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <Link href={`/clients/${client.id}`} className="text-lg font-bold text-gray-800 hover:text-green-700 transition-colors">{client.name}</Link>
+                </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditClient(client)}
-                    className="text-blue-400 hover:text-blue-600 transition-all duration-200 cursor-pointer text-sm"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClient(client.id)}
-                    className="text-red-400 hover:text-red-600 transition-all duration-200 cursor-pointer text-sm"
-                  >
-                    🗑️
-                  </button>
+                  <button onClick={() => handleEditClient(client)} className="text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">✏️</button>
+                  <button onClick={() => handleDeleteClient(client.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
                 </div>
               </div>
-              {client.email && <p className="text-gray-500">📧 {client.email}</p>}
-              {client.phone && <p className="text-gray-500">📞 {client.phone}</p>}
-              {client.address && <p className="text-gray-500">📍 {client.address}</p>}
-              {client.notes && <p className="text-gray-400 text-sm mt-2">📝 {client.notes}</p>}
+              <div className="space-y-1 pl-14">
+                {client.email && <p className="text-gray-500 text-sm flex items-center gap-1.5"><span className="text-base">📧</span> {client.email}</p>}
+                {client.phone && <p className="text-gray-500 text-sm flex items-center gap-1.5"><span className="text-base">📞</span> {client.phone}</p>}
+                {client.address && <p className="text-gray-500 text-sm flex items-center gap-1.5"><span className="text-base">📍</span> {client.address}</p>}
+                {client.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {client.notes}</p>}
+              </div>
             </div>
           ))
         )}
