@@ -68,14 +68,12 @@ export default function TeamPage() {
 
       // Send email automatically
       const link = `${window.location.origin}/invite/${data.token}`
-      const { data: { session } } = await supabase.auth.getSession()
       const emailRes = await fetch(
         'https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-invite-email',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
           },
           body: JSON.stringify({
             email: data.email,
