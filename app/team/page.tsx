@@ -116,6 +116,11 @@ export default function TeamPage() {
     }
   }
 
+  const deleteInvite = async (inviteId: string) => {
+    await supabase.from('invites').delete().eq('id', inviteId)
+    fetchInvites()
+  }
+
   const removeWorker = async (workerId: string) => {
     if (!confirm('Remove this worker from your team?')) return
     await supabase
@@ -192,6 +197,12 @@ export default function TeamPage() {
                     className="text-xs font-bold py-2 px-3 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors cursor-pointer"
                   >
                     {copiedToken === invite.token ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                  <button
+                    onClick={() => deleteInvite(invite.id)}
+                    className="text-xs font-bold py-2 px-3 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-colors cursor-pointer"
+                  >
+                    🗑️
                   </button>
                 </div>
               </div>
