@@ -316,10 +316,10 @@ export default function ClientsPage() {
                   <button onClick={() => handleDeleteClient(client.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
                 </div>
               </div>
-              <div className="space-y-1 pl-14">
-                {client.email && <p className="text-gray-500 text-sm flex items-center gap-1.5"><span className="text-base">📧</span> {client.email}</p>}
+              <div className="space-y-1 pl-14 min-w-0">
+                {client.email && <p className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0"><span className="text-base shrink-0">📧</span> <span className="truncate">{client.email}</span></p>}
                 {client.phone && <p className="text-gray-500 text-sm flex items-center gap-1.5"><span className="text-base">📞</span> {client.phone}</p>}
-                {client.address && <p className="text-gray-500 text-sm flex items-center gap-1.5"><span className="text-base">📍</span> {client.address}</p>}
+                {client.address && <p className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0"><span className="text-base shrink-0">📍</span> <span className="truncate">{client.address}</span></p>}
                 {client.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {client.notes}</p>}
               </div>
             </div>
