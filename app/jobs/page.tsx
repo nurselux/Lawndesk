@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import JobPhotoUpload from '../../components/JobPhotoUpload'
+import JobPhotoGallery from '../../components/JobPhotoGallery'
+import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
 
 interface Job {
   id: string
@@ -81,6 +84,9 @@ export default function JobsPage() {
     invoiceNumber: number
     message: string
   } | null>(null)
+  const [photosUploadedFor, setPhotosUploadedFor] = useState<string | null>(null)
+  const [showPhotos, setShowPhotos] = useState<string | null>(null)
+  const [cardPhotos, setCardPhotos] = useState<Record<string, JobPhoto[]>>({})
 
   useEffect(() => {
     if (user) {
@@ -89,13 +95,23 @@ export default function JobsPage() {
     }
   }, [user])
 
+  const fetchAllPhotos = async (jobIds: string[]) => {
+    const entries = await Promise.all(
+      jobIds.map(async (id) => [id, await getJobPhotos(id)] as [string, JobPhoto[]])
+    )
+    setCardPhotos(Object.fromEntries(entries))
+  }
+
   const fetchJobs = async () => {
     const { data } = await supabase
       .from('Jobs')
       .select('*')
       .eq('user_id', user?.id)
       .order('date', { ascending: true })
-    if (data) setJobs(data as Job[])
+    if (data) {
+      setJobs(data as Job[])
+      fetchAllPhotos(data.map((j) => j.id))
+    }
   }
 
   const fetchClients = async () => {
@@ -512,6 +528,34 @@ export default function JobsPage() {
               className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
+          
+          {/* Photo Upload Section */}
+          {editingJob && (
+            <div className="mt-6 border-t border-blue-200 pt-6">
+              <h4 className="font-bold text-gray-800 mb-4">📸 Job Photos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <JobPhotoUpload
+                  jobId={editingJob.id}
+                  userId={user?.id}
+                  photoType="before"
+                  onSuccess={() => { setPhotosUploadedFor(editingJob.id); fetchAllPhotos([editingJob.id]) }}
+                />
+                <JobPhotoUpload
+                  jobId={editingJob.id}
+                  userId={user?.id}
+                  photoType="after"
+                  onSuccess={() => { setPhotosUploadedFor(editingJob.id); fetchAllPhotos([editingJob.id]) }}
+                />
+              </div>
+              <div className="mt-4">
+                <JobPhotoGallery
+                  jobId={editingJob.id}
+                  onPhotoDeleted={() => { setPhotosUploadedFor(editingJob.id); fetchAllPhotos([editingJob.id]) }}
+                />
+              </div>
+            </div>
+          )}
+          
           <div className="flex gap-3 mt-4">
             <button onClick={handleUpdateJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow">
               {saving ? '⏳ Saving...' : '💾 Save Changes'}
@@ -565,10 +609,26 @@ export default function JobsPage() {
                 )}
                 {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {job.notes}</p>}
               </div>
+              {cardPhotos[job.id]?.length > 0 && (
+                <div className="flex gap-1.5 mb-3">
+                  {cardPhotos[job.id].map((photo) => (
+                    <div key={photo.id} className="relative">
+                      <img
+                        src={getPhotoUrl(photo.storage_path)}
+                        alt={photo.photo_type}
+                        className="w-12 h-12 object-cover rounded-lg border border-gray-200"
+                      />
+                      <span className="absolute -top-1 -right-1 text-xs leading-none">
+                        {photo.photo_type === 'before' ? '📸' : '✨'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <select
                 value={job.status}
                 onChange={(e) => handleStatusChange(job.id, e.target.value)}
-                className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer ${
+                className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer w-full ${
                   job.status === '🟢 Completed' ? 'bg-green-100 text-green-700' :
                   job.status === '🟡 In Progress' ? 'bg-yellow-100 text-yellow-700' :
                   job.status === '🔴 Cancelled' ? 'bg-red-100 text-red-700' :
@@ -580,6 +640,23 @@ export default function JobsPage() {
                 <option>🟢 Completed</option>
                 <option>🔴 Cancelled</option>
               </select>
+              <button
+                onClick={() => {
+                  setEditingJob(job)
+                  setEditTitle(job.title.includes('Custom') ? '✏️ Custom' : job.title)
+                  setEditCustomTitle(job.title.includes('Custom') ? job.title : '')
+                  setEditClientId(job.client_id)
+                  setEditDate(job.date)
+                  setEditTime(job.time)
+                  setEditStatus(job.status)
+                  setEditNotes(job.notes)
+                  setEditRecurring(job.recurring || '🔂 One-time')
+                  setShowPhotos(job.id)
+                }}
+                className="w-full mt-2 text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
+              >
+                📸 Add/View Photos
+              </button>
             </div>
           ))
         )}
