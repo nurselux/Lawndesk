@@ -23,6 +23,7 @@ interface Job {
 interface Client {
   id: string
   name: string
+  address: string
 }
 
 const JOB_TYPES = [
@@ -117,7 +118,7 @@ export default function JobsPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name')
+      .select('id, name, address')
       .eq('user_id', user?.id)
       .order('name', { ascending: true })
     if (data) setClients(data as Client[])
@@ -640,23 +641,35 @@ export default function JobsPage() {
                 <option>🟢 Completed</option>
                 <option>🔴 Cancelled</option>
               </select>
-              <button
-                onClick={() => {
-                  setEditingJob(job)
-                  setEditTitle(job.title.includes('Custom') ? '✏️ Custom' : job.title)
-                  setEditCustomTitle(job.title.includes('Custom') ? job.title : '')
-                  setEditClientId(job.client_id)
-                  setEditDate(job.date)
-                  setEditTime(job.time)
-                  setEditStatus(job.status)
-                  setEditNotes(job.notes)
-                  setEditRecurring(job.recurring || '🔂 One-time')
-                  setShowPhotos(job.id)
-                }}
-                className="w-full mt-2 text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
-              >
-                📸 Add/View Photos
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => {
+                    setEditingJob(job)
+                    setEditTitle(job.title.includes('Custom') ? '✏️ Custom' : job.title)
+                    setEditCustomTitle(job.title.includes('Custom') ? job.title : '')
+                    setEditClientId(job.client_id)
+                    setEditDate(job.date)
+                    setEditTime(job.time)
+                    setEditStatus(job.status)
+                    setEditNotes(job.notes)
+                    setEditRecurring(job.recurring || '🔂 One-time')
+                    setShowPhotos(job.id)
+                  }}
+                  className="flex-1 text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
+                >
+                  📸 Add/View Photos
+                </button>
+                {clients.find(c => c.id === job.client_id)?.address && (
+                  <a
+                    href={`https://maps.apple.com/?daddr=${encodeURIComponent(clients.find(c => c.id === job.client_id)!.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                  >
+                    📍 Navigate
+                  </a>
+                )}
+              </div>
             </div>
           ))
         )}
