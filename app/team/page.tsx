@@ -64,9 +64,32 @@ export default function TeamPage() {
       .single()
     if (!error && data) {
       setInviteEmail('')
-      setSuccessMessage('Invite created! Copy the link and send it to your worker.')
-      setTimeout(() => setSuccessMessage(''), 5000)
       fetchInvites()
+
+      // Send email automatically
+      const link = `${window.location.origin}/invite/${data.token}`
+      const { data: { session } } = await supabase.auth.getSession()
+      const emailRes = await fetch(
+        'https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-invite-email',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            email: data.email,
+            inviteLink: link,
+            adminName: user?.email,
+          }),
+        }
+      )
+      if (emailRes.ok) {
+        setSuccessMessage(`✅ Invite email sent to ${data.email}!`)
+      } else {
+        setSuccessMessage('Invite created but email failed — use the Share button below.')
+      }
+      setTimeout(() => setSuccessMessage(''), 6000)
     }
     setSending(false)
   }
@@ -78,6 +101,19 @@ export default function TeamPage() {
     navigator.clipboard.writeText(getInviteLink(token))
     setCopiedToken(token)
     setTimeout(() => setCopiedToken(null), 2000)
+  }
+
+  const shareLink = async (token: string, email: string) => {
+    const link = getInviteLink(token)
+    if (navigator.share) {
+      await navigator.share({
+        title: 'Join my LawnDesk team',
+        text: `You've been invited to join LawnDesk. Tap the link to set up your worker account.`,
+        url: link,
+      })
+    } else {
+      copyLink(token)
+    }
   }
 
   const removeWorker = async (workerId: string) => {
@@ -129,7 +165,7 @@ export default function TeamPage() {
           <p className="mt-3 text-green-700 font-semibold text-sm">{successMessage}</p>
         )}
         <p className="text-gray-400 text-xs mt-3">
-          An invite link will be generated. Share it with your worker via text or email — they'll use it to create their account.
+          An invite email will be sent automatically. You can also use the Share button to send it via text, WhatsApp, or any other app.
         </p>
       </div>
 
@@ -144,12 +180,20 @@ export default function TeamPage() {
                   <p className="font-semibold text-gray-800 truncate">{invite.email}</p>
                   <p className="text-gray-400 text-xs">Created {new Date(invite.created_at).toLocaleDateString()}</p>
                 </div>
-                <button
-                  onClick={() => copyLink(invite.token)}
-                  className="shrink-0 text-xs font-bold py-2 px-4 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors cursor-pointer"
-                >
-                  {copiedToken === invite.token ? '✓ Copied!' : '📋 Copy Link'}
-                </button>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => shareLink(invite.token, invite.email)}
+                    className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer"
+                  >
+                    📤 Share
+                  </button>
+                  <button
+                    onClick={() => copyLink(invite.token)}
+                    className="text-xs font-bold py-2 px-3 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors cursor-pointer"
+                  >
+                    {copiedToken === invite.token ? '✓ Copied!' : '📋 Copy'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
