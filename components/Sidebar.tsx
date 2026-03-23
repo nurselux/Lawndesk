@@ -36,6 +36,7 @@ export default function Sidebar() {
     { label: 'Clients', icon: '👥', href: '/clients' },
     { label: 'Jobs', icon: '📅', href: '/jobs' },
     { label: 'Invoices', icon: '📄', href: '/invoices' },
+    { label: 'Team', icon: '👷', href: '/team' },
     { label: 'Settings', icon: '⚙️', href: '/settings' },
   ]
 

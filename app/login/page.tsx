@@ -24,11 +24,16 @@ function LoginContent() {
       return
     }
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setMessage(error.message)
     } else {
-      router.push('/dashboard')
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+      router.push(profile?.role === 'worker' ? '/worker' : '/dashboard')
       router.refresh()
     }
     setLoading(false)
