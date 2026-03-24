@@ -38,6 +38,7 @@ export default function Sidebar() {
     { label: 'Quotes', icon: '📋', href: '/quotes' },
     { label: 'Invoices', icon: '📄', href: '/invoices' },
     { label: 'Team', icon: '👷', href: '/team' },
+    { label: 'Client Portal', icon: '🌐', href: '/portal', external: true },
     { label: 'Settings', icon: '⚙️', href: '/settings' },
   ]
 
@@ -56,13 +57,22 @@ export default function Sidebar() {
         </div>
         <nav className="flex-1 p-4">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <div className={`p-3 rounded-lg mb-2 font-medium transition-all duration-200 cursor-pointer hover:bg-green-700 ${
-                isActive(item.href) ? 'bg-green-600' : ''
-              }`}>
-                {item.icon} {item.label}
-              </div>
-            </Link>
+            item.external ? (
+              <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">
+                <div className="p-3 rounded-lg mb-2 font-medium transition-all duration-200 cursor-pointer hover:bg-green-700 flex items-center justify-between">
+                  <span>{item.icon} {item.label}</span>
+                  <span className="text-green-400 text-xs">↗</span>
+                </div>
+              </a>
+            ) : (
+              <Link key={item.href} href={item.href}>
+                <div className={`p-3 rounded-lg mb-2 font-medium transition-all duration-200 cursor-pointer hover:bg-green-700 ${
+                  isActive(item.href) ? 'bg-green-600' : ''
+                }`}>
+                  {item.icon} {item.label}
+                </div>
+              </Link>
+            )
           ))}
         </nav>
         <div className="p-4 border-t border-green-700">
@@ -122,16 +132,28 @@ export default function Sidebar() {
         {/* Drawer nav */}
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <div className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 cursor-pointer ${
-                isActive(item.href)
-                  ? 'bg-green-600 text-white'
-                  : 'hover:bg-green-700 text-green-100'
-              }`}>
-                <span className="text-xl">{item.icon}</span>
-                <span>{item.label}</span>
-              </div>
-            </Link>
+            item.external ? (
+              <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 cursor-pointer hover:bg-green-700 text-green-100 justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                  <span className="text-green-400 text-sm">↗</span>
+                </div>
+              </a>
+            ) : (
+              <Link key={item.href} href={item.href}>
+                <div className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-base transition-all duration-200 cursor-pointer ${
+                  isActive(item.href)
+                    ? 'bg-green-600 text-white'
+                    : 'hover:bg-green-700 text-green-100'
+                }`}>
+                  <span className="text-xl">{item.icon}</span>
+                  <span>{item.label}</span>
+                </div>
+              </Link>
+            )
           ))}
         </nav>
 
