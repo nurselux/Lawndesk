@@ -194,7 +194,16 @@ function DashboardContent() {
     <div className="p-6 pb-6 min-h-dvh bg-gray-50">
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
-          🎉 Payment successful! Welcome to LawnDesk Pro. Your subscription is now active.
+          🎉 You're all set! Your 14-day free trial has started. No charge until your trial ends.
+        </div>
+      )}
+
+      {subscriptionStatus === 'trialing' && !stripeSuccess && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
+          <span>🎁 You're on a free trial — enjoy full access! Your card won't be charged until the trial ends.</span>
+          <Link href="/settings" className="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap ml-4">
+            Manage Billing
+          </Link>
         </div>
       )}
 
