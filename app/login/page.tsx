@@ -90,7 +90,7 @@ function LoginContent() {
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-1">Start Your Free Trial</h2>
               <span className="inline-block bg-green-100 text-green-700 text-xs font-bold py-1 px-3 rounded-full">
-                14 days free · No credit card required
+                14-day free trial · Cancel anytime
               </span>
             </div>
             <ul className="space-y-2 mb-6">

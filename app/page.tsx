@@ -25,7 +25,7 @@ export default function Home() {
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-green-600 bg-opacity-60 border border-green-400 rounded-full px-4 py-1.5 mb-6">
             <span className="text-yellow-300 font-bold text-xs sm:text-sm">✨ 14-Day Free Trial</span>
-            <span className="text-green-200 text-xs sm:text-sm">· No credit card required</span>
+            <span className="text-green-200 text-xs sm:text-sm">· Cancel anytime</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight">
             Run Your Lawn Business<br className="hidden sm:block" /> Like a Pro
@@ -83,7 +83,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
           <p className="text-gray-500 text-lg mb-2">No hidden fees. Cancel anytime.</p>
-          <p className="text-green-700 font-semibold mb-12">✨ Every plan includes a 14-day free trial — no credit card required.</p>
+          <p className="text-green-700 font-semibold mb-12">✨ Every plan includes a 14-day free trial — cancel anytime.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
             {/* Starter */}
@@ -118,7 +118,7 @@ export default function Home() {
                     Try Free for 14 Days
                   </button>
                 </Link>
-                <p className="text-center text-gray-400 text-xs mt-2">No credit card required</p>
+                <p className="text-center text-gray-400 text-xs mt-2">Cancel anytime</p>
               </div>
             </div>
 
@@ -157,7 +157,7 @@ export default function Home() {
                     Try Free for 14 Days
                   </button>
                 </Link>
-                <p className="text-center text-green-400 text-xs mt-2">No credit card required</p>
+                <p className="text-center text-green-400 text-xs mt-2">Cancel anytime</p>
               </div>
             </div>
 
@@ -211,7 +211,7 @@ export default function Home() {
             {[
               {
                 q: 'Is there a free trial?',
-                a: 'Yes! Every new account gets a 14-day free trial with full access to all Pro features. No credit card required.',
+                a: 'Yes! Every new account gets a 14-day free trial with full access to all Pro features. Cancel anytime.',
               },
               {
                 q: 'Can I cancel anytime?',

@@ -125,7 +125,7 @@ export default function PricingPage() {
               >
                 {loading === plans[0].priceId ? 'Loading...' : 'Start Free Trial'}
               </button>
-              <p className="text-center text-gray-400 text-xs mt-3">No credit card required</p>
+              <p className="text-center text-gray-400 text-xs mt-3">Cancel anytime</p>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function PricingPage() {
               >
                 {loading === plans[1].priceId ? 'Loading...' : 'Start Free Trial'}
               </button>
-              <p className="text-center text-green-400 text-xs mt-3">No credit card required</p>
+              <p className="text-center text-green-400 text-xs mt-3">Cancel anytime</p>
             </div>
           </div>
 
