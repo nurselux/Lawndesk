@@ -66,6 +66,8 @@ export default function TeamPage() {
   const [editHourlyRate, setEditHourlyRate] = useState('')
   const [editPresetRole, setEditPresetRole] = useState('worker_limited')
   const [savingWorker, setSavingWorker] = useState(false)
+  const [changingRoleFor, setChangingRoleFor] = useState<string | null>(null)
+  const [savingRole, setSavingRole] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -189,6 +191,20 @@ export default function TeamPage() {
     fetchWorkers()
     setSuccessMessage('Worker removed.')
     setTimeout(() => setSuccessMessage(''), 4000)
+  }
+
+  const handleQuickRoleChange = async (workerId: string, newRole: string) => {
+    setSavingRole(workerId)
+    const preset = PRESET_ROLES.find(r => r.id === newRole)
+    await supabase.from('profiles').update({
+      preset_role: newRole,
+      permissions: preset?.permissions || null,
+    }).eq('id', workerId)
+    setWorkers(prev => prev.map(w => w.id === workerId ? { ...w, preset_role: newRole } : w))
+    setChangingRoleFor(null)
+    setSavingRole(null)
+    setSuccessMessage('Permission level updated!')
+    setTimeout(() => setSuccessMessage(''), 3000)
   }
 
   const pendingInvites = invites.filter(i => i.status !== 'used')
@@ -383,35 +399,90 @@ export default function TeamPage() {
         ) : (
           <div className="space-y-3">
             {workers.map((worker) => {
-              const roleInfo = PRESET_ROLES.find(r => r.id === worker.preset_role)
+              const roleInfo = PRESET_ROLES.find(r => r.id === (worker.preset_role || 'worker_limited'))
+              const isChangingRole = changingRoleFor === worker.id
+              const isSaving = savingRole === worker.id
               return (
-                <div key={worker.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="bg-violet-100 text-violet-700 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0">
-                      {worker.name ? worker.name[0].toUpperCase() : '?'}
+                <div key={worker.id} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                  {/* Worker row */}
+                  <div className="flex items-center justify-between p-4 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="bg-violet-100 text-violet-700 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0">
+                        {worker.name ? worker.name[0].toUpperCase() : '?'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-800 truncate">{worker.name || 'Unnamed Worker'}</p>
+                        {worker.phone && <p className="text-xs text-gray-400">{worker.phone}</p>}
+                      </div>
                     </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => openEditWorker(worker)}
+                        className="text-blue-400 hover:text-blue-600 text-sm font-semibold cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => removeWorker(worker.id)}
+                        className="text-red-400 hover:text-red-600 text-sm font-semibold cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Permission bar */}
+                  <div className="border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-bold text-gray-800 truncate">{worker.name || 'Unnamed Worker'}</p>
-                      <p className="text-xs text-gray-400">
-                        {roleInfo?.label || 'Worker (Limited)'}
-                        {worker.hourly_rate ? ` · $${worker.hourly_rate}/hr` : ''}
-                      </p>
+                      <p className="text-xs text-gray-400 mb-0.5 font-semibold uppercase tracking-wide">Permissions</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="inline-flex items-center gap-1 bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                          🔐 {roleInfo?.label || 'Worker (Limited)'}
+                        </span>
+                        <span className="text-xs text-gray-400">{roleInfo?.description}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
                     <button
-                      onClick={() => openEditWorker(worker)}
-                      className="text-blue-400 hover:text-blue-600 text-sm font-semibold cursor-pointer"
+                      onClick={() => setChangingRoleFor(isChangingRole ? null : worker.id)}
+                      className="shrink-0 text-xs font-bold py-1.5 px-3 rounded-lg bg-gray-100 text-gray-500 hover:bg-violet-100 hover:text-violet-700 transition-colors cursor-pointer"
                     >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => removeWorker(worker.id)}
-                      className="text-red-400 hover:text-red-600 text-sm font-semibold cursor-pointer"
-                    >
-                      Remove
+                      {isChangingRole ? 'Cancel' : 'Change'}
                     </button>
                   </div>
+
+                  {/* Inline role picker */}
+                  {isChangingRole && (
+                    <div className="border-t border-violet-100 bg-violet-50 p-4 space-y-2">
+                      <p className="text-xs font-bold text-violet-700 mb-3">Select new permission level:</p>
+                      {PRESET_ROLES.map(r => (
+                        <button
+                          key={r.id}
+                          onClick={() => handleQuickRoleChange(worker.id, r.id)}
+                          disabled={isSaving}
+                          className={`w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer disabled:opacity-50 ${
+                            (worker.preset_role || 'worker_limited') === r.id
+                              ? 'border-violet-500 bg-white shadow-sm'
+                              : 'border-transparent bg-white hover:border-violet-300'
+                          }`}
+                        >
+                          <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            (worker.preset_role || 'worker_limited') === r.id ? 'border-violet-600' : 'border-gray-300'
+                          }">
+                            {(worker.preset_role || 'worker_limited') === r.id && (
+                              <div className="w-2 h-2 rounded-full bg-violet-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800 text-sm">
+                              {r.label}
+                              {isSaving && <span className="ml-2 text-violet-400 font-normal">Saving…</span>}
+                            </p>
+                            <p className="text-gray-400 text-xs mt-0.5">{r.description}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             })}
