@@ -2,8 +2,6 @@ import Stripe from 'stripe'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Must disable body parsing so we can verify the Stripe signature
-export const config = { api: { bodyParser: false } }
 
 const STARTER_PRICE_ID = 'price_1TDXflC4da9Jmue97LkfChat'
 const PRO_PRICE_ID = 'price_1TDXsmC4da9Jmue93UnMFCbZ'

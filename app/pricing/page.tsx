@@ -8,12 +8,23 @@ import { supabase } from '../../lib/supabase'
 export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setIsLoggedIn(!!session)
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('stripe_customer_id, subscription_status')
+          .eq('id', session.user.id)
+          .single()
+        const active = !!data?.stripe_customer_id &&
+          ['trialing', 'active', 'past_due'].includes(data?.subscription_status ?? '')
+        setIsSubscribed(active)
+      }
     }
     checkUser()
   }, [])
@@ -124,12 +135,21 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => handleSubscribe(plans[0].priceId)}
-                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
-              >
-                {loading === plans[0].priceId ? 'Loading...' : 'Start Free Trial'}
-              </button>
+              {isSubscribed ? (
+                <button
+                  onClick={() => router.push('/settings')}
+                  className="w-full bg-gray-100 text-gray-600 font-bold py-3 rounded-xl cursor-pointer"
+                >
+                  Manage Subscription →
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSubscribe(plans[0].priceId)}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
+                >
+                  {loading === plans[0].priceId ? 'Loading...' : 'Start Free Trial'}
+                </button>
+              )}
               <p className="text-center text-gray-400 text-xs mt-3">Cancel anytime</p>
             </div>
           </div>
@@ -160,12 +180,21 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => handleSubscribe(plans[1].priceId)}
-                className="w-full bg-white text-green-800 font-bold py-3 rounded-xl hover:bg-green-50 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
-              >
-                {loading === plans[1].priceId ? 'Loading...' : 'Start Free Trial'}
-              </button>
+              {isSubscribed ? (
+                <button
+                  onClick={() => router.push('/settings')}
+                  className="w-full bg-white/20 text-white font-bold py-3 rounded-xl cursor-pointer"
+                >
+                  Manage Subscription →
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSubscribe(plans[1].priceId)}
+                  className="w-full bg-white text-green-800 font-bold py-3 rounded-xl hover:bg-green-50 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
+                >
+                  {loading === plans[1].priceId ? 'Loading...' : 'Start Free Trial'}
+                </button>
+              )}
               <p className="text-center text-green-400 text-xs mt-3">Cancel anytime</p>
             </div>
           </div>
