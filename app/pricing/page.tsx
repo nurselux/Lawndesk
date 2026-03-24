@@ -59,10 +59,11 @@ export default function PricingPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const email = session?.user?.email || ''
+      const userId = session?.user?.id || ''
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId, email }),
+        body: JSON.stringify({ priceId, email, userId }),
       })
       const data = await response.json()
       if (data.url) window.location.href = data.url

@@ -59,6 +59,7 @@ function DashboardContent() {
   const [upcomingJobs, setUpcomingJobs] = useState<Job[]>([])
   const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([])
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
 
   const animatedClients = useCountUp(clientCount)
   const animatedJobs = useCountUp(jobsThisWeek)
@@ -66,7 +67,11 @@ function DashboardContent() {
   const animatedRevenue = useCountUp(totalRevenue, 1400)
 
   useEffect(() => {
-    if (user) fetchDashboardData()
+    if (user) {
+      fetchDashboardData()
+      supabase.from('profiles').select('subscription_status').eq('id', user.id).single()
+        .then(({ data }) => { if (data) setSubscriptionStatus(data.subscription_status) })
+    }
   }, [user])
 
   const fetchDashboardData = async () => {
@@ -190,6 +195,24 @@ function DashboardContent() {
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
           🎉 Payment successful! Welcome to LawnDesk Pro. Your subscription is now active.
+        </div>
+      )}
+
+      {subscriptionStatus === 'past_due' && (
+        <div className="bg-red-50 border border-red-200 text-red-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
+          <span>⚠️ Your payment failed. Please update your billing info to keep access.</span>
+          <Link href="/pricing" className="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+            Update Billing
+          </Link>
+        </div>
+      )}
+
+      {subscriptionStatus === 'cancelled' && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
+          <span>⚠️ Your subscription has been cancelled. Reactivate to keep using LawnDesk.</span>
+          <Link href="/pricing" className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors">
+            Reactivate
+          </Link>
         </div>
       )}
 
