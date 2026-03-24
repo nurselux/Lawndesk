@@ -74,6 +74,7 @@ export default function WorkerPage() {
       .select('*')
       .eq('user_id', profile!.owner_id)
       .eq('date', formatDate(selectedDate))
+      .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
       .order('time', { ascending: true })
     if (data) setJobs(data as Job[])
   }

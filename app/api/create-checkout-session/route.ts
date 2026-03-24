@@ -23,8 +23,8 @@ export async function POST(req: Request) {
       subscription_data: {
         trial_period_days: 14,
       },
-      success_url: `https://lawndesk.vercel.app/dashboard?success=true`,
-      cancel_url: `https://lawndesk.vercel.app/pricing?cancelled=true`,
+      success_url: `https://lawndesk.pro/dashboard?success=true`,
+      cancel_url: `https://lawndesk.pro/pricing?cancelled=true`,
     })
 
     return NextResponse.json({ url: session.url })

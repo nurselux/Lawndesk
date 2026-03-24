@@ -18,12 +18,18 @@ interface Job {
   notes: string
   user_id: string
   recurring: string
+  assigned_to?: string
 }
 
 interface Client {
   id: string
   name: string
   address: string
+}
+
+interface Worker {
+  id: string
+  name: string | null
 }
 
 const JOB_TYPES = [
@@ -53,6 +59,7 @@ export default function JobsPage() {
   const { user, loading } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [clients, setClients] = useState<Client[]>([])
+  const [workers, setWorkers] = useState<Worker[]>([])
   const [title, setTitle] = useState('')
   const [customTitle, setCustomTitle] = useState('')
   const [clientId, setClientId] = useState('')
@@ -60,6 +67,7 @@ export default function JobsPage() {
   const [time, setTime] = useState('')
   const [status, setStatus] = useState('🔵 Scheduled')
   const [notes, setNotes] = useState('')
+  const [assignedTo, setAssignedTo] = useState('')
   const [recurring, setRecurring] = useState('🔂 One-time')
   const [customRecurring, setCustomRecurring] = useState('')
   const [search, setSearch] = useState('')
@@ -74,6 +82,7 @@ export default function JobsPage() {
   const [editTime, setEditTime] = useState('')
   const [editStatus, setEditStatus] = useState('🔵 Scheduled')
   const [editNotes, setEditNotes] = useState('')
+  const [editAssignedTo, setEditAssignedTo] = useState('')
   const [editRecurring, setEditRecurring] = useState('🔂 One-time')
   const [editCustomRecurring, setEditCustomRecurring] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -93,6 +102,7 @@ export default function JobsPage() {
     if (user) {
       fetchJobs()
       fetchClients()
+      fetchWorkers()
     }
   }, [user])
 
@@ -122,6 +132,15 @@ export default function JobsPage() {
       .eq('user_id', user?.id)
       .order('name', { ascending: true })
     if (data) setClients(data as Client[])
+  }
+
+  const fetchWorkers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, name')
+      .eq('owner_id', user?.id)
+      .eq('role', 'worker')
+    if (data) setWorkers(data as Worker[])
   }
 
   const generateRecurringDates = (startDate: string, recurringType: string): string[] => {
@@ -174,6 +193,7 @@ export default function JobsPage() {
       notes,
       recurring: finalRecurring,
       user_id: user?.id,
+      assigned_to: assignedTo || null,
     }))
 
     const { error } = await supabase.from('Jobs').insert(jobsToInsert as any)
@@ -186,6 +206,7 @@ export default function JobsPage() {
       setTime('')
       setStatus('🔵 Scheduled')
       setNotes('')
+      setAssignedTo('')
       setRecurring('🔂 One-time')
       setCustomRecurring('')
       setShowForm(false)
@@ -214,6 +235,7 @@ export default function JobsPage() {
     setEditTime(job.time)
     setEditStatus(job.status)
     setEditNotes(job.notes)
+    setEditAssignedTo(job.assigned_to || '')
     setEditRecurring(job.recurring || '🔂 One-time')
     setEditCustomRecurring('')
     setShowForm(false)
@@ -239,6 +261,7 @@ export default function JobsPage() {
         status: editStatus,
         notes: editNotes,
         recurring: finalRecurring,
+        assigned_to: editAssignedTo || null,
       })
       .eq('id', editingJob!.id)
     if (!error) {
@@ -437,6 +460,14 @@ export default function JobsPage() {
               <option>🟢 Completed</option>
               <option>🔴 Cancelled</option>
             </select>
+            {workers.length > 0 && (
+              <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
+                <option value="">👷 Assign to Worker (optional)</option>
+                {workers.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name || 'Unnamed Worker'}</option>
+                ))}
+              </select>
+            )}
             {recurring === '✏️ Custom' && (
               <input
                 placeholder="Describe your schedule (e.g. Every 10 days)"
@@ -514,6 +545,14 @@ export default function JobsPage() {
               <option>🟢 Completed</option>
               <option>🔴 Cancelled</option>
             </select>
+            {workers.length > 0 && (
+              <select value={editAssignedTo} onChange={(e) => setEditAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
+                <option value="">👷 Assign to Worker (optional)</option>
+                {workers.map((w) => (
+                  <option key={w.id} value={w.id}>{w.name || 'Unnamed Worker'}</option>
+                ))}
+              </select>
+            )}
             {editRecurring === '✏️ Custom' && (
               <input
                 placeholder="Describe your schedule (e.g. Every 10 days)"
@@ -604,6 +643,9 @@ export default function JobsPage() {
               </div>
               <div className="space-y-1 mb-3">
                 <p className="text-gray-500 text-sm">👤 {job.client_name}</p>
+                {job.assigned_to && workers.find(w => w.id === job.assigned_to) && (
+                  <p className="text-xs"><span className="bg-violet-100 text-violet-700 font-semibold px-2 py-0.5 rounded-full">👷 {workers.find(w => w.id === job.assigned_to)?.name || 'Worker'}</span></p>
+                )}
                 {job.date && <p className="text-sm"><span className="bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full text-xs">📅 {job.date}</span>{job.time && <span className="ml-1 bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full text-xs">🕐 {job.time}</span>}</p>}
                 {job.recurring && job.recurring !== '🔂 One-time' && (
                   <p className="text-xs"><span className="bg-cyan-50 text-cyan-600 font-semibold px-2 py-0.5 rounded-full">🔄 {job.recurring}</span></p>

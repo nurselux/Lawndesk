@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
@@ -23,6 +23,31 @@ interface Invoice {
   due_date: string
 }
 
+function useCountUp(target: number, duration = 1000) {
+  const [count, setCount] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setCount(target)
+      return
+    }
+    if (target === 0) { setCount(0); return }
+
+    const start = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3) // ease-out cubic
+      setCount(Math.round(eased * target))
+      if (p < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration])
+
+  return count
+}
+
 function DashboardContent() {
   const { user, loading } = useAuth()
   const searchParams = useSearchParams()
@@ -33,6 +58,12 @@ function DashboardContent() {
   const [totalRevenue, setTotalRevenue] = useState(0)
   const [upcomingJobs, setUpcomingJobs] = useState<Job[]>([])
   const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([])
+  const [dataLoaded, setDataLoaded] = useState(false)
+
+  const animatedClients = useCountUp(clientCount)
+  const animatedJobs = useCountUp(jobsThisWeek)
+  const animatedUnpaid = useCountUp(unpaidCount)
+  const animatedRevenue = useCountUp(totalRevenue, 1400)
 
   useEffect(() => {
     if (user) fetchDashboardData()
@@ -42,7 +73,6 @@ function DashboardContent() {
     const today = new Date()
     const todayStr = today.toISOString().split('T')[0]
 
-    // Auto-mark overdue invoices
     await supabase
       .from('Invoices')
       .update({ status: '🔴 Overdue' })
@@ -51,7 +81,6 @@ function DashboardContent() {
       .lt('due_date', todayStr)
       .not('due_date', 'is', null)
 
-    // Start and end of current week (Mon–Sun)
     const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1
     const weekStart = new Date(today)
     weekStart.setDate(today.getDate() - dayOfWeek)
@@ -97,6 +126,7 @@ function DashboardContent() {
 
     if (upcoming) setUpcomingJobs(upcoming as Job[])
     if (overdue) setOverdueInvoices(overdue as Invoice[])
+    setDataLoaded(true)
   }
 
   if (loading) return (
@@ -112,6 +142,49 @@ function DashboardContent() {
     return 'bg-blue-100 text-blue-700'
   }
 
+  const statCards = [
+    {
+      gradient: 'from-green-500 to-emerald-600',
+      emoji: '👥',
+      label: 'Total Clients',
+      value: animatedClients,
+      display: String(animatedClients),
+      href: '/clients',
+      linkLabel: 'View all →',
+      delay: 0,
+    },
+    {
+      gradient: 'from-blue-500 to-cyan-500',
+      emoji: '📅',
+      label: 'Jobs This Week',
+      value: animatedJobs,
+      display: String(animatedJobs),
+      href: '/jobs',
+      linkLabel: 'View all →',
+      delay: 80,
+    },
+    {
+      gradient: 'from-amber-400 to-orange-500',
+      emoji: '⚠️',
+      label: 'Unpaid Invoices',
+      value: animatedUnpaid,
+      display: String(animatedUnpaid),
+      href: '/invoices',
+      linkLabel: 'View all →',
+      delay: 160,
+    },
+    {
+      gradient: 'from-purple-500 to-violet-600',
+      emoji: '💰',
+      label: 'Total Revenue',
+      value: animatedRevenue,
+      display: `$${animatedRevenue.toLocaleString()}`,
+      href: '/invoices',
+      linkLabel: 'View invoices →',
+      delay: 240,
+    },
+  ]
+
   return (
     <div className="p-6 pb-6 min-h-dvh bg-gray-50">
       {stripeSuccess && (
@@ -119,7 +192,11 @@ function DashboardContent() {
           🎉 Payment successful! Welcome to LawnDesk Pro. Your subscription is now active.
         </div>
       )}
-      <div className="flex items-center gap-3 mb-8">
+
+      <div
+        className="flex items-center gap-3 mb-8 fade-up"
+        style={{ animation: 'fadeUp 0.4s ease-out both' }}
+      >
         <div className="bg-green-700 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📊</div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800 leading-none">Dashboard</h2>
@@ -127,9 +204,12 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Onboarding — shown only when account is brand new */}
-      {clientCount === 0 && upcomingJobs.length === 0 && (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8">
+      {/* Onboarding */}
+      {clientCount === 0 && upcomingJobs.length === 0 && dataLoaded && (
+        <div
+          className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8"
+          style={{ animation: 'fadeUp 0.5s ease-out both', animationDelay: '100ms' }}
+        >
           <h3 className="text-xl font-bold text-gray-800 mb-1">Welcome to LawnDesk! 🌿</h3>
           <p className="text-gray-500 mb-5">Let's get your business set up. Follow these steps to get started:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -158,36 +238,32 @@ function DashboardContent() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 sm:p-6 shadow text-center text-white">
-          <p className="text-4xl mb-1">👥</p>
-          <p className="text-white/80 mb-1 text-xs sm:text-sm">Total Clients</p>
-          <p className="text-3xl sm:text-4xl font-bold">{clientCount}</p>
-          <Link href="/clients" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View all →</Link>
-        </div>
-        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl p-4 sm:p-6 shadow text-center text-white">
-          <p className="text-4xl mb-1">📅</p>
-          <p className="text-white/80 mb-1 text-xs sm:text-sm">Jobs This Week</p>
-          <p className="text-3xl sm:text-4xl font-bold">{jobsThisWeek}</p>
-          <Link href="/jobs" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View all →</Link>
-        </div>
-        <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl p-4 sm:p-6 shadow text-center text-white">
-          <p className="text-4xl mb-1">⚠️</p>
-          <p className="text-white/80 mb-1 text-xs sm:text-sm">Unpaid Invoices</p>
-          <p className="text-3xl sm:text-4xl font-bold">{unpaidCount}</p>
-          <Link href="/invoices" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View all →</Link>
-        </div>
-        <div className="bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl p-4 sm:p-6 shadow text-center text-white">
-          <p className="text-4xl mb-1">💰</p>
-          <p className="text-white/80 mb-1 text-xs sm:text-sm">Total Revenue</p>
-          <p className="text-3xl sm:text-4xl font-bold">${totalRevenue.toFixed(0)}</p>
-          <Link href="/invoices" className="text-xs text-white/70 hover:text-white mt-1 inline-block">View invoices →</Link>
-        </div>
+        {statCards.map((card) => (
+          <div
+            key={card.label}
+            className={`bg-gradient-to-br ${card.gradient} rounded-xl p-4 sm:p-6 shadow text-center text-white spring-in`}
+            style={{
+              animation: 'springIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+              animationDelay: `${card.delay}ms`,
+            }}
+          >
+            <p className="text-4xl mb-1">{card.emoji}</p>
+            <p className="text-white/80 mb-1 text-xs sm:text-sm">{card.label}</p>
+            <p className="text-3xl sm:text-4xl font-bold tabular-nums">{card.display}</p>
+            <Link href={card.href} className="text-xs text-white/70 hover:text-white mt-1 inline-block">
+              {card.linkLabel}
+            </Link>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Upcoming Jobs */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-md">
+        <div
+          className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-md"
+          style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '320ms' }}
+        >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-gray-800">Upcoming Jobs</h3>
             <Link href="/jobs" className="text-sm text-green-600 hover:underline">View all →</Link>
@@ -199,8 +275,15 @@ function DashboardContent() {
             </div>
           ) : (
             <div className="space-y-3">
-              {upcomingJobs.map((job) => (
-                <div key={job.id} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+              {upcomingJobs.map((job, i) => (
+                <div
+                  key={job.id}
+                  className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0 slide-in-row"
+                  style={{
+                    animation: 'slideInRow 0.35s ease-out both',
+                    animationDelay: `${360 + i * 70}ms`,
+                  }}
+                >
                   <div>
                     <p className="font-semibold text-gray-800">{job.title}</p>
                     <div className="flex items-center gap-2 flex-wrap mt-0.5">
@@ -222,7 +305,10 @@ function DashboardContent() {
         <div className="flex flex-col gap-6">
 
           {/* Quick Actions */}
-          <div className="bg-amber-50 rounded-2xl p-6 shadow-md">
+          <div
+            className="bg-amber-50 rounded-2xl p-6 shadow-md"
+            style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '360ms' }}
+          >
             <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
               <Link href="/clients">
@@ -244,7 +330,10 @@ function DashboardContent() {
           </div>
 
           {/* Overdue Invoices */}
-          <div className="bg-amber-50 rounded-2xl p-6 shadow-md">
+          <div
+            className="bg-amber-50 rounded-2xl p-6 shadow-md"
+            style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '420ms' }}
+          >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">Overdue Invoices</h3>
               <Link href="/invoices" className="text-sm text-green-600 hover:underline">View all →</Link>
@@ -256,8 +345,15 @@ function DashboardContent() {
               </div>
             ) : (
               <div className="space-y-3">
-                {overdueInvoices.map((inv) => (
-                  <div key={inv.id} className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0">
+                {overdueInvoices.map((inv, i) => (
+                  <div
+                    key={inv.id}
+                    className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0 slide-in-row"
+                    style={{
+                      animation: 'slideInRow 0.35s ease-out both',
+                      animationDelay: `${440 + i * 60}ms`,
+                    }}
+                  >
                     <div>
                       <p className="font-semibold text-gray-800 text-sm">{inv.client_name}</p>
                       {inv.due_date && <p className="text-xs text-red-400">Due {inv.due_date}</p>}
