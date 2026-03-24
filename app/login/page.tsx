@@ -23,20 +23,33 @@ function LoginContent() {
       setMessage('Please enter your email and password')
       return
     }
-    setLoading(true)
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setMessage(error.message)
-    } else {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .single()
-      router.push(profile?.role === 'worker' ? '/worker' : '/dashboard')
-      router.refresh()
+    if (!email.includes('@')) {
+      setMessage('Please enter a valid email address')
+      return
     }
-    setLoading(false)
+    setLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setMessage(
+          error.message.includes('Invalid login credentials')
+            ? 'Incorrect email or password. Please try again.'
+            : error.message
+        )
+      } else {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+        router.push(profile?.role === 'worker' ? '/worker' : '/dashboard')
+        router.refresh()
+      }
+    } catch {
+      setMessage('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSignUp = async () => {
