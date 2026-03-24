@@ -122,7 +122,7 @@ export default function WorkerPage() {
   const fetchJobs = async () => {
     const { data } = await supabase
       .from('Jobs')
-      .select('*')
+      .select('id, title, client_name, client_id, date, time, status, notes, worker_notes, clocked_in_at, clocked_out_at, user_id, assigned_to')
       .eq('user_id', profile!.owner_id)
       .eq('date', toDateStr(selectedDate))
       .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
@@ -153,7 +153,7 @@ export default function WorkerPage() {
     weekEnd.setDate(weekEnd.getDate() + 6)
     const { data } = await supabase
       .from('Jobs')
-      .select('*')
+      .select('id, title, client_name, client_id, date, time, status, notes, worker_notes, clocked_in_at, clocked_out_at, user_id, assigned_to')
       .eq('user_id', profile!.owner_id)
       .gte('date', toDateStr(weekStart))
       .lte('date', toDateStr(weekEnd))

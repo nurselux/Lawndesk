@@ -50,7 +50,7 @@ export default function TeamPage() {
   const fetchInvites = async () => {
     const { data } = await supabase
       .from('invites')
-      .select('*')
+      .select('id, email, token, status, admin_id, created_at')
       .eq('admin_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setInvites(data as Invite[])

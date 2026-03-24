@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import NextImage from 'next/image'
 import { getJobPhotoPair, getPhotoUrl, deleteJobPhoto, JobPhoto } from '../lib/jobPhotos'
 
 interface JobPhotoGalleryProps {
@@ -61,10 +62,13 @@ export default function JobPhotoGallery({ jobId, onPhotoDeleted }: JobPhotoGalle
           {before ? (
             <>
               <div className="relative">
-                <img
+                <NextImage
                   src={getPhotoUrl(before.storage_path)}
                   alt="Before"
+                  width={600}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                  loading="lazy"
                 />
                 <span className="absolute top-2 left-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                   📸 Before
@@ -90,10 +94,13 @@ export default function JobPhotoGallery({ jobId, onPhotoDeleted }: JobPhotoGalle
           {after ? (
             <>
               <div className="relative">
-                <img
+                <NextImage
                   src={getPhotoUrl(after.storage_path)}
                   alt="After"
+                  width={600}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                  loading="lazy"
                 />
                 <span className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                   ✨ After

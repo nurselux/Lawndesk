@@ -45,7 +45,7 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('*')
+      .select('id, name, email, phone, address, notes, user_id')
       .eq('user_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setClients(data as Client[])

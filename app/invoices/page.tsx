@@ -68,7 +68,7 @@ export default function InvoicesPage() {
   const fetchInvoices = async () => {
     const { data } = await supabase
       .from('Invoices')
-      .select('*')
+      .select('id, client_name, client_id, amount, status, due_date, description, user_id, invoice_number, share_token')
       .eq('user_id', user?.id)
       .order('invoice_number', { ascending: true })
     if (data) setInvoices(data as Invoice[])
