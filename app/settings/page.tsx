@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 
 interface Profile {
   subscription_status: string | null
@@ -21,6 +22,7 @@ function subLabel(status: string | null, plan: string | null) {
 
 export default function SettingsPage() {
   const { user, loading } = useAuth()
+  const { checking } = useSubscriptionGate()
   const [userEmail, setUserEmail] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [pwCurrent, setPwCurrent] = useState('')
@@ -88,7 +90,7 @@ export default function SettingsPage() {
     setPortalLoading(false)
   }
 
-  if (loading) return (
+  if (checking) return (
     <div className="flex items-center justify-center min-h-screen">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>

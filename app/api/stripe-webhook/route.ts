@@ -41,9 +41,20 @@ export async function POST(req: Request) {
 
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
+
+        // Invoice payment (one-time)
+        if (session.metadata?.type === 'invoice_payment') {
+          const { invoiceId } = session.metadata
+          await supabase
+            .from('Invoices')
+            .update({ status: '🟢 Paid', stripe_payment_id: session.payment_intent as string })
+            .eq('id', invoiceId)
+          break
+        }
+
+        // Subscription checkout
         const userId = session.client_reference_id || session.metadata?.userId
         const customerId = session.customer as string
-
         if (!userId) break
 
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string)

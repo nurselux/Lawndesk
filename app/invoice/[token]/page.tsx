@@ -21,6 +21,14 @@ export default function PublicInvoicePage() {
   const token = params.token as string
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [notFound, setNotFound] = useState(false)
+  const [payLoading, setPayLoading] = useState(false)
+  const [justPaid, setJustPaid] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('paid=true')) {
+      setJustPaid(true)
+    }
+  }, [])
 
   useEffect(() => {
     const fetchInvoice = async () => {
@@ -70,14 +78,21 @@ export default function PublicInvoicePage() {
   return (
     <main className="min-h-dvh bg-gray-100 flex flex-col items-center justify-start p-6 print:bg-white print:p-0">
 
+      {/* Success banner */}
+      {justPaid && (
+        <div className="w-full max-w-xl mb-4 bg-green-100 border border-green-300 text-green-800 font-bold p-4 rounded-xl print:hidden">
+          🎉 Payment received! Thank you — your invoice has been marked as paid.
+        </div>
+      )}
+
       {/* Print button — hidden when printing */}
       <div className="w-full max-w-xl mb-4 flex justify-between items-center print:hidden">
         <Link href="/" className="text-green-700 font-bold hover:underline text-sm">🌿 LawnDesk</Link>
         <button
           onClick={() => window.print()}
-          className="bg-green-700 text-white font-bold py-2 px-5 rounded-lg hover:bg-green-800 transition cursor-pointer text-sm shadow"
+          className="bg-white border border-gray-300 text-gray-600 font-bold py-2 px-5 rounded-lg hover:bg-gray-50 transition cursor-pointer text-sm shadow"
         >
-          🖨️ Print / Save as PDF
+          🖨️ Print / Save PDF
         </button>
       </div>
 
@@ -146,6 +161,34 @@ export default function PublicInvoicePage() {
               <p className="text-3xl font-bold text-green-700">${invoice.amount.toFixed(2)}</p>
             </div>
           </div>
+
+          {/* Pay Now button */}
+          {invoice.status !== '🟢 Paid' && (
+            <div className="mb-6 print:hidden">
+              <button
+                onClick={async () => {
+                  setPayLoading(true)
+                  try {
+                    const res = await fetch('/api/create-invoice-payment', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ invoiceId: invoice.id, token }),
+                    })
+                    const data = await res.json()
+                    if (data.url) window.location.href = data.url
+                  } catch {
+                    alert('Something went wrong. Please try again.')
+                  }
+                  setPayLoading(false)
+                }}
+                disabled={payLoading}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-4 rounded-xl hover:opacity-90 transition cursor-pointer text-lg shadow-md disabled:opacity-50"
+              >
+                {payLoading ? '⏳ Redirecting...' : `💳 Pay $${invoice.amount.toFixed(2)} Now`}
+              </button>
+              <p className="text-center text-gray-400 text-xs mt-2">Secure payment powered by Stripe</p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="border-t border-gray-100 pt-4 text-center">
