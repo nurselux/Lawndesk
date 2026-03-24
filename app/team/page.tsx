@@ -126,6 +126,8 @@ export default function TeamPage() {
       .update({ role: 'admin', owner_id: null })
       .eq('id', workerId)
     fetchWorkers()
+    setSuccessMessage('Worker removed from your team.')
+    setTimeout(() => setSuccessMessage(''), 4000)
   }
 
   if (loading) return (

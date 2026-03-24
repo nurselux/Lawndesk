@@ -103,7 +103,7 @@ export default function Home() {
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
                   {[
-                    { icon: '👥', text: 'Up to 25 clients' },
+                    { icon: '👥', text: 'Up to 10 clients' },
                     { icon: '📅', text: 'Unlimited jobs' },
                     { icon: '📄', text: 'Basic invoicing' },
                   ].map((f) => (
