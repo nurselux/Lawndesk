@@ -16,9 +16,26 @@ interface Job {
   time: string
   status: string
   notes: string
+  worker_notes?: string | null
+  clocked_in_at?: string | null
+  clocked_out_at?: string | null
   user_id: string
   recurring: string
   assigned_to?: string
+}
+
+function fmtClock(ts: string | null | undefined) {
+  if (!ts) return ''
+  return new Date(ts).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+}
+
+function fmtDuration(start: string | null | undefined, end: string | null | undefined) {
+  if (!start || !end) return ''
+  const ms = new Date(end).getTime() - new Date(start).getTime()
+  if (ms < 0) return ''
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
 interface Client {
@@ -651,6 +668,14 @@ export default function JobsPage() {
                   <p className="text-xs"><span className="bg-cyan-50 text-cyan-600 font-semibold px-2 py-0.5 rounded-full">🔄 {job.recurring}</span></p>
                 )}
                 {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {job.notes}</p>}
+                {job.worker_notes && <p className="text-gray-500 text-xs mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">📋 <span className="font-semibold">Worker:</span> {job.worker_notes}</p>}
+                {job.clocked_in_at && (
+                  <p className="text-xs mt-2">
+                    <span className={`px-2 py-0.5 rounded-full font-semibold ${job.clocked_out_at ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
+                      ⏱ {fmtClock(job.clocked_in_at)}{job.clocked_out_at ? ` → ${fmtClock(job.clocked_out_at)} (${fmtDuration(job.clocked_in_at, job.clocked_out_at)})` : ' · In progress'}
+                    </span>
+                  </p>
+                )}
               </div>
               {cardPhotos[job.id]?.length > 0 && (
                 <div className="flex gap-1.5 mb-3">
