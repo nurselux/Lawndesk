@@ -120,13 +120,16 @@ export default function WorkerPage() {
   }, [profile, weekStart, view])
 
   const fetchJobs = async () => {
-    const { data } = await supabase
+    const seeAllJobs = (profile as any)?.permissions?.see_all_jobs === true
+    let q = supabase
       .from('Jobs')
       .select('id, title, client_name, client_id, date, time, status, notes, worker_notes, clocked_in_at, clocked_out_at, user_id, assigned_to')
       .eq('user_id', profile!.owner_id)
       .eq('date', toDateStr(selectedDate))
-      .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
-      .order('time', { ascending: true })
+    if (!seeAllJobs) {
+      q = q.or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
+    }
+    const { data } = await q.order('time', { ascending: true })
     if (data) {
       setJobs(data as Job[])
       const notes: Record<string, string> = {}
@@ -136,30 +139,32 @@ export default function WorkerPage() {
   }
 
   const fetchWeekJobDates = async () => {
+    const seeAllJobs = (profile as any)?.permissions?.see_all_jobs === true
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekEnd.getDate() + 6)
-    const { data } = await supabase
+    let q = supabase
       .from('Jobs')
       .select('date')
       .eq('user_id', profile!.owner_id)
       .gte('date', toDateStr(weekStart))
       .lte('date', toDateStr(weekEnd))
-      .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
+    if (!seeAllJobs) q = q.or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
+    const { data } = await q
     if (data) setWeekJobDates(new Set(data.map((j: any) => j.date)))
   }
 
   const fetchWeekJobs = async () => {
+    const seeAllJobs = (profile as any)?.permissions?.see_all_jobs === true
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekEnd.getDate() + 6)
-    const { data } = await supabase
+    let q = supabase
       .from('Jobs')
       .select('id, title, client_name, client_id, date, time, status, notes, worker_notes, clocked_in_at, clocked_out_at, user_id, assigned_to')
       .eq('user_id', profile!.owner_id)
       .gte('date', toDateStr(weekStart))
       .lte('date', toDateStr(weekEnd))
-      .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
-      .order('date', { ascending: true })
-      .order('time', { ascending: true })
+    if (!seeAllJobs) q = q.or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
+    const { data } = await q.order('date', { ascending: true }).order('time', { ascending: true })
     if (data) {
       setWeekJobs(data as Job[])
       const notes: Record<string, string> = {}
