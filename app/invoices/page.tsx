@@ -249,16 +249,36 @@ export default function InvoicesPage() {
     setSending(null)
   }
 
-  const handleSendSMS = (inv: Invoice) => {
+  const handleSendSMS = async (inv: Invoice) => {
     const phone = inv.client_phone
     if (!phone) {
       setErrorMessage('No phone on file for this client.')
       setTimeout(() => setErrorMessage(''), 4000)
       return
     }
+    setSending({ id: inv.id, type: 'sms' })
     const link = getInvoiceLink(inv.share_token)
     const msg = `Hi ${inv.client_name}, your invoice for $${inv.amount.toFixed(2)} is ready. View and pay here: ${link}`
-    window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`)
+    try {
+      const res = await fetch(
+        'https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: phone, message: msg }),
+        }
+      )
+      if (res.ok) {
+        setSuccessMessage(`💬 Invoice texted to ${phone}!`)
+      } else {
+        setErrorMessage('Text failed — use Copy Link to share manually.')
+      }
+    } catch {
+      setErrorMessage('Text failed — use Copy Link to share manually.')
+    }
+    setTimeout(() => setSuccessMessage(''), 5000)
+    setTimeout(() => setErrorMessage(''), 5000)
+    setSending(null)
   }
 
   const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)

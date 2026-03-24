@@ -215,15 +215,35 @@ export default function QuotesPage() {
     setSending(null)
   }
 
-  const sendQuoteSMS = (quote: Quote) => {
+  const sendQuoteSMS = async (quote: Quote) => {
     if (!quote.client_phone) {
       setErrorMessage('No phone number for this client.')
       setTimeout(() => setErrorMessage(''), 4000)
       return
     }
+    setSending(quote.id)
     const link = getQuoteLink(quote.share_token)
     const msg = `Hi ${quote.client_name}, here's your quote for $${quote.amount.toFixed(2)} from LawnDesk. Review and approve it here: ${link}`
-    window.open(`sms:${quote.client_phone}?body=${encodeURIComponent(msg)}`)
+    try {
+      const res = await fetch(
+        'https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: quote.client_phone, message: msg }),
+        }
+      )
+      if (res.ok) {
+        setSuccessMessage(`💬 Quote texted to ${quote.client_phone}!`)
+      } else {
+        setErrorMessage('Text failed — use Copy Link to share manually.')
+      }
+    } catch {
+      setErrorMessage('Text failed — use Copy Link to share manually.')
+    }
+    setTimeout(() => setSuccessMessage(''), 5000)
+    setTimeout(() => setErrorMessage(''), 5000)
+    setSending(null)
   }
 
   const resetForm = () => {
