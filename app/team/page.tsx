@@ -17,7 +17,7 @@ interface Invite {
   id: string
   email: string
   token: string
-  used: boolean
+  status: string
   created_at: string
 }
 
@@ -177,11 +177,11 @@ export default function TeamPage() {
       </div>
 
       {/* Pending invites */}
-      {invites.filter(i => !i.used).length > 0 && (
+      {invites.filter(i => i.status !== 'used').length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
           <h3 className="font-bold text-gray-800 mb-4">🔗 Pending Invites</h3>
           <div className="space-y-3">
-            {invites.filter(i => !i.used).map((invite) => (
+            {invites.filter(i => i.status !== 'used').map((invite) => (
               <div key={invite.id} className="flex items-center justify-between gap-3 p-3 bg-violet-50 rounded-xl border border-violet-100">
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-800 truncate">{invite.email}</p>

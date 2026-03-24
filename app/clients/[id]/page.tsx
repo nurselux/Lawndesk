@@ -32,6 +32,15 @@ interface Invoice {
   description: string
 }
 
+interface Quote {
+  id: string
+  title: string
+  amount: number
+  status: string
+  created_at: string
+  share_token: string
+}
+
 export default function ClientDetailPage() {
   const { user, loading } = useAuth()
   const params = useParams()
@@ -39,6 +48,7 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<Client | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
   const [dataLoading, setDataLoading] = useState(true)
 
   // Edit state
@@ -71,7 +81,7 @@ export default function ClientDetailPage() {
     const typedClient = clientData as Client
     setClient(typedClient)
 
-    const [{ data: jobData }, { data: invoiceData }] = await Promise.all([
+    const [{ data: jobData }, { data: invoiceData }, { data: quoteData }] = await Promise.all([
       supabase.from('Jobs').select('id, title, date, time, status, recurring')
         .eq('user_id', user!.id)
         .eq('client_id', typedClient.id)
@@ -80,10 +90,15 @@ export default function ClientDetailPage() {
         .eq('user_id', user!.id)
         .eq('client_id', typedClient.id)
         .order('created_at', { ascending: false }),
+      supabase.from('Quotes').select('id, title, amount, status, created_at, share_token')
+        .eq('user_id', user!.id)
+        .eq('client_id', typedClient.id)
+        .order('created_at', { ascending: false }),
     ])
 
     if (jobData) setJobs(jobData as Job[])
     if (invoiceData) setInvoices(invoiceData as Invoice[])
+    if (quoteData) setQuotes(quoteData as Quote[])
     setDataLoading(false)
   }
 
@@ -237,6 +252,43 @@ export default function ClientDetailPage() {
                   <span className={`text-xs font-bold py-1 px-2 rounded-full ${jobStatusColor(job.status)}`}>
                     {job.status}
                   </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quotes */}
+        <div className="bg-white rounded-xl p-6 shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-800">Quotes ({quotes.length})</h3>
+            <Link href="/quotes" className="text-sm text-blue-600 hover:underline">+ New Quote</Link>
+          </div>
+          {quotes.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-3xl mb-2">📋</p>
+              <p className="text-gray-400 text-sm">No quotes yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {quotes.map((q) => (
+                <div key={q.id} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                  <div>
+                    <p className="font-semibold text-gray-800 text-sm">{q.title}</p>
+                    <p className="text-xs text-gray-400">{new Date(q.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-gray-800 text-sm">${q.amount.toFixed(2)}</span>
+                    <span className={`text-xs font-bold py-1 px-2 rounded-full ${
+                      q.status === 'approved' ? 'bg-green-100 text-green-700' :
+                      q.status === 'declined' ? 'bg-red-100 text-red-500' :
+                      q.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                      q.status === 'converted' ? 'bg-purple-100 text-purple-700' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>
+                      {q.status}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
