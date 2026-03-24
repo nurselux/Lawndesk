@@ -58,8 +58,13 @@ export default function PricingPage() {
     setLoading(priceId)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const email = session?.user?.email || ''
-      const userId = session?.user?.id || ''
+      if (!session?.user) {
+        router.push(`/login?signup=true&redirect=/pricing`)
+        setLoading(null)
+        return
+      }
+      const email = session.user.email || ''
+      const userId = session.user.id || ''
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
