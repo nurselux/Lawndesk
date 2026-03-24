@@ -50,6 +50,7 @@ export default function ClientDetailPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [dataLoading, setDataLoading] = useState(true)
+  const [portalCopied, setPortalCopied] = useState(false)
 
   // Edit state
   const [editing, setEditing] = useState(false)
@@ -132,6 +133,21 @@ export default function ClientDetailPage() {
     setSaving(false)
   }
 
+  const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/portal` : 'https://lawndesk.pro/portal'
+
+  const sharePortal = async () => {
+    const msg = `Hi ${client?.name}, you can view your quotes and invoices on our client portal here: ${portalUrl}${client?.email ? ` — sign in with ${client.email}` : ''}`
+    if (navigator.share) {
+      await navigator.share({ title: 'LawnDesk Client Portal', text: msg, url: portalUrl })
+    } else if (client?.phone) {
+      window.open(`sms:${client.phone}?body=${encodeURIComponent(msg)}`)
+    } else {
+      navigator.clipboard.writeText(msg)
+      setPortalCopied(true)
+      setTimeout(() => setPortalCopied(false), 2000)
+    }
+  }
+
   const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)
   const totalOwed = invoices.filter(i => i.status === '🟡 Unpaid' || i.status === '🔴 Overdue').reduce((s, i) => s + i.amount, 0)
 
@@ -210,7 +226,35 @@ export default function ClientDetailPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mt-6 pt-6 border-t border-gray-100">
+            {/* Share portal bar */}
+            <div className="mt-5 pt-5 border-t border-gray-100">
+              <div className="flex items-center justify-between gap-3 bg-green-50 rounded-xl px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-green-800">Client Portal</p>
+                  <p className="text-green-600 text-xs truncate">
+                    {client?.email ? `${portalUrl} · ${client.email}` : portalUrl}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  {client?.phone && (
+                    <a
+                      href={`sms:${client.phone}?body=${encodeURIComponent(`Hi ${client.name}, view your quotes and invoices here: ${portalUrl}${client.email ? ` — sign in with ${client.email}` : ''}`)}`}
+                      className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                    >
+                      💬 Text
+                    </a>
+                  )}
+                  <button
+                    onClick={sharePortal}
+                    className="text-xs font-bold py-2 px-3 rounded-lg bg-green-700 text-white hover:bg-green-800 transition-colors cursor-pointer"
+                  >
+                    {portalCopied ? '✓ Copied!' : '📲 Share'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 mt-5 pt-5 border-t border-gray-100">
               <div className="text-center">
                 <p className="text-xl sm:text-2xl font-bold text-green-700">{jobs.length}</p>
                 <p className="text-gray-400 text-xs sm:text-sm">Total Jobs</p>

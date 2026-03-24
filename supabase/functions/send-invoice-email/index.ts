@@ -11,7 +11,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders });
 
-  const { recipientEmail, recipientName, invoiceNumber, amount, description, dueDate, invoiceLink, businessName } = await req.json();
+  const { recipientEmail, recipientName, invoiceNumber, amount, description, dueDate, invoiceLink, businessName, portalLink } = await req.json();
 
   if (!recipientEmail || !invoiceLink) {
     return new Response(JSON.stringify({ error: 'Missing recipientEmail or invoiceLink' }), {
@@ -55,6 +55,7 @@ Deno.serve(async (req: Request) => {
           </div>
           <a href="${invoiceLink}" style="display:inline-block;background:#15803d;color:#fff;font-weight:bold;padding:14px 32px;border-radius:10px;text-decoration:none;font-size:16px;">View &amp; Pay Invoice →</a>
           <p style="color:#9ca3af;font-size:12px;margin-top:24px;">Or open this link:<br/><span style="color:#374151;">${invoiceLink}</span></p>
+          ${portalLink ? `<p style="color:#6b7280;font-size:13px;margin-top:20px;">Want to view all your invoices and quotes? <a href="${portalLink}" style="color:#7c3aed;text-decoration:underline;">Access your client portal →</a></p>` : ''}
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;"/>
           <p style="color:#9ca3af;font-size:12px;">Sent via LawnDesk · <a href="https://lawndesk.pro" style="color:#9ca3af;">lawndesk.pro</a></p>
         </div>

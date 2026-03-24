@@ -232,6 +232,7 @@ export default function InvoicesPage() {
             description: inv.description,
             dueDate: inv.due_date,
             invoiceLink: link,
+            portalLink: `${window.location.origin}/portal`,
           }),
         }
       )
