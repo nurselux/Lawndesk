@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 
 interface Client {
   id: string
@@ -17,6 +18,7 @@ interface Client {
 
 export default function ClientsPage() {
   const { user, loading } = useAuth()
+  const { checking, profile } = useSubscriptionGate()
   const [clients, setClients] = useState<Client[]>([])
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -53,6 +55,11 @@ export default function ClientsPage() {
     if (!name) {
       setErrorMessage('Client name is required')
       setTimeout(() => setErrorMessage(''), 3000)
+      return
+    }
+    if (profile?.subscription_plan === 'starter' && clients.length >= 10) {
+      setErrorMessage('Starter plan is limited to 10 clients. Upgrade to Pro for unlimited clients.')
+      setTimeout(() => setErrorMessage(''), 5000)
       return
     }
     setSaving(true)
@@ -129,7 +136,7 @@ export default function ClientsPage() {
     return matchesSearch && matchesFilter
   })
 
-  if (loading) return (
+  if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 
 interface Invoice {
   id: string
@@ -24,6 +25,7 @@ interface Client {
 
 export default function InvoicesPage() {
   const { user, loading } = useAuth()
+  const { checking } = useSubscriptionGate()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [clientId, setClientId] = useState('')
@@ -197,7 +199,7 @@ export default function InvoicesPage() {
     return matchesSearch && matchesStatus
   })
 
-  if (loading) return (
+  if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>

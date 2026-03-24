@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 
 interface Job {
   id: string
@@ -50,6 +51,7 @@ function useCountUp(target: number, duration = 1000) {
 
 function DashboardContent() {
   const { user, loading } = useAuth()
+  const { checking } = useSubscriptionGate()
   const searchParams = useSearchParams()
   const stripeSuccess = searchParams.get('success') === 'true'
   const [clientCount, setClientCount] = useState(0)
@@ -134,7 +136,7 @@ function DashboardContent() {
     setDataLoaded(true)
   }
 
-  if (loading) return (
+  if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>

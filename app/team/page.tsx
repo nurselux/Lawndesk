@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 
 interface Worker {
   id: string
@@ -22,6 +23,7 @@ interface Invite {
 
 export default function TeamPage() {
   const { user, loading } = useAuth()
+  const { checking } = useSubscriptionGate()
   const [workers, setWorkers] = useState<Worker[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
@@ -130,7 +132,7 @@ export default function TeamPage() {
     setTimeout(() => setSuccessMessage(''), 4000)
   }
 
-  if (loading) return (
+  if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>

@@ -4,6 +4,17 @@ import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 
+async function getRedirect(userId: string) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('stripe_customer_id, role')
+    .eq('id', userId)
+    .single()
+  if (data?.role === 'worker') return '/worker'
+  if (!data?.stripe_customer_id) return '/pricing'
+  return '/dashboard'
+}
+
 function CallbackHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -13,24 +24,22 @@ function CallbackHandler() {
     const type = searchParams.get('type')
 
     if (token_hash && type) {
-      // PKCE flow: token passed as query params
       supabase.auth.verifyOtp({ token_hash, type: type as any })
-        .then(({ error }) => {
-          if (error) router.replace('/login?error=confirmation_failed')
-          else router.replace('/dashboard')
+        .then(async ({ data, error }) => {
+          if (error) { router.replace('/login?error=confirmation_failed'); return }
+          const dest = data.session ? await getRedirect(data.session.user.id) : '/pricing'
+          router.replace(dest)
         })
     } else {
-      // Implicit flow: session tokens are in the URL hash (#access_token=...)
-      // createBrowserClient processes the hash automatically — just wait for it
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
         if (session) {
-          router.replace('/dashboard')
+          router.replace(await getRedirect(session.user.id))
           return
         }
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
           if (event === 'SIGNED_IN' && session) {
             subscription.unsubscribe()
-            router.replace('/dashboard')
+            getRedirect(session.user.id).then(dest => router.replace(dest))
           }
         })
       })

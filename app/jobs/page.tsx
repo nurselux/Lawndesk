@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
@@ -74,6 +75,7 @@ const JOB_TYPES = [
 
 export default function JobsPage() {
   const { user, loading } = useAuth()
+  const { checking } = useSubscriptionGate()
   const [jobs, setJobs] = useState<Job[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [workers, setWorkers] = useState<Worker[]>([])
@@ -344,7 +346,7 @@ export default function JobsPage() {
     return matchesSearch && matchesStatus
   })
 
-  if (loading) return (
+  if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
       <p className="text-green-700 text-xl font-bold">Loading...</p>
     </div>
