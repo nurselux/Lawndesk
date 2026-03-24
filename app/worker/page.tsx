@@ -26,20 +26,29 @@ interface Client {
   address: string
 }
 
-function formatDate(date: Date) {
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function toDateStr(date: Date) {
   return date.toISOString().split('T')[0]
 }
 
-function displayDate(date: Date) {
-  const today = new Date()
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+function getWeekStart(date: Date) {
+  const d = new Date(date)
+  const day = d.getDay() // 0=Sun
+  d.setDate(d.getDate() - day)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
 
-  if (formatDate(date) === formatDate(today)) return 'Today'
-  if (formatDate(date) === formatDate(tomorrow)) return 'Tomorrow'
-  if (formatDate(date) === formatDate(yesterday)) return 'Yesterday'
+function displayDate(date: Date) {
+  const todayStr = toDateStr(new Date())
+  const tomorrowDate = new Date()
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1)
+  const tomorrowStr = toDateStr(tomorrowDate)
+  const dateStr = toDateStr(date)
+
+  if (dateStr === todayStr) return 'Today'
+  if (dateStr === tomorrowStr) return 'Tomorrow'
   return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 }
 
@@ -49,12 +58,13 @@ export default function WorkerPage() {
   const { profile, loading: profileLoading } = useProfile(user?.id)
 
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()))
   const [jobs, setJobs] = useState<Job[]>([])
+  const [weekJobDates, setWeekJobDates] = useState<Set<string>>(new Set())
   const [clients, setClients] = useState<Client[]>([])
   const [expandedJob, setExpandedJob] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
 
-  // Redirect admins away from worker view
   useEffect(() => {
     if (!profileLoading && profile?.role === 'admin') {
       router.replace('/dashboard')
@@ -68,15 +78,32 @@ export default function WorkerPage() {
     }
   }, [profile, selectedDate])
 
+  useEffect(() => {
+    if (profile?.owner_id) fetchWeekJobDates()
+  }, [profile, weekStart])
+
   const fetchJobs = async () => {
     const { data } = await supabase
       .from('Jobs')
       .select('*')
       .eq('user_id', profile!.owner_id)
-      .eq('date', formatDate(selectedDate))
+      .eq('date', toDateStr(selectedDate))
       .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
       .order('time', { ascending: true })
     if (data) setJobs(data as Job[])
+  }
+
+  const fetchWeekJobDates = async () => {
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+    const { data } = await supabase
+      .from('Jobs')
+      .select('date')
+      .eq('user_id', profile!.owner_id)
+      .gte('date', toDateStr(weekStart))
+      .lte('date', toDateStr(weekEnd))
+      .or(`assigned_to.is.null,assigned_to.eq.${profile!.id}`)
+    if (data) setWeekJobDates(new Set(data.map((j: any) => j.date)))
   }
 
   const fetchClients = async () => {
@@ -94,17 +121,39 @@ export default function WorkerPage() {
     setSaving(null)
   }
 
-  const prevDay = () => {
-    const d = new Date(selectedDate)
-    d.setDate(d.getDate() - 1)
+  const prevWeek = () => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() - 7)
+    setWeekStart(d)
+  }
+
+  const nextWeek = () => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + 7)
+    setWeekStart(d)
+  }
+
+  const goToToday = () => {
+    const today = new Date()
+    setSelectedDate(today)
+    setWeekStart(getWeekStart(today))
+  }
+
+  const selectDay = (dayIndex: number) => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + dayIndex)
     setSelectedDate(d)
   }
 
-  const nextDay = () => {
-    const d = new Date(selectedDate)
-    d.setDate(d.getDate() + 1)
-    setSelectedDate(d)
-  }
+  const todayStr = toDateStr(new Date())
+  const selectedStr = toDateStr(selectedDate)
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + i)
+    return d
+  })
+
+  const isCurrentWeek = toDateStr(weekStart) === toDateStr(getWeekStart(new Date()))
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -119,6 +168,7 @@ export default function WorkerPage() {
 
   return (
     <div className="min-h-dvh bg-gray-50 flex flex-col">
+
       {/* Header */}
       <div className="bg-green-700 text-white px-5 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
@@ -135,16 +185,80 @@ export default function WorkerPage() {
         </button>
       </div>
 
-      {/* Date nav */}
-      <div className="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between sticky top-[60px] z-10">
-        <button onClick={prevDay} className="text-gray-400 hover:text-gray-700 text-2xl cursor-pointer px-2">‹</button>
-        <div className="text-center">
-          <p className="font-bold text-gray-800 text-lg leading-none">{displayDate(selectedDate)}</p>
-          <p className="text-gray-400 text-xs mt-0.5">
-            {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-          </p>
+      {/* Week strip */}
+      <div className="bg-white border-b border-gray-200 sticky top-[60px] z-10 px-2 py-3">
+        <div className="flex items-center gap-1">
+          {/* Prev week */}
+          <button
+            onClick={prevWeek}
+            className="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 text-xl cursor-pointer rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            ‹
+          </button>
+
+          {/* 7 day pills */}
+          <div className="flex flex-1 gap-1">
+            {weekDays.map((day, i) => {
+              const str = toDateStr(day)
+              const isSelected = str === selectedStr
+              const isToday = str === todayStr
+              const hasJobs = weekJobDates.has(str)
+
+              return (
+                <button
+                  key={i}
+                  onClick={() => selectDay(i)}
+                  className={`flex-1 flex flex-col items-center py-1.5 rounded-xl transition-all cursor-pointer relative
+                    ${isSelected
+                      ? 'bg-green-700 text-white shadow-md'
+                      : isToday
+                      ? 'bg-green-50 text-green-700 ring-2 ring-green-300'
+                      : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                >
+                  <span className={`text-xs font-semibold leading-none ${isSelected ? 'text-green-200' : 'text-gray-400'}`}>
+                    {DAY_ABBR[day.getDay()]}
+                  </span>
+                  <span className={`text-base font-bold leading-tight ${isSelected ? 'text-white' : isToday ? 'text-green-700' : 'text-gray-700'}`}>
+                    {day.getDate()}
+                  </span>
+                  {/* Job dot */}
+                  <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
+                    hasJobs
+                      ? isSelected ? 'bg-green-300' : 'bg-green-500'
+                      : 'bg-transparent'
+                  }`} />
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Next week */}
+          <button
+            onClick={nextWeek}
+            className="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 text-xl cursor-pointer rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            ›
+          </button>
         </div>
-        <button onClick={nextDay} className="text-gray-400 hover:text-gray-700 text-2xl cursor-pointer px-2">›</button>
+
+        {/* Selected date label + today shortcut */}
+        <div className="flex items-center justify-between mt-2 px-1">
+          <p className="font-bold text-gray-800 text-sm leading-none">
+            {displayDate(selectedDate)}
+            <span className="text-gray-400 font-normal ml-1 text-xs">
+              {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </p>
+          {!isCurrentWeek && (
+            <button
+              onClick={goToToday}
+              className="text-xs font-semibold text-green-700 hover:underline cursor-pointer"
+            >
+              Back to Today
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Jobs */}
@@ -155,7 +269,7 @@ export default function WorkerPage() {
             <p className="text-gray-700 font-bold text-lg">No jobs scheduled</p>
             <p className="text-gray-400 text-sm mt-1">Nothing on the schedule for this day.</p>
             <button
-              onClick={() => setSelectedDate(new Date())}
+              onClick={goToToday}
               className="mt-6 text-green-700 font-semibold text-sm hover:underline cursor-pointer"
             >
               Go to Today
@@ -175,7 +289,6 @@ export default function WorkerPage() {
                   'border-blue-500'
                 }`}
               >
-                {/* Job summary row */}
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="min-w-0">
@@ -207,7 +320,6 @@ export default function WorkerPage() {
                     </p>
                   )}
 
-                  {/* Action buttons */}
                   <div className="flex gap-2">
                     {client?.address && (
                       <a
@@ -228,20 +340,11 @@ export default function WorkerPage() {
                   </div>
                 </div>
 
-                {/* Photo section */}
                 {isExpanded && (
                   <div className="border-t border-gray-100 p-4 bg-gray-50 space-y-4">
                     <div className="grid grid-cols-2 gap-3">
-                      <JobPhotoUpload
-                        jobId={job.id}
-                        userId={user?.id}
-                        photoType="before"
-                      />
-                      <JobPhotoUpload
-                        jobId={job.id}
-                        userId={user?.id}
-                        photoType="after"
-                      />
+                      <JobPhotoUpload jobId={job.id} userId={user?.id} photoType="before" />
+                      <JobPhotoUpload jobId={job.id} userId={user?.id} photoType="after" />
                     </div>
                     <JobPhotoGallery jobId={job.id} />
                   </div>
@@ -252,7 +355,7 @@ export default function WorkerPage() {
         )}
       </div>
 
-      {/* Bottom job count summary */}
+      {/* Bottom summary */}
       {jobs.length > 0 && (
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-5 py-3 flex justify-between text-xs font-semibold text-gray-500">
           <span>{jobs.filter(j => j.status === '🟢 Completed').length} of {jobs.length} completed</span>
