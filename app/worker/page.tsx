@@ -125,12 +125,30 @@ export default function WorkerPage() {
     const d = new Date(weekStart)
     d.setDate(d.getDate() - 7)
     setWeekStart(d)
+    setSelectedDate(d)
   }
 
   const nextWeek = () => {
     const d = new Date(weekStart)
     d.setDate(d.getDate() + 7)
     setWeekStart(d)
+    setSelectedDate(d)
+  }
+
+  const prevMonth = () => {
+    const d = new Date(selectedDate)
+    d.setDate(1)
+    d.setMonth(d.getMonth() - 1)
+    setSelectedDate(d)
+    setWeekStart(getWeekStart(d))
+  }
+
+  const nextMonth = () => {
+    const d = new Date(selectedDate)
+    d.setDate(1)
+    d.setMonth(d.getMonth() + 1)
+    setSelectedDate(d)
+    setWeekStart(getWeekStart(d))
   }
 
   const goToToday = () => {
@@ -187,6 +205,16 @@ export default function WorkerPage() {
 
       {/* Week strip */}
       <div className="bg-white border-b border-gray-200 sticky top-[60px] z-10 px-2 py-3">
+
+        {/* Month navigation */}
+        <div className="flex items-center justify-between px-1 mb-2">
+          <button onClick={prevMonth} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer text-sm font-bold">‹</button>
+          <p className="font-bold text-gray-800 text-sm">
+            {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </p>
+          <button onClick={nextMonth} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer text-sm font-bold">›</button>
+        </div>
+
         <div className="flex items-center gap-1">
           {/* Prev week */}
           <button
