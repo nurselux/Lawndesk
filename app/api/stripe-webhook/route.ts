@@ -49,11 +49,14 @@ export async function POST(req: Request) {
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
         const priceId = subscription.items.data[0].price.id
         const plan = getPlan(priceId)
-        const status = subscription.status // 'trialing' | 'active'
+        const status = subscription.status
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null
 
         await supabase
           .from('profiles')
-          .update({ stripe_customer_id: customerId, subscription_status: status, subscription_plan: plan })
+          .update({ stripe_customer_id: customerId, subscription_status: status, subscription_plan: plan, trial_ends_at: trialEnd })
           .eq('id', userId)
         break
       }

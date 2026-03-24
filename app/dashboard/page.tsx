@@ -62,6 +62,7 @@ function DashboardContent() {
   const [overdueInvoices, setOverdueInvoices] = useState<Invoice[]>([])
   const [dataLoaded, setDataLoaded] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
 
   const animatedClients = useCountUp(clientCount)
   const animatedJobs = useCountUp(jobsThisWeek)
@@ -71,8 +72,13 @@ function DashboardContent() {
   useEffect(() => {
     if (user) {
       fetchDashboardData()
-      supabase.from('profiles').select('subscription_status').eq('id', user.id).single()
-        .then(({ data }) => { if (data) setSubscriptionStatus(data.subscription_status) })
+      supabase.from('profiles').select('subscription_status, trial_ends_at').eq('id', user.id).single()
+        .then(({ data }) => {
+          if (data) {
+            setSubscriptionStatus(data.subscription_status)
+            setTrialEndsAt(data.trial_ends_at)
+          }
+        })
     }
   }, [user])
 
@@ -202,7 +208,16 @@ function DashboardContent() {
 
       {subscriptionStatus === 'trialing' && !stripeSuccess && (
         <div className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span>🎁 You're on a free trial — enjoy full access! Your card won't be charged until the trial ends.</span>
+          <span>
+            🎁 You&apos;re on a free trial —{' '}
+            {trialEndsAt
+              ? (() => {
+                  const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
+                  return days > 0 ? `${days} day${days === 1 ? '' : 's'} remaining.` : 'trial ending soon.'
+                })()
+              : 'enjoy full access!'}{' '}
+            Your card won&apos;t be charged until the trial ends.
+          </span>
           <Link href="/settings" className="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap ml-4">
             Manage Billing
           </Link>
