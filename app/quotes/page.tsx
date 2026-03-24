@@ -15,6 +15,8 @@ interface Quote {
   id: string
   client_id: string | null
   client_name: string
+  client_email: string | null
+  client_phone: string | null
   title: string
   description: string | null
   line_items: LineItem[]
@@ -29,13 +31,15 @@ interface Quote {
 interface Client {
   id: string
   name: string
+  email: string | null
+  phone: string | null
 }
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
   sent: 'bg-blue-100 text-blue-700',
   approved: 'bg-green-100 text-green-700',
-  declined: 'bg-red-100 text-red-700',
+  declined: 'bg-red-100 text-red-400',
   converted: 'bg-purple-100 text-purple-700',
 }
 
@@ -56,14 +60,18 @@ export default function QuotesPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [sending, setSending] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState('All')
 
   // Form state
+  const [useExistingClient, setUseExistingClient] = useState(false)
   const [clientId, setClientId] = useState('')
   const [clientName, setClientName] = useState('')
+  const [clientEmail, setClientEmail] = useState('')
+  const [clientPhone, setClientPhone] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [lineItems, setLineItems] = useState<LineItem[]>([emptyItem()])
@@ -80,7 +88,7 @@ export default function QuotesPage() {
   const fetchQuotes = async () => {
     const { data } = await supabase
       .from('Quotes')
-      .select('id, client_id, client_name, title, description, line_items, amount, status, share_token, expires_at, notes, created_at')
+      .select('id, client_id, client_name, client_email, client_phone, title, description, line_items, amount, status, share_token, expires_at, notes, created_at')
       .eq('user_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setQuotes(data as Quote[])
@@ -89,7 +97,7 @@ export default function QuotesPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name')
+      .select('id, name, email, phone')
       .eq('user_id', user?.id)
       .order('name')
     if (data) setClients(data as Client[])
@@ -98,18 +106,25 @@ export default function QuotesPage() {
   const calcTotal = (items: LineItem[]) =>
     items.reduce((s, i) => s + i.quantity * i.unit_price, 0)
 
-  const handleClientChange = (id: string) => {
+  const handleClientSelect = (id: string) => {
     setClientId(id)
-    const c = clients.find((c) => c.id === id)
-    if (c) setClientName(c.name)
+    const c = clients.find(c => c.id === id)
+    if (c) {
+      setClientName(c.name)
+      setClientEmail(c.email || '')
+      setClientPhone(c.phone || '')
+    }
   }
 
   const updateItem = (idx: number, field: keyof LineItem, value: string | number) => {
-    setLineItems((prev) => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item))
+    setLineItems(prev => prev.map((item, i) => i === idx ? { ...item, [field]: value } : item))
   }
 
-  const addItem = () => setLineItems((prev) => [...prev, emptyItem()])
-  const removeItem = (idx: number) => setLineItems((prev) => prev.filter((_, i) => i !== idx))
+  const addItem = () => setLineItems(prev => [...prev, emptyItem()])
+  const removeItem = (idx: number) => setLineItems(prev => prev.filter((_, i) => i !== idx))
+
+  const getQuoteLink = (token: string) => `${window.location.origin}/quote/${token}`
+  const getPortalLink = () => `${window.location.origin}/portal`
 
   const handleCreate = async () => {
     if (!title.trim()) {
@@ -124,34 +139,100 @@ export default function QuotesPage() {
     }
     setSaving(true)
     const amount = calcTotal(lineItems)
-    const { error } = await supabase.from('Quotes').insert([{
+    const validItems = lineItems.filter(i => i.description.trim())
+    const { data: quote, error } = await supabase.from('Quotes').insert([{
       user_id: user?.id,
       client_id: clientId || null,
       client_name: clientName.trim(),
+      client_email: clientEmail.trim() || null,
+      client_phone: clientPhone.trim() || null,
       title: title.trim(),
       description: description.trim() || null,
-      line_items: lineItems.filter((i) => i.description.trim()),
+      line_items: validItems,
       amount,
-      status: 'draft',
+      status: clientEmail.trim() ? 'sent' : 'draft',
       expires_at: expiresAt || null,
       notes: notes.trim() || null,
-    }])
-    if (!error) {
+    }]).select().single()
+
+    if (!error && quote) {
       resetForm()
-      setSuccessMessage('Quote created!')
-      setTimeout(() => setSuccessMessage(''), 3000)
       fetchQuotes()
-    } else {
+      if (clientEmail.trim()) {
+        // Auto-send email
+        await sendQuoteEmail(quote as Quote)
+      } else {
+        setSuccessMessage('Quote created!')
+        setTimeout(() => setSuccessMessage(''), 4000)
+      }
+    } else if (error) {
       setErrorMessage(`Error: ${error.message}`)
       setTimeout(() => setErrorMessage(''), 4000)
     }
     setSaving(false)
   }
 
+  const sendQuoteEmail = async (quote: Quote) => {
+    if (!quote.client_email) {
+      setErrorMessage('No email address for this client.')
+      setTimeout(() => setErrorMessage(''), 4000)
+      return
+    }
+    setSending(quote.id)
+    try {
+      const res = await fetch(
+        'https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-quote-email',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientEmail: quote.client_email,
+            recipientName: quote.client_name,
+            quoteTitle: quote.title,
+            amount: quote.amount,
+            description: quote.description,
+            lineItems: quote.line_items,
+            expiresAt: quote.expires_at,
+            quoteLink: getQuoteLink(quote.share_token),
+            portalLink: getPortalLink(),
+          }),
+        }
+      )
+      if (res.ok) {
+        if (quote.status === 'draft') {
+          await supabase.from('Quotes').update({ status: 'sent' }).eq('id', quote.id)
+          fetchQuotes()
+        }
+        setSuccessMessage(`📧 Quote emailed to ${quote.client_email}!`)
+      } else {
+        setErrorMessage('Email failed — use Copy Link to share manually.')
+      }
+    } catch {
+      setErrorMessage('Email failed — use Copy Link to share manually.')
+    }
+    setTimeout(() => setSuccessMessage(''), 5000)
+    setTimeout(() => setErrorMessage(''), 5000)
+    setSending(null)
+  }
+
+  const sendQuoteSMS = (quote: Quote) => {
+    if (!quote.client_phone) {
+      setErrorMessage('No phone number for this client.')
+      setTimeout(() => setErrorMessage(''), 4000)
+      return
+    }
+    const link = getQuoteLink(quote.share_token)
+    const msg = `Hi ${quote.client_name}, here's your quote for $${quote.amount.toFixed(2)} from LawnDesk. Review and approve it here: ${link}`
+    window.open(`sms:${quote.client_phone}?body=${encodeURIComponent(msg)}`)
+  }
+
   const resetForm = () => {
     setShowForm(false)
+    setUseExistingClient(false)
     setClientId('')
     setClientName('')
+    setClientEmail('')
+    setClientPhone('')
     setTitle('')
     setDescription('')
     setLineItems([emptyItem()])
@@ -161,7 +242,7 @@ export default function QuotesPage() {
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('Quotes').update({ status }).eq('id', id)
-    fetchQuotes()
+    setQuotes(prev => prev.map(q => q.id === id ? { ...q, status } : q))
   }
 
   const deleteQuote = async (id: string) => {
@@ -193,18 +274,12 @@ export default function QuotesPage() {
   }
 
   const copyLink = (token: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/quote/${token}`)
+    navigator.clipboard.writeText(getQuoteLink(token))
     setCopiedId(token)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  const markSent = async (id: string, token: string) => {
-    await supabase.from('Quotes').update({ status: 'sent' }).eq('id', id)
-    copyLink(token)
-    fetchQuotes()
-  }
-
-  const filtered = quotes.filter((q) =>
+  const filtered = quotes.filter(q =>
     filterStatus === 'All' || q.status === filterStatus.toLowerCase()
   )
 
@@ -217,33 +292,31 @@ export default function QuotesPage() {
   const total = calcTotal(lineItems)
 
   return (
-    <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-4 pb-8 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📋</div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Quotes</h2>
-            <p className="text-gray-500 text-sm">Send estimates and win more work</p>
+            <p className="text-gray-500 text-sm">Send estimates, win more work</p>
           </div>
         </div>
         <button
-          onClick={() => { setShowForm(!showForm) }}
-          className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
+          onClick={() => setShowForm(!showForm)}
+          className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-2.5 px-5 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm"
         >
           + New Quote
         </button>
       </div>
 
       {/* Filter */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {['All', 'Draft', 'Sent', 'Approved', 'Declined', 'Converted'].map((s) => (
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+        {['All', 'Draft', 'Sent', 'Approved', 'Declined', 'Converted'].map(s => (
           <button
             key={s}
             onClick={() => setFilterStatus(s)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-              filterStatus === s
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-400'
+            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              filterStatus === s ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-400'
             }`}
           >
             {s}
@@ -251,139 +324,170 @@ export default function QuotesPage() {
         ))}
       </div>
 
-      {successMessage && (
-        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-lg mb-4">✅ {successMessage}</div>
-      )}
-      {errorMessage && (
-        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-lg mb-4">❌ {errorMessage}</div>
-      )}
+      {successMessage && <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4 text-sm">✅ {successMessage}</div>}
+      {errorMessage && <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4 text-sm">❌ {errorMessage}</div>}
 
       {/* Create form */}
       {showForm && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">New Quote</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            {clients.length > 0 ? (
+        <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm">
+          <h3 className="font-bold text-gray-800 mb-4 text-base">📋 New Quote</h3>
+
+          {/* Client section */}
+          <div className="mb-4">
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => { setUseExistingClient(false); setClientId(''); setClientName(''); setClientEmail(''); setClientPhone('') }}
+                className={`flex-1 text-sm font-semibold py-2 rounded-lg border transition-all cursor-pointer ${
+                  !useExistingClient ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                }`}
+              >
+                New / Walk-in
+              </button>
+              <button
+                onClick={() => setUseExistingClient(true)}
+                className={`flex-1 text-sm font-semibold py-2 rounded-lg border transition-all cursor-pointer ${
+                  useExistingClient ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                }`}
+              >
+                Existing Client
+              </button>
+            </div>
+
+            {useExistingClient ? (
               <select
                 value={clientId}
-                onChange={(e) => handleClientChange(e.target.value)}
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
+                onChange={e => handleClientSelect(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white mb-3"
               >
                 <option value="">Select client…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.email ? ` · ${c.email}` : ''}</option>
                 ))}
               </select>
-            ) : (
+            ) : null}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 placeholder="Client Name *"
                 value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
+                onChange={e => setClientName(e.target.value)}
+                className="border border-gray-200 rounded-xl p-3 text-gray-800"
+                readOnly={useExistingClient && !!clientId}
               />
-            )}
-            {clients.length > 0 && !clientId && (
               <input
-                placeholder="Or type client name *"
-                value={clientName}
-                onChange={(e) => { setClientName(e.target.value); setClientId('') }}
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
+                type="email"
+                placeholder="Email (to send quote)"
+                value={clientEmail}
+                onChange={e => setClientEmail(e.target.value)}
+                className="border border-gray-200 rounded-xl p-3 text-gray-800"
               />
-            )}
-            <input
-              placeholder="Quote Title *"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            />
-            <input
-              placeholder="Description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            />
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 font-semibold">Expires</label>
               <input
-                type="date"
-                value={expiresAt}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
+                type="tel"
+                placeholder="Phone (for SMS)"
+                value={clientPhone}
+                onChange={e => setClientPhone(e.target.value)}
+                className="border border-gray-200 rounded-xl p-3 text-gray-800"
+              />
+              <input
+                placeholder="Quote Title *"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="border border-gray-200 rounded-xl p-3 text-gray-800"
               />
             </div>
+            <input
+              placeholder="Short description (optional)"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 mt-3"
+            />
           </div>
 
           {/* Line items */}
           <div className="mb-4">
-            <h4 className="font-bold text-gray-700 mb-2">Line Items</h4>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Line Items</p>
             <div className="space-y-2">
               {lineItems.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                   <input
                     placeholder="Description"
                     value={item.description}
-                    onChange={(e) => updateItem(idx, 'description', e.target.value)}
-                    className="col-span-6 border border-gray-300 rounded-lg p-2 text-gray-800 text-sm"
+                    onChange={e => updateItem(idx, 'description', e.target.value)}
+                    className="col-span-6 border border-gray-200 rounded-lg p-2.5 text-gray-800 text-sm"
                   />
                   <input
                     type="number"
                     placeholder="Qty"
                     value={item.quantity}
                     min={1}
-                    onChange={(e) => updateItem(idx, 'quantity', parseFloat(e.target.value) || 1)}
-                    className="col-span-2 border border-gray-300 rounded-lg p-2 text-gray-800 text-sm"
+                    onChange={e => updateItem(idx, 'quantity', parseFloat(e.target.value) || 1)}
+                    className="col-span-2 border border-gray-200 rounded-lg p-2.5 text-gray-800 text-sm"
+                    inputMode="decimal"
                   />
                   <input
                     type="number"
-                    placeholder="Price"
+                    placeholder="$"
                     value={item.unit_price}
                     min={0}
                     step={0.01}
-                    onChange={(e) => updateItem(idx, 'unit_price', parseFloat(e.target.value) || 0)}
-                    className="col-span-3 border border-gray-300 rounded-lg p-2 text-gray-800 text-sm"
+                    onChange={e => updateItem(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                    className="col-span-3 border border-gray-200 rounded-lg p-2.5 text-gray-800 text-sm"
+                    inputMode="decimal"
                   />
                   <button
                     onClick={() => removeItem(idx)}
                     disabled={lineItems.length === 1}
-                    className="col-span-1 text-red-400 hover:text-red-600 disabled:opacity-30 text-lg cursor-pointer"
-                  >
-                    ✕
-                  </button>
+                    className="col-span-1 text-red-400 hover:text-red-600 disabled:opacity-20 text-base cursor-pointer"
+                  >✕</button>
                 </div>
               ))}
             </div>
-            <button
-              onClick={addItem}
-              className="mt-2 text-sm text-blue-600 font-semibold hover:underline cursor-pointer"
-            >
-              + Add line item
-            </button>
-            {total > 0 && (
-              <p className="text-right text-lg font-bold text-gray-800 mt-3">
-                Total: ${total.toFixed(2)}
-              </p>
-            )}
+            <div className="flex items-center justify-between mt-2">
+              <button onClick={addItem} className="text-sm text-blue-600 font-semibold hover:underline cursor-pointer">
+                + Add line
+              </button>
+              {total > 0 && <p className="text-base font-bold text-gray-800">Total: ${total.toFixed(2)}</p>}
+            </div>
           </div>
 
-          <textarea
-            placeholder="Internal notes (not shown to client)"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-            className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full mb-4 text-sm"
-          />
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="text-xs text-gray-400 font-semibold block mb-1">Expires</label>
+              <input
+                type="date"
+                value={expiresAt}
+                onChange={e => setExpiresAt(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 font-semibold block mb-1">Internal notes</label>
+              <input
+                placeholder="Not shown to client"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm"
+              />
+            </div>
+          </div>
+
+          {clientEmail && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 mb-4 text-sm text-blue-700 font-semibold">
+              ✉️ Quote will be emailed to {clientEmail} automatically
+            </div>
+          )}
 
           <div className="flex gap-3">
             <button
               onClick={handleCreate}
               disabled={saving}
-              className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-3 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save Quote'}
+              {saving ? '⏳ Saving…' : clientEmail ? '📧 Save & Send' : 'Save Quote'}
             </button>
             <button
               onClick={resetForm}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-200 text-gray-600 font-bold py-3 px-5 rounded-xl cursor-pointer hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -391,67 +495,89 @@ export default function QuotesPage() {
         </div>
       )}
 
-      {/* Quotes list */}
+      {/* Quote list */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-5xl mb-3">📋</p>
           <p className="text-gray-700 font-bold mb-1">No quotes yet</p>
-          <p className="text-gray-400 text-sm">Create your first quote to send to a client.</p>
+          <p className="text-gray-400 text-sm">Create your first quote above.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filtered.map((quote) => (
-            <div key={quote.id} className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-200">
-              <div className="flex justify-between items-start gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className={`text-xs font-bold py-1 px-2 rounded-full ${STATUS_COLORS[quote.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                      {STATUS_LABELS[quote.status] ?? quote.status}
-                    </span>
-                    {quote.expires_at && (
-                      <span className="text-xs text-gray-400">Expires {new Date(quote.expires_at).toLocaleDateString()}</span>
+          {filtered.map(quote => (
+            <div key={quote.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`text-xs font-bold py-1 px-2 rounded-full ${STATUS_COLORS[quote.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                        {STATUS_LABELS[quote.status] ?? quote.status}
+                      </span>
+                      {quote.expires_at && (
+                        <span className="text-xs text-gray-400">Expires {new Date(quote.expires_at).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                    <h4 className="font-bold text-gray-800 text-base truncate">{quote.title}</h4>
+                    <p className="text-gray-500 text-sm">{quote.client_name}</p>
+                    {(quote.client_email || quote.client_phone) && (
+                      <p className="text-gray-400 text-xs mt-0.5">
+                        {quote.client_email}{quote.client_email && quote.client_phone ? ' · ' : ''}{quote.client_phone}
+                      </p>
                     )}
+                    {quote.description && <p className="text-gray-400 text-xs mt-1 truncate">{quote.description}</p>}
                   </div>
-                  <h4 className="font-bold text-gray-800 text-lg truncate">{quote.title}</h4>
-                  <p className="text-gray-500 text-sm">{quote.client_name}</p>
-                  {quote.description && <p className="text-gray-400 text-xs mt-1 truncate">{quote.description}</p>}
+                  <div className="shrink-0 text-right">
+                    <p className="text-2xl font-bold text-blue-700">${quote.amount.toFixed(2)}</p>
+                    <p className="text-gray-400 text-xs">{new Date(quote.created_at).toLocaleDateString()}</p>
+                  </div>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-2xl font-bold text-blue-700">${quote.amount.toFixed(2)}</p>
-                  <p className="text-gray-400 text-xs">{new Date(quote.created_at).toLocaleDateString()}</p>
-                </div>
+
+                {quote.line_items?.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-1">
+                    {quote.line_items.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm text-gray-500">
+                        <span className="truncate">{item.description}</span>
+                        <span className="font-semibold shrink-0 ml-2">{item.quantity} × ${item.unit_price.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Line items preview */}
-              {quote.line_items?.length > 0 && (
-                <div className="mt-3 border-t border-gray-100 pt-3 space-y-1">
-                  {quote.line_items.map((item, i) => (
-                    <div key={i} className="flex justify-between text-sm text-gray-600">
-                      <span>{item.description}</span>
-                      <span className="font-semibold">{item.quantity} × ${item.unit_price.toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* Action bar */}
+              <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 flex items-center gap-2 flex-wrap rounded-b-2xl">
+                {/* Send email */}
+                <button
+                  onClick={() => sendQuoteEmail(quote)}
+                  disabled={sending === quote.id}
+                  className={`text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
+                    quote.client_email ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-400'
+                  }`}
+                  title={quote.client_email || 'No email on file'}
+                >
+                  {sending === quote.id ? '⏳' : '📧'} Email
+                </button>
 
-              {/* Actions */}
-              <div className="flex gap-2 mt-4 flex-wrap">
-                {quote.status === 'draft' && (
-                  <button
-                    onClick={() => markSent(quote.id, quote.share_token)}
-                    className="text-xs font-bold py-2 px-3 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors cursor-pointer"
-                  >
-                    📤 Send (Copy Link)
-                  </button>
-                )}
-                {quote.status === 'sent' && (
-                  <button
-                    onClick={() => copyLink(quote.share_token)}
-                    className="text-xs font-bold py-2 px-3 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors cursor-pointer"
-                  >
-                    {copiedId === quote.share_token ? '✓ Copied!' : '📋 Copy Link'}
-                  </button>
-                )}
+                {/* Send SMS */}
+                <button
+                  onClick={() => sendQuoteSMS(quote)}
+                  className={`text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
+                    quote.client_phone ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-400'
+                  }`}
+                  title={quote.client_phone || 'No phone on file'}
+                >
+                  💬 Text
+                </button>
+
+                {/* Copy link */}
+                <button
+                  onClick={() => copyLink(quote.share_token)}
+                  className="text-xs font-bold py-2 px-3 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors cursor-pointer"
+                >
+                  {copiedId === quote.share_token ? '✓ Copied!' : '🔗 Copy Link'}
+                </button>
+
+                {/* Status actions */}
                 {quote.status === 'approved' && (
                   <button
                     onClick={() => convertToJob(quote)}
@@ -460,27 +586,18 @@ export default function QuotesPage() {
                     🔁 Convert to Job
                   </button>
                 )}
-                {quote.status !== 'converted' && quote.status !== 'declined' && (
-                  <>
-                    {quote.status !== 'approved' && (
-                      <button
-                        onClick={() => updateStatus(quote.id, 'approved')}
-                        className="text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors cursor-pointer"
-                      >
-                        ✅ Mark Approved
-                      </button>
-                    )}
-                    <button
-                      onClick={() => updateStatus(quote.id, 'declined')}
-                      className="text-xs font-bold py-2 px-3 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-colors cursor-pointer"
-                    >
-                      ❌ Mark Declined
-                    </button>
-                  </>
+                {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
+                  <button
+                    onClick={() => updateStatus(quote.id, 'approved')}
+                    className="text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors cursor-pointer"
+                  >
+                    ✅ Mark Approved
+                  </button>
                 )}
+
                 <button
                   onClick={() => deleteQuote(quote.id)}
-                  className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer ml-auto"
+                  className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer ml-auto"
                 >
                   🗑️
                 </button>
