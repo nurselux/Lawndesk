@@ -446,16 +446,16 @@ export default function JobsPage() {
   )
 
   return (
-    <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">🌿</div>
-          <div>
+    <div className="pb-6 bg-gray-50 min-h-dvh">
+      <div className="flex justify-between items-center mb-6 gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 shrink-0 rounded-xl flex items-center justify-center shadow-md">🌿</div>
+          <div className="min-w-0">
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Jobs</h2>
             <p className="text-gray-500 text-sm">Schedule and track your work</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-1.5 items-end shrink-0">
           {(() => {
             const today = new Date().toISOString().split('T')[0]
             const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
@@ -464,7 +464,7 @@ export default function JobsPage() {
             const mapsUrl = `https://www.google.com/maps/dir/${addresses.map(a => encodeURIComponent(a!)).join('/')}`
             return (
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm">
+                <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-3 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm whitespace-nowrap">
                   🗺️ Today's Route
                 </button>
               </a>
@@ -472,7 +472,7 @@ export default function JobsPage() {
           })()}
           <button
             onClick={() => { setShowForm(!showForm); setEditingJob(null) }}
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow whitespace-nowrap text-sm"
           >
             + Schedule Job
           </button>

@@ -18,9 +18,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [profile, loading])
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="flex min-h-dvh w-full overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 md:ml-64 p-6 pt-14 md:pt-6 bg-gray-100 min-h-dvh">
+      <main className="flex-1 md:ml-64 px-4 py-4 pt-16 md:px-6 md:pt-6 bg-gray-100 min-h-dvh w-full overflow-x-hidden">
         {children}
       </main>
     </div>
