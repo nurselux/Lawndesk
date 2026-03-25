@@ -11,12 +11,21 @@ export default function Sidebar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState('')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [overdueCount, setOverdueCount] = useState(0)
 
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setIsLoggedIn(!!session)
       if (session?.user?.email) setUserEmail(session.user.email)
+      if (session?.user?.id) {
+        const { count } = await (supabase as any)
+          .from('Invoices')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .eq('status', '🔴 Overdue')
+        setOverdueCount(count ?? 0)
+      }
     }
     checkUser()
   }, [])
@@ -36,7 +45,7 @@ export default function Sidebar() {
     { label: 'Clients', icon: '👥', href: '/clients' },
     { label: 'Jobs', icon: '📅', href: '/jobs' },
     { label: 'Quotes', icon: '📋', href: '/quotes' },
-    { label: 'Invoices', icon: '📄', href: '/invoices' },
+    { label: 'Invoices', icon: '📄', href: '/invoices', badge: overdueCount > 0 ? overdueCount : undefined },
     { label: 'Team', icon: '👷', href: '/team' },
     { label: 'Client Portal', icon: '🌐', href: '/portal', external: true },
     { label: 'Settings', icon: '⚙️', href: '/settings' },
@@ -66,10 +75,11 @@ export default function Sidebar() {
               </a>
             ) : (
               <Link key={item.href} href={item.href}>
-                <div className={`p-3 rounded-lg mb-2 font-medium transition-all duration-200 cursor-pointer hover:bg-green-700 ${
+                <div className={`p-3 rounded-lg mb-2 font-medium transition-all duration-200 cursor-pointer hover:bg-green-700 flex items-center justify-between ${
                   isActive(item.href) ? 'bg-green-600' : ''
                 }`}>
-                  {item.icon} {item.label}
+                  <span>{item.icon} {item.label}</span>
+                  {item.badge && <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{item.badge}</span>}
                 </div>
               </Link>
             )
@@ -150,7 +160,8 @@ export default function Sidebar() {
                     : 'hover:bg-green-700 text-green-100'
                 }`}>
                   <span className="text-xl">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge && <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{item.badge}</span>}
                 </div>
               </Link>
             )

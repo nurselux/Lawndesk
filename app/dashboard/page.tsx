@@ -66,6 +66,8 @@ function DashboardContent() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(() =>
     typeof window !== 'undefined' && localStorage.getItem('onboarding_dismissed') === '1'
   )
+  const [lastMonthRevenue, setLastMonthRevenue] = useState(0)
+  const [lastMonthJobs, setLastMonthJobs] = useState(0)
 
   const animatedClients = useCountUp(clientCount)
   const animatedJobs = useCountUp(jobsThisWeek)
@@ -143,6 +145,18 @@ function DashboardContent() {
     if (upcoming) setUpcomingJobs(upcoming as Job[])
     if (overdue) setOverdueInvoices(overdue as Invoice[])
     setDataLoaded(true)
+
+    // Fetch last month stats for trend comparison
+    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString().split('T')[0]
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0]
+    const [{ data: lastInvoices }, { count: lastJobCount }] = await Promise.all([
+      (supabase as any).from('Invoices').select('amount, status').eq('user_id', user!.id)
+        .eq('status', '🟢 Paid').gte('created_at', lastMonthStart).lte('created_at', lastMonthEnd),
+      (supabase as any).from('Jobs').select('*', { count: 'exact', head: true }).eq('user_id', user!.id)
+        .gte('date', lastMonthStart).lte('date', lastMonthEnd),
+    ])
+    if (lastInvoices) setLastMonthRevenue(lastInvoices.reduce((s: number, i: any) => s + i.amount, 0))
+    setLastMonthJobs(lastJobCount ?? 0)
   }
 
   if (checking) return (
@@ -158,46 +172,54 @@ function DashboardContent() {
     return 'bg-blue-100 text-blue-700'
   }
 
+  const revenueTrend = lastMonthRevenue > 0
+    ? Math.round(((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+    : null
+
+  const jobsTrend = lastMonthJobs > 0
+    ? Math.round(((jobsThisWeek - lastMonthJobs) / lastMonthJobs) * 100)
+    : null
+
   const statCards = [
     {
       gradient: 'from-green-500 to-emerald-600',
       emoji: '👥',
       label: 'Total Clients',
-      value: animatedClients,
       display: String(animatedClients),
       href: '/clients',
       linkLabel: 'View all →',
       delay: 0,
+      trend: null,
     },
     {
       gradient: 'from-blue-500 to-cyan-500',
       emoji: '📅',
       label: 'Jobs This Week',
-      value: animatedJobs,
       display: String(animatedJobs),
       href: '/jobs',
       linkLabel: 'View all →',
       delay: 80,
+      trend: jobsTrend,
     },
     {
       gradient: 'from-amber-400 to-orange-500',
       emoji: '⚠️',
       label: 'Unpaid Invoices',
-      value: animatedUnpaid,
       display: String(animatedUnpaid),
       href: '/invoices',
       linkLabel: 'View all →',
       delay: 160,
+      trend: null,
     },
     {
       gradient: 'from-purple-500 to-violet-600',
       emoji: '💰',
       label: 'Total Revenue',
-      value: animatedRevenue,
       display: `$${animatedRevenue.toLocaleString()}`,
       href: '/invoices',
       linkLabel: 'View invoices →',
       delay: 240,
+      trend: revenueTrend,
     },
   ]
 
@@ -310,6 +332,11 @@ function DashboardContent() {
             <p className="text-4xl mb-1">{card.emoji}</p>
             <p className="text-white/80 mb-1 text-xs sm:text-sm">{card.label}</p>
             <p className="text-3xl sm:text-4xl font-bold tabular-nums">{card.display}</p>
+            {card.trend !== null && (
+              <p className={`text-xs mt-0.5 font-semibold ${card.trend >= 0 ? 'text-white/90' : 'text-white/70'}`}>
+                {card.trend >= 0 ? '↑' : '↓'} {Math.abs(card.trend)}% vs last mo
+              </p>
+            )}
             <Link href={card.href} className="text-xs text-white/70 hover:text-white mt-1 inline-block">
               {card.linkLabel}
             </Link>

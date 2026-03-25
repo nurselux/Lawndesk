@@ -45,6 +45,8 @@ function InvoicesContent() {
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkSaving, setBulkSaving] = useState(false)
 
   // Form state
   const [clientId, setClientId] = useState('')
@@ -192,6 +194,26 @@ function InvoicesContent() {
     setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: '🟢 Paid' } : inv))
     setSuccessMessage('Marked as paid!')
     setTimeout(() => setSuccessMessage(''), 3000)
+  }
+
+  const bulkMarkPaid = async () => {
+    if (selectedIds.size === 0) return
+    setBulkSaving(true)
+    const ids = Array.from(selectedIds)
+    await supabase.from('Invoices').update({ status: '🟢 Paid' }).in('id', ids)
+    setInvoices(prev => prev.map(inv => selectedIds.has(inv.id) ? { ...inv, status: '🟢 Paid' } : inv))
+    setSelectedIds(new Set())
+    setSuccessMessage(`✅ ${ids.length} invoice${ids.length !== 1 ? 's' : ''} marked as paid!`)
+    setTimeout(() => setSuccessMessage(''), 4000)
+    setBulkSaving(false)
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
   }
 
   const handleDelete = async (id: string) => {
@@ -467,6 +489,28 @@ function InvoicesContent() {
         </div>
       )}
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="bg-purple-600 text-white rounded-2xl px-4 py-3 mb-4 flex items-center justify-between shadow-lg">
+          <span className="font-bold text-sm">{selectedIds.size} selected</span>
+          <div className="flex gap-2">
+            <button
+              onClick={bulkMarkPaid}
+              disabled={bulkSaving}
+              className="bg-white text-purple-700 font-bold text-xs py-2 px-4 rounded-lg hover:bg-purple-50 transition cursor-pointer disabled:opacity-50"
+            >
+              {bulkSaving ? '⏳ Saving…' : '✓ Mark All Paid'}
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-purple-200 hover:text-white text-xs font-semibold cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Invoice List */}
       {invoices.length === 0 ? (
         <div className="text-center py-16">
@@ -497,12 +541,21 @@ function InvoicesContent() {
                 key={inv.id}
                 className={`bg-white rounded-2xl shadow-sm border-l-4 overflow-hidden ${
                   isPaid ? 'border-green-500' : isOverdue ? 'border-red-500' : 'border-amber-500'
-                }`}
+                } ${selectedIds.has(inv.id) ? 'ring-2 ring-purple-400' : ''}`}
               >
                 {/* Main row */}
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
+                    <div className="flex items-start gap-2 min-w-0">
+                      {!isPaid && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(inv.id)}
+                          onChange={() => toggleSelect(inv.id)}
+                          className="mt-1 accent-purple-600 cursor-pointer shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0">
                       <p className="text-xs text-gray-400 font-mono leading-none mb-0.5">
                         INV-{String(inv.invoice_number).padStart(3, '0')}
                       </p>
@@ -510,6 +563,7 @@ function InvoicesContent() {
                       {inv.description && (
                         <p className="text-gray-400 text-xs truncate mt-0.5">{inv.description}</p>
                       )}
+                    </div>
                     </div>
                     <div className="text-right shrink-0">
                       <p className={`text-2xl font-bold leading-none ${

@@ -286,7 +286,12 @@ export default function TeamPage() {
               <div key={invite.id} className="flex items-center justify-between gap-3 p-3 bg-violet-50 rounded-xl border border-violet-100">
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-800 truncate">{invite.email}</p>
-                  <p className="text-gray-400 text-xs">Sent {new Date(invite.created_at).toLocaleDateString()}</p>
+                  {(() => {
+                    const daysLeft = Math.max(0, 7 - Math.floor((Date.now() - new Date(invite.created_at).getTime()) / 86400000))
+                    return daysLeft === 0
+                      ? <p className="text-red-400 text-xs font-semibold">Expired</p>
+                      : <p className="text-gray-400 text-xs">Expires in <span className={`font-semibold ${daysLeft <= 2 ? 'text-red-400' : 'text-gray-500'}`}>{daysLeft} day{daysLeft !== 1 ? 's' : ''}</span></p>
+                  })()}
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
