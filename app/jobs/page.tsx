@@ -449,7 +449,7 @@ export default function JobsPage() {
     <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📅</div>
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">🌿</div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Jobs</h2>
             <p className="text-gray-500 text-sm">Schedule and track your work</p>
