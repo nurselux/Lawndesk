@@ -44,6 +44,7 @@ export default function Sidebar() {
     { label: 'Dashboard', icon: '📊', href: '/dashboard' },
     { label: 'Clients', icon: '👥', href: '/clients' },
     { label: 'Jobs', icon: '📅', href: '/jobs' },
+    { label: 'Calendar', icon: '🗓️', href: '/calendar' },
     { label: 'Quotes', icon: '📋', href: '/quotes' },
     { label: 'Invoices', icon: '📄', href: '/invoices', badge: overdueCount > 0 ? overdueCount : undefined },
     { label: 'Team', icon: '👷', href: '/team' },

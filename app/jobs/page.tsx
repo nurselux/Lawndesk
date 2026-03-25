@@ -336,6 +336,12 @@ export default function JobsPage() {
     fetchJobs()
   }
 
+  const getNextInvoiceNumber = async () => {
+    const { data } = await supabase.from('Invoices').select('invoice_number')
+      .eq('user_id', user?.id).order('invoice_number', { ascending: false }).limit(1)
+    return (data?.[0]?.invoice_number || 0) + 1
+  }
+
   const handleStatusChange = async (id: string, newStatus: string) => {
     await supabase.from('Jobs').update({ status: newStatus }).eq('id', id)
     fetchJobs()
@@ -345,7 +351,7 @@ export default function JobsPage() {
       if (!job?.client_id) return
 
       const [{ data: clientData }, { data: invoicesData }] = await Promise.all([
-        supabase.from('Clients').select('name, phone').eq('id', job.client_id).single(),
+        supabase.from('Clients').select('name, phone, email').eq('id', job.client_id).single(),
         supabase.from('Invoices')
           .select('share_token, amount, invoice_number')
           .eq('client_id', job.client_id)
@@ -355,19 +361,44 @@ export default function JobsPage() {
           .limit(1),
       ])
 
-      const invoice = invoicesData?.[0]
+      let invoice = invoicesData?.[0]
+
+      // Auto-create invoice if none exists for this client
+      if (!invoice) {
+        const nextNum = await getNextInvoiceNumber()
+        const dueDate = new Date()
+        dueDate.setDate(dueDate.getDate() + 7)
+        const { data: newInv } = await supabase.from('Invoices').insert([{
+          client_name: clientData?.name || '',
+          client_id: job.client_id,
+          client_email: clientData?.email || null,
+          client_phone: clientData?.phone || null,
+          amount: 0,
+          status: '🟡 Unpaid',
+          due_date: dueDate.toISOString().split('T')[0],
+          description: job.title,
+          invoice_number: nextNum,
+          user_id: user?.id,
+        }] as any).select().single()
+        invoice = newInv
+        setSuccessMessage(`✅ Job complete! Invoice #${String(nextNum).padStart(3, '0')} created — set the amount in Invoices.`)
+        setTimeout(() => setSuccessMessage(''), 6000)
+      }
 
       if (clientData?.phone && invoice?.share_token) {
         const invoiceUrl = `${window.location.origin}/invoice/${invoice.share_token}`
         const message = `Hi ${clientData.name}! Your lawn service is complete ✅ Your invoice for $${Number(invoice.amount).toFixed(2)} is ready: ${invoiceUrl}`
-        // Auto-send via Twilio
         fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: clientData.phone, message }),
         })
-        setSuccessMessage(`✅ Job complete! Invoice text sent to ${clientData.name}.`)
-        setTimeout(() => setSuccessMessage(''), 5000)
+        if (!invoicesData?.[0]) {
+          // message already set above
+        } else {
+          setSuccessMessage(`✅ Job complete! Invoice text sent to ${clientData.name}.`)
+          setTimeout(() => setSuccessMessage(''), 5000)
+        }
       }
     }
   }
@@ -424,12 +455,28 @@ export default function JobsPage() {
             <p className="text-gray-500 text-sm">Schedule and track your work</p>
           </div>
         </div>
-        <button
-          onClick={() => { setShowForm(!showForm); setEditingJob(null) }}
-          className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
-        >
-          + Schedule Job
-        </button>
+        <div className="flex gap-2">
+          {(() => {
+            const today = new Date().toISOString().split('T')[0]
+            const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
+            const addresses = todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter(Boolean)
+            if (addresses.length < 2) return null
+            const mapsUrl = `https://www.google.com/maps/dir/${addresses.map(a => encodeURIComponent(a!)).join('/')}`
+            return (
+              <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm">
+                  🗺️ Today's Route
+                </button>
+              </a>
+            )
+          })()}
+          <button
+            onClick={() => { setShowForm(!showForm); setEditingJob(null) }}
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
+          >
+            + Schedule Job
+          </button>
+        </div>
       </div>
 
       {/* Period tabs */}
