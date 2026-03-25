@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   description: "The simplest business management tool for landscaping professionals.",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

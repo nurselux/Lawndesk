@@ -58,6 +58,7 @@ body {
 
 input, select, textarea {
   outline: none;
+  font-size: 16px; /* Prevents iOS Safari auto-zoom on focus */
 }
 
 input:focus, select:focus, textarea:focus {
