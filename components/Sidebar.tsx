@@ -12,6 +12,7 @@ export default function Sidebar() {
   const [userEmail, setUserEmail] = useState('')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -19,12 +20,20 @@ export default function Sidebar() {
       setIsLoggedIn(!!session)
       if (session?.user?.email) setUserEmail(session.user.email)
       if (session?.user?.id) {
-        const { count } = await (supabase as any)
-          .from('Invoices')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', session.user.id)
-          .eq('status', '🔴 Overdue')
-        setOverdueCount(count ?? 0)
+        const [invoiceResult, requestResult] = await Promise.all([
+          (supabase as any)
+            .from('Invoices')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', session.user.id)
+            .eq('status', '🔴 Overdue'),
+          (supabase as any)
+            .from('booking_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('owner_id', session.user.id)
+            .eq('status', 'pending'),
+        ])
+        setOverdueCount(invoiceResult.count ?? 0)
+        setPendingRequestsCount(requestResult.count ?? 0)
       }
     }
     checkUser()
@@ -47,6 +56,7 @@ export default function Sidebar() {
     { label: 'Calendar', icon: '📅', href: '/calendar' },
     { label: 'Quotes', icon: '🤝', href: '/quotes' },
     { label: 'Invoices', icon: '📄', href: '/invoices', badge: overdueCount > 0 ? overdueCount : undefined },
+    { label: 'Requests', icon: '📬', href: '/requests', badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
     { label: 'Team', icon: '👷', href: '/team' },
     { label: 'Client Portal', icon: '🌐', href: '/portal', external: true },
     { label: 'Settings', icon: '⚙️', href: '/settings' },

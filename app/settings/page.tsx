@@ -11,6 +11,12 @@ interface Profile {
   subscription_plan: string | null
   stripe_customer_id: string | null
   google_review_link: string | null
+  booking_username: string | null
+  business_name: string | null
+  booking_enabled: boolean | null
+  booking_notify_sms: boolean | null
+  booking_notify_email: boolean | null
+  booking_welcome_message: string | null
 }
 
 function subLabel(status: string | null, plan: string | null) {
@@ -37,19 +43,35 @@ export default function SettingsPage() {
   const [reviewLink, setReviewLink] = useState('')
   const [reviewSaving, setReviewSaving] = useState(false)
   const [reviewMessage, setReviewMessage] = useState('')
+  const [bookingUsername, setBookingUsername] = useState('')
+  const [businessName, setBusinessName] = useState('')
+  const [bookingEnabled, setBookingEnabled] = useState(true)
+  const [bookingNotifySms, setBookingNotifySms] = useState(false)
+  const [bookingNotifyEmail, setBookingNotifyEmail] = useState(true)
+  const [bookingWelcome, setBookingWelcome] = useState('')
+  const [bookingSaving, setBookingSaving] = useState(false)
+  const [bookingMessage, setBookingMessage] = useState('')
+  const [bookingError, setBookingError] = useState('')
+  const [bookingCopied, setBookingCopied] = useState(false)
 
   useEffect(() => {
     if (user) {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
           if (data) {
             setProfile(data as Profile)
             setReviewLink(data.google_review_link || '')
+            setBookingUsername(data.booking_username || '')
+            setBusinessName(data.business_name || '')
+            setBookingEnabled(data.booking_enabled ?? true)
+            setBookingNotifySms(data.booking_notify_sms ?? false)
+            setBookingNotifyEmail(data.booking_notify_email ?? true)
+            setBookingWelcome(data.booking_welcome_message || '')
           }
         })
     }
@@ -76,6 +98,30 @@ export default function SettingsPage() {
       setPwConfirm('')
     }
     setPwSaving(false)
+  }
+
+  const handleSaveBooking = async () => {
+    setBookingError('')
+    const slug = bookingUsername.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+    if (!slug) { setBookingError('Please enter a booking username.'); return }
+    if (!businessName) { setBookingError('Please enter your business name.'); return }
+    setBookingSaving(true)
+    const { error } = await (supabase.from('profiles') as any).update({
+      booking_username: slug,
+      business_name: businessName,
+      booking_enabled: bookingEnabled,
+      booking_notify_sms: bookingNotifySms,
+      booking_notify_email: bookingNotifyEmail,
+      booking_welcome_message: bookingWelcome || null,
+    }).eq('id', user?.id)
+    if (error) {
+      setBookingError(error.message.includes('unique') ? 'That username is already taken. Try another.' : error.message)
+    } else {
+      setBookingUsername(slug)
+      setBookingMessage('Booking page saved!')
+      setTimeout(() => setBookingMessage(''), 3000)
+    }
+    setBookingSaving(false)
   }
 
   const handleSaveReviewLink = async () => {
@@ -206,6 +252,92 @@ export default function SettingsPage() {
           >
             {pwSaving ? '⏳ Updating...' : 'Update Password'}
           </button>
+        </div>
+      </div>
+
+      {/* Online Booking */}
+      <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-bold text-gray-800">📋 Online Booking Page</h3>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <span className="text-sm text-gray-500">Active</span>
+            <div
+              onClick={() => setBookingEnabled(!bookingEnabled)}
+              className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${bookingEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+          </label>
+        </div>
+        <p className="text-gray-500 text-sm mb-4">Clients can book jobs directly from your unique link. Share it on your website, Instagram, or anywhere.</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Business Name</label>
+            <input
+              placeholder="e.g. Green Thumb Lawn Care"
+              value={businessName}
+              onChange={e => setBusinessName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Booking Username</label>
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <span className="bg-gray-50 text-gray-400 text-sm px-3 py-3 border-r border-gray-300 whitespace-nowrap">lawndesk.pro/book/</span>
+              <input
+                placeholder="your-business"
+                value={bookingUsername}
+                onChange={e => setBookingUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                className="flex-1 p-3 text-gray-800 text-sm outline-none"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Welcome Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+            <textarea
+              placeholder="e.g. Thanks for choosing us! Fill out the form and we'll get back to you within 24 hours."
+              value={bookingWelcome}
+              onChange={e => setBookingWelcome(e.target.value)}
+              rows={2}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Notify me when a request comes in</label>
+            <div className="flex gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <div onClick={() => setBookingNotifyEmail(!bookingNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${bookingNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifyEmail ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </div>
+                <span className="text-sm text-gray-700">📧 Email</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <div onClick={() => setBookingNotifySms(!bookingNotifySms)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${bookingNotifySms ? 'bg-green-500' : 'bg-gray-300'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifySms ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </div>
+                <span className="text-sm text-gray-700">📱 SMS</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        {bookingError && <p className="text-red-500 text-sm mt-3">{bookingError}</p>}
+        {bookingMessage && <p className="text-green-600 text-sm font-semibold mt-3">{bookingMessage}</p>}
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={handleSaveBooking}
+            disabled={bookingSaving}
+            className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+          >
+            {bookingSaving ? '⏳ Saving...' : '💾 Save'}
+          </button>
+          {bookingUsername && (
+            <button
+              onClick={() => { navigator.clipboard.writeText(`https://lawndesk.pro/book/${bookingUsername}`); setBookingCopied(true); setTimeout(() => setBookingCopied(false), 2000) }}
+              className="border-2 border-green-700 text-green-700 font-bold py-3 px-6 rounded-lg hover:bg-green-50 transition cursor-pointer"
+            >
+              {bookingCopied ? '✅ Copied!' : '🔗 Copy Link'}
+            </button>
+          )}
         </div>
       </div>
 
