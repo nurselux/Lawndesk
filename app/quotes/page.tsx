@@ -315,7 +315,7 @@ export default function QuotesPage() {
     <div className="p-4 pb-8 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📋</div>
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">🤝</div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Quotes</h2>
             <p className="text-gray-500 text-sm">Send estimates, win more work</p>
@@ -350,7 +350,7 @@ export default function QuotesPage() {
       {/* Create form */}
       {showForm && (
         <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm">
-          <h3 className="font-bold text-gray-800 mb-4 text-base">📋 New Quote</h3>
+          <h3 className="font-bold text-gray-800 mb-4 text-base">🤝 New Quote</h3>
 
           {/* Client section */}
           <div className="mb-4">
@@ -518,7 +518,7 @@ export default function QuotesPage() {
       {/* Quote list */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">📋</p>
+          <p className="text-5xl mb-3">🤝</p>
           <p className="text-gray-700 font-bold mb-1">No quotes yet</p>
           <p className="text-gray-400 text-sm">Create your first quote above.</p>
         </div>
