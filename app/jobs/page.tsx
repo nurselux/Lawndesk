@@ -93,6 +93,7 @@ export default function JobsPage() {
   const [customRecurring, setCustomRecurring] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
+  const [filterPeriod, setFilterPeriod] = useState('This Week')
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingJob, setEditingJob] = useState<Job | null>(null)
@@ -378,8 +379,34 @@ export default function JobsPage() {
       j.client_name.toLowerCase().includes(q) ||
       j.notes?.toLowerCase().includes(q)
     const matchesStatus = filterStatus === 'All' || j.status === filterStatus
-    return matchesSearch && matchesStatus
+
+    let matchesPeriod = true
+    if (filterPeriod !== 'All') {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const jobDate = new Date(j.date + 'T00:00:00')
+      if (filterPeriod === 'Today') {
+        const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
+        matchesPeriod = jobDate >= today && jobDate < tomorrow
+      } else if (filterPeriod === 'This Week') {
+        const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7)
+        matchesPeriod = jobDate >= today && jobDate < weekEnd
+      } else if (filterPeriod === 'This Month') {
+        const monthEnd = new Date(today); monthEnd.setDate(monthEnd.getDate() + 30)
+        matchesPeriod = jobDate >= today && jobDate < monthEnd
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesPeriod
   })
+
+  const groupedJobs = filteredJobs.reduce<Record<string, typeof filteredJobs>>((acc, job) => {
+    const key = job.date || 'No Date'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(job)
+    return acc
+  }, {})
+  const sortedDates = Object.keys(groupedJobs).sort()
 
   if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
@@ -403,6 +430,23 @@ export default function JobsPage() {
         >
           + Schedule Job
         </button>
+      </div>
+
+      {/* Period tabs */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+        {['Today', 'This Week', 'This Month', 'All'].map((p) => (
+          <button
+            key={p}
+            onClick={() => setFilterPeriod(p)}
+            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-150 cursor-pointer ${
+              filterPeriod === p
+                ? 'bg-blue-500 text-white shadow'
+                : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-500'
+            }`}
+          >
+            {p}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -661,9 +705,9 @@ export default function JobsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div>
         {jobs.length === 0 ? (
-          <div className="col-span-3 text-center py-16">
+          <div className="text-center py-16">
             <p className="text-6xl mb-4">📅</p>
             <p className="text-gray-700 text-xl font-bold mb-2">No jobs scheduled yet</p>
             <p className="text-gray-400 mb-6">Schedule your first job to start tracking your work.</p>
@@ -675,13 +719,31 @@ export default function JobsPage() {
             </button>
           </div>
         ) : filteredJobs.length === 0 ? (
-          <div className="col-span-3 text-center py-12">
+          <div className="text-center py-12">
             <p className="text-5xl mb-4">🔍</p>
             <p className="text-gray-500 text-lg font-bold">No jobs match your search</p>
-            <p className="text-gray-400">Try a different title, client, or status.</p>
+            <p className="text-gray-400">Try a different period, status, or search term.</p>
           </div>
         ) : (
-          filteredJobs.map((job) => (
+          sortedDates.map((dateKey) => {
+            const label = (() => {
+              const today = new Date(); today.setHours(0,0,0,0)
+              const d = new Date(dateKey + 'T00:00:00')
+              const diff = Math.round((d.getTime() - today.getTime()) / 86400000)
+              if (diff === 0) return 'Today'
+              if (diff === 1) return 'Tomorrow'
+              if (diff === -1) return 'Yesterday'
+              return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+            })()
+            return (
+              <div key={dateKey} className="mb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide">{label}</h3>
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-xs text-gray-400 font-semibold">{groupedJobs[dateKey].length} job{groupedJobs[dateKey].length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupedJobs[dateKey].map((job) => (
             <div key={job.id} className={`bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4 ${
               job.status === '🟢 Completed' ? 'border-green-500' :
               job.status === '🟡 In Progress' ? 'border-yellow-500' :
@@ -792,7 +854,11 @@ export default function JobsPage() {
                 )}
               </div>
             </div>
-          ))
+                  ))}
+                </div>
+              </div>
+            )
+          })
         )}
       </div>
     </div>
