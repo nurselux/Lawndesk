@@ -11,7 +11,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="bg-green-900 text-white text-2xl font-bold px-4 py-1.5 rounded-lg hover:bg-green-950 transition-all duration-200">🌿 LawnDesk</Link>
           <div className="flex gap-3 items-center">
-            <Link href="/login" className="text-green-100 font-semibold hover:text-white transition-colors hidden sm:block">Log In</Link>
+            <Link href="/login" className="text-green-100 font-semibold hover:text-white transition-colors">Log In</Link>
             <Link href="/login?signup=true" className="bg-white text-green-700 font-bold py-2 px-4 sm:px-5 rounded-lg hover:scale-105 hover:shadow-md transition-all duration-200 text-xs sm:text-sm whitespace-nowrap">
               <span className="sm:hidden">Try Free ✨</span>
               <span className="hidden sm:inline">Try Free for 14 Days</span>

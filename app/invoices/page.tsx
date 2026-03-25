@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
@@ -29,12 +30,13 @@ interface Client {
 
 type SendState = { id: string; type: 'email' | 'sms' }
 
-export default function InvoicesPage() {
+function InvoicesContent() {
   const { user } = useAuth()
   const { checking } = useSubscriptionGate()
+  const searchParams = useSearchParams()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [clients, setClients] = useState<Client[]>([])
-  const [filterStatus, setFilterStatus] = useState('All')
+  const [filterStatus, setFilterStatus] = useState(() => searchParams.get('filter') || 'All')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
@@ -604,5 +606,13 @@ export default function InvoicesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function InvoicesPage() {
+  return (
+    <Suspense>
+      <InvoicesContent />
+    </Suspense>
   )
 }

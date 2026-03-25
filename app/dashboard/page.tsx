@@ -63,6 +63,9 @@ function DashboardContent() {
   const [dataLoaded, setDataLoaded] = useState(false)
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null)
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null)
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('onboarding_dismissed') === '1'
+  )
 
   const animatedClients = useCountUp(clientCount)
   const animatedJobs = useCountUp(jobsThisWeek)
@@ -254,12 +257,20 @@ function DashboardContent() {
       </div>
 
       {/* Onboarding */}
-      {clientCount === 0 && upcomingJobs.length === 0 && dataLoaded && (
+      {clientCount === 0 && upcomingJobs.length === 0 && dataLoaded && !onboardingDismissed && (
         <div
           className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8"
           style={{ animation: 'fadeUp 0.5s ease-out both', animationDelay: '100ms' }}
         >
-          <h3 className="text-xl font-bold text-gray-800 mb-1">Welcome to LawnDesk! 🌿</h3>
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="text-xl font-bold text-gray-800">Welcome to LawnDesk! 🌿</h3>
+            <button
+              onClick={() => { setOnboardingDismissed(true); localStorage.setItem('onboarding_dismissed', '1') }}
+              className="text-gray-400 hover:text-gray-600 text-sm cursor-pointer"
+            >
+              ✕ Skip
+            </button>
+          </div>
           <p className="text-gray-500 mb-5">Let's get your business set up. Follow these steps to get started:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
@@ -385,7 +396,7 @@ function DashboardContent() {
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">Overdue Invoices</h3>
-              <Link href="/invoices" className="text-sm text-green-600 hover:underline">View all →</Link>
+              <Link href="/invoices?filter=Overdue" className="text-sm text-green-600 hover:underline">View all →</Link>
             </div>
             {overdueInvoices.length === 0 ? (
               <div className="text-center py-4">

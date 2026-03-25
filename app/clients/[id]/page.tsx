@@ -212,9 +212,9 @@ export default function ClientDetailPage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-3">{client.name}</h2>
                 <div className="space-y-1">
-                  {client.email && <p className="text-gray-500">📧 {client.email}</p>}
-                  {client.phone && <p className="text-gray-500">📞 {client.phone}</p>}
-                  {client.address && <p className="text-gray-500">📍 {client.address}</p>}
+                  {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 hover:text-blue-600 transition-colors block">📧 {client.email}</a>}
+                  {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 hover:text-green-600 transition-colors block">📞 {client.phone}</a>}
+                  {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-orange-600 transition-colors block">📍 {client.address}</a>}
                   {client.notes && <p className="text-gray-400 text-sm mt-2">📝 {client.notes}</p>}
                 </div>
               </div>

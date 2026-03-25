@@ -43,6 +43,7 @@ interface Client {
   id: string
   name: string
   address: string
+  phone: string
 }
 
 interface Worker {
@@ -147,7 +148,7 @@ export default function JobsPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name, address')
+      .select('id, name, address, phone')
       .eq('user_id', user?.id)
       .order('name', { ascending: true })
     if (data) setClients(data as Client[])
@@ -726,16 +727,24 @@ export default function JobsPage() {
                   }}
                   className="flex-1 text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
                 >
-                  📸 Add/View Photos
+                  📸 Photos
                 </button>
-                {clients.find(c => c.id === job.client_id)?.address && (
+                {clients.find(c => c.id === job.client_id)?.phone && (
                   <a
-                    href={`https://maps.apple.com/?daddr=${encodeURIComponent(clients.find(c => c.id === job.client_id)!.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`tel:${clients.find(c => c.id === job.client_id)!.phone}`}
                     className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
                   >
-                    📍 Navigate
+                    📞 Call
+                  </a>
+                )}
+                {clients.find(c => c.id === job.client_id)?.address && (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(clients.find(c => c.id === job.client_id)!.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold py-1.5 px-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                  >
+                    📍 Map
                   </a>
                 )}
               </div>
