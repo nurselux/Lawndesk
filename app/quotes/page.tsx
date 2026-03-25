@@ -312,37 +312,46 @@ export default function QuotesPage() {
   const total = calcTotal(lineItems)
 
   return (
-    <div className="p-4 pb-8 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">🤝</div>
+    <div className="pb-8 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
+
+      {/* Header */}
+      <div className="px-4 pt-4 pb-4">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 leading-none">Quotes</h2>
-            <p className="text-gray-500 text-sm">Send estimates, win more work</p>
+            <h2 className="text-2xl font-bold text-gray-800">🤝 Quotes</h2>
+            <p className="text-gray-400 text-sm mt-0.5">Send estimates, win more work</p>
           </div>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="shrink-0 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl cursor-pointer shadow text-sm"
+          >
+            + New Quote
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-2.5 px-5 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm"
-        >
-          + New Quote
-        </button>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
-        {['All', 'Draft', 'Sent', 'Approved', 'Declined', 'Converted'].map(s => (
-          <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${
-              filterStatus === s ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-400'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
+      {/* Filter tabs — scrollable with fade hint */}
+      <div className="relative mb-4">
+        <div className="flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+          {['All', 'Draft', 'Sent', 'Approved', 'Declined', 'Converted'].map(s => (
+            <button
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                filterStatus === s
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-gray-500 border border-gray-200'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        {/* Right fade to hint scrollability */}
+        <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
       </div>
+
+      <div className="px-4">
 
       {successMessage && <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4 text-sm">✅ {successMessage}</div>}
       {errorMessage && <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4 text-sm">❌ {errorMessage}</div>}
@@ -643,6 +652,7 @@ export default function QuotesPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }
