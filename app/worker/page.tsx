@@ -28,6 +28,7 @@ interface Client {
   name: string
   address: string | null
   phone: string | null
+  notes: string | null
 }
 
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -178,7 +179,7 @@ export default function WorkerPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name, address, phone')
+      .select('id, name, address, phone, notes')
       .eq('user_id', profile!.owner_id)
     if (data) setClients(data as Client[])
   }
@@ -334,6 +335,12 @@ export default function WorkerPage() {
             </select>
           </div>
 
+          {client?.notes && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 mb-2">
+              <p className="text-amber-800 text-xs font-bold mb-0.5">🏠 Property Notes</p>
+              <p className="text-amber-700 text-xs">{client.notes}</p>
+            </div>
+          )}
           {job.notes && (
             <p className="text-gray-400 text-xs bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3">
               📝 {job.notes}

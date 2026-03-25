@@ -220,10 +220,11 @@ export default function ClientsPage() {
               className="border border-gray-300 rounded-lg p-3 text-gray-800"
             />
             <textarea
-              placeholder="Notes"
+              placeholder="🏠 Property Notes — gate code, dog in yard, where to park, special instructions..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
+              className="border border-amber-300 rounded-lg p-3 text-gray-800 sm:col-span-2 bg-amber-50"
+              rows={3}
             />
           </div>
           <div className="flex gap-3 mt-4">
@@ -272,10 +273,11 @@ export default function ClientsPage() {
               className="border border-gray-300 rounded-lg p-3 text-gray-800"
             />
             <textarea
-              placeholder="Notes"
+              placeholder="🏠 Property Notes — gate code, dog in yard, where to park, special instructions..."
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
+              className="border border-amber-300 rounded-lg p-3 text-gray-800 sm:col-span-2 bg-amber-50"
+              rows={3}
             />
           </div>
           <div className="flex gap-3 mt-4">
@@ -327,7 +329,7 @@ export default function ClientsPage() {
                 {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-600 transition-colors"><span className="text-base shrink-0">📧</span> <span className="truncate">{client.email}</span></a>}
                 {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 text-sm flex items-center gap-1.5 hover:text-green-600 transition-colors"><span className="text-base">📞</span> {client.phone}</a>}
                 {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-600 transition-colors"><span className="text-base shrink-0">📍</span> <span className="truncate">{client.address}</span></a>}
-                {client.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {client.notes}</p>}
+                {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 font-medium">🏠 {client.notes}</p>}
               </div>
               {(client.phone || client.address || client.email) && (
                 <div className="flex gap-2 mt-3 pt-3 border-t border-amber-100 pl-14">
