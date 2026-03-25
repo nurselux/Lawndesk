@@ -349,151 +349,168 @@ export default function QuotesPage() {
 
       {/* Create form */}
       {showForm && (
-        <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm">
-          <h3 className="font-bold text-gray-800 mb-4 text-base">🤝 New Quote</h3>
+        <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
+          <h3 className="font-bold text-gray-800 text-base">🤝 New Quote</h3>
 
           {/* Client section */}
-          <div className="mb-4">
-            <div className="flex gap-2 mb-3">
+          <div className="space-y-3">
+            <div className="flex rounded-xl overflow-hidden border border-gray-200">
               <button
                 onClick={() => { setUseExistingClient(false); setClientId(''); setClientName(''); setClientEmail(''); setClientPhone('') }}
-                className={`flex-1 text-sm font-semibold py-2 rounded-lg border transition-all cursor-pointer ${
-                  !useExistingClient ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                className={`flex-1 text-sm font-semibold py-2.5 transition-all cursor-pointer ${
+                  !useExistingClient ? 'bg-blue-600 text-white' : 'bg-white text-gray-500'
                 }`}
               >
                 New / Walk-in
               </button>
               <button
                 onClick={() => setUseExistingClient(true)}
-                className={`flex-1 text-sm font-semibold py-2 rounded-lg border transition-all cursor-pointer ${
-                  useExistingClient ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                className={`flex-1 text-sm font-semibold py-2.5 transition-all cursor-pointer ${
+                  useExistingClient ? 'bg-blue-600 text-white' : 'bg-white text-gray-500'
                 }`}
               >
                 Existing Client
               </button>
             </div>
 
-            {useExistingClient ? (
+            {useExistingClient && (
               <select
                 value={clientId}
                 onChange={e => handleClientSelect(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white mb-3"
+                className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800 bg-white"
               >
                 <option value="">Select client…</option>
                 {clients.map(c => (
                   <option key={c.id} value={c.id}>{c.name}{c.email ? ` · ${c.email}` : ''}</option>
                 ))}
               </select>
-            ) : null}
+            )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                placeholder="Client Name *"
-                value={clientName}
-                onChange={e => setClientName(e.target.value)}
-                className="border border-gray-200 rounded-xl p-3 text-gray-800"
-                readOnly={useExistingClient && !!clientId}
-              />
-              <input
-                type="email"
-                placeholder="Email (to send quote)"
-                value={clientEmail}
-                onChange={e => setClientEmail(e.target.value)}
-                className="border border-gray-200 rounded-xl p-3 text-gray-800"
-              />
-              <input
-                type="tel"
-                placeholder="Phone (for SMS)"
-                value={clientPhone}
-                onChange={e => setClientPhone(e.target.value)}
-                className="border border-gray-200 rounded-xl p-3 text-gray-800"
-              />
-              <input
-                placeholder="Quote Title *"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                className="border border-gray-200 rounded-xl p-3 text-gray-800"
-              />
-            </div>
+            <input
+              placeholder="Client Name *"
+              value={clientName}
+              onChange={e => setClientName(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
+              readOnly={useExistingClient && !!clientId}
+            />
+            <input
+              type="tel"
+              placeholder="Phone (for SMS)"
+              value={clientPhone}
+              onChange={e => setClientPhone(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
+            />
+            <input
+              type="email"
+              placeholder="Email (to send quote)"
+              value={clientEmail}
+              onChange={e => setClientEmail(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
+            />
+          </div>
+
+          {/* Quote details */}
+          <div className="space-y-3">
+            <input
+              placeholder="Quote Title *  e.g. Spring Lawn Cleanup"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800 font-medium"
+            />
             <input
               placeholder="Short description (optional)"
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 mt-3"
+              className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
             />
           </div>
 
           {/* Line items */}
-          <div className="mb-4">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Line Items</p>
+          <div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Line Items</p>
+
+            {/* Column headers */}
+            <div className="grid grid-cols-12 gap-2 mb-1 px-0.5">
+              <span className="col-span-6 text-xs text-gray-400 font-semibold">Description</span>
+              <span className="col-span-2 text-xs text-gray-400 font-semibold text-center">Qty</span>
+              <span className="col-span-4 text-xs text-gray-400 font-semibold">$ Price</span>
+            </div>
+
             <div className="space-y-2">
               {lineItems.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                   <input
-                    placeholder="Description"
+                    placeholder="e.g. Lawn mowing"
                     value={item.description}
                     onChange={e => updateItem(idx, 'description', e.target.value)}
-                    className="col-span-6 border border-gray-200 rounded-lg p-2.5 text-gray-800 text-sm"
+                    className="col-span-6 border border-gray-200 rounded-xl p-3 text-gray-800 text-sm"
                   />
                   <input
                     type="number"
-                    placeholder="Qty"
                     value={item.quantity}
                     min={1}
                     onChange={e => updateItem(idx, 'quantity', parseFloat(e.target.value) || 1)}
-                    className="col-span-2 border border-gray-200 rounded-lg p-2.5 text-gray-800 text-sm"
+                    className="col-span-2 border border-gray-200 rounded-xl p-3 text-gray-800 text-sm text-center"
                     inputMode="decimal"
                   />
-                  <input
-                    type="number"
-                    placeholder="$"
-                    value={item.unit_price}
-                    min={0}
-                    step={0.01}
-                    onChange={e => updateItem(idx, 'unit_price', parseFloat(e.target.value) || 0)}
-                    className="col-span-3 border border-gray-200 rounded-lg p-2.5 text-gray-800 text-sm"
-                    inputMode="decimal"
-                  />
+                  <div className="col-span-3 flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                    <span className="pl-2.5 text-gray-400 text-sm font-semibold">$</span>
+                    <input
+                      type="number"
+                      value={item.unit_price}
+                      min={0}
+                      step={0.01}
+                      onChange={e => updateItem(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                      className="flex-1 p-3 text-gray-800 text-sm focus:outline-none w-full"
+                      inputMode="decimal"
+                    />
+                  </div>
                   <button
                     onClick={() => removeItem(idx)}
                     disabled={lineItems.length === 1}
-                    className="col-span-1 text-red-400 hover:text-red-600 disabled:opacity-20 text-base cursor-pointer"
+                    className="col-span-1 text-red-400 hover:text-red-600 disabled:opacity-20 text-lg cursor-pointer flex items-center justify-center h-full"
                   >✕</button>
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <button onClick={addItem} className="text-sm text-blue-600 font-semibold hover:underline cursor-pointer">
+
+            <div className="flex items-center justify-between mt-3">
+              <button onClick={addItem} className="text-sm text-blue-600 font-bold cursor-pointer">
                 + Add line
               </button>
-              {total > 0 && <p className="text-base font-bold text-gray-800">Total: ${total.toFixed(2)}</p>}
+              {total > 0 && (
+                <p className="text-base font-bold text-gray-800 bg-blue-50 px-3 py-1 rounded-lg">
+                  Total: ${total.toFixed(2)}
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* Expires + Notes — stacked, not side by side */}
+          <div className="space-y-3">
             <div>
-              <label className="text-xs text-gray-400 font-semibold block mb-1">Expires</label>
+              <label className="text-xs text-gray-500 font-bold uppercase tracking-wide block mb-1.5">Expiry Date (optional)</label>
               <input
                 type="date"
                 value={expiresAt}
                 onChange={e => setExpiresAt(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800"
+                className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-400 font-semibold block mb-1">Internal notes</label>
+              <label className="text-xs text-gray-500 font-bold uppercase tracking-wide block mb-1.5">Internal Notes (not shown to client)</label>
               <input
-                placeholder="Not shown to client"
+                placeholder="e.g. Client wants early morning..."
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm"
+                className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
               />
             </div>
           </div>
 
           {clientEmail && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 mb-4 text-sm text-blue-700 font-semibold">
-              ✉️ Quote will be emailed to {clientEmail} automatically
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-semibold">
+              ✉️ Quote will be emailed to {clientEmail} on save
             </div>
           )}
 
@@ -501,13 +518,13 @@ export default function QuotesPage() {
             <button
               onClick={handleCreate}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-3 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-4 rounded-xl text-base cursor-pointer shadow disabled:opacity-50"
             >
-              {saving ? '⏳ Saving…' : clientEmail ? '📧 Save & Send' : 'Save Quote'}
+              {saving ? '⏳ Saving…' : clientEmail ? '📧 Save & Send' : '💾 Save Quote'}
             </button>
             <button
               onClick={resetForm}
-              className="border-2 border-gray-200 text-gray-600 font-bold py-3 px-5 rounded-xl cursor-pointer hover:bg-gray-50"
+              className="border-2 border-gray-200 text-gray-600 font-bold py-4 px-5 rounded-xl cursor-pointer"
             >
               Cancel
             </button>
