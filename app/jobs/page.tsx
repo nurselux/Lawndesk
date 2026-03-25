@@ -400,6 +400,24 @@ export default function JobsPage() {
           setTimeout(() => setSuccessMessage(''), 5000)
         }
       }
+
+      // Send Google review request if business has set a review link
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('google_review_link')
+        .eq('id', user?.id)
+        .single()
+
+      if (clientData?.phone && (profileData as any)?.google_review_link) {
+        fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: clientData.phone,
+            message: `Hi ${clientData.name}! Thanks for choosing us today 🌿 We'd love a quick Google review if you have a moment: ${(profileData as any).google_review_link}`,
+          }),
+        })
+      }
     }
   }
 

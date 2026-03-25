@@ -10,6 +10,7 @@ interface Profile {
   subscription_status: string | null
   subscription_plan: string | null
   stripe_customer_id: string | null
+  google_review_link: string | null
 }
 
 function subLabel(status: string | null, plan: string | null) {
@@ -33,16 +34,24 @@ export default function SettingsPage() {
   const [pwError, setPwError] = useState('')
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState('')
+  const [reviewLink, setReviewLink] = useState('')
+  const [reviewSaving, setReviewSaving] = useState(false)
+  const [reviewMessage, setReviewMessage] = useState('')
 
   useEffect(() => {
     if (user) {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link')
         .eq('id', user.id)
         .single()
-        .then(({ data }) => { if (data) setProfile(data as Profile) })
+        .then(({ data }) => {
+          if (data) {
+            setProfile(data as Profile)
+            setReviewLink(data.google_review_link || '')
+          }
+        })
     }
   }, [user])
 
@@ -67,6 +76,18 @@ export default function SettingsPage() {
       setPwConfirm('')
     }
     setPwSaving(false)
+  }
+
+  const handleSaveReviewLink = async () => {
+    setReviewSaving(true)
+    const { error } = await (supabase.from('profiles') as any)
+      .update({ google_review_link: reviewLink || null })
+      .eq('id', user?.id)
+    if (!error) {
+      setReviewMessage('Saved!')
+      setTimeout(() => setReviewMessage(''), 3000)
+    }
+    setReviewSaving(false)
   }
 
   const handleManageBilling = async () => {
@@ -186,6 +207,27 @@ export default function SettingsPage() {
             {pwSaving ? '⏳ Updating...' : 'Update Password'}
           </button>
         </div>
+      </div>
+
+      {/* Google Review Link */}
+      <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-1">⭐ Google Review Link</h3>
+        <p className="text-gray-500 text-sm mb-4">When a job is marked complete, your client automatically receives a text asking for a Google review. Paste your Google Business review link below.</p>
+        <input
+          type="url"
+          placeholder="https://g.page/r/your-business/review"
+          value={reviewLink}
+          onChange={e => setReviewLink(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm mb-3"
+        />
+        {reviewMessage && <p className="text-green-600 text-sm font-semibold mb-2">{reviewMessage}</p>}
+        <button
+          onClick={handleSaveReviewLink}
+          disabled={reviewSaving}
+          className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+        >
+          {reviewSaving ? '⏳ Saving...' : '💾 Save'}
+        </button>
       </div>
 
       {/* Need Help */}
