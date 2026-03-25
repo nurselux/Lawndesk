@@ -44,6 +44,7 @@ interface Client {
   name: string
   address: string
   phone: string
+  email: string
 }
 
 interface Worker {
@@ -117,6 +118,8 @@ export default function JobsPage() {
   const [photosUploadedFor, setPhotosUploadedFor] = useState<string | null>(null)
   const [showPhotos, setShowPhotos] = useState<string | null>(null)
   const [cardPhotos, setCardPhotos] = useState<Record<string, JobPhoto[]>>({})
+  const [notifyingJob, setNotifyingJob] = useState<string | null>(null)
+  const [notifiedJob, setNotifiedJob] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -148,7 +151,7 @@ export default function JobsPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name, address, phone')
+      .select('id, name, address, phone, email')
       .eq('user_id', user?.id)
       .order('name', { ascending: true })
     if (data) setClients(data as Client[])
@@ -296,6 +299,36 @@ export default function JobsPage() {
     setSaving(false)
   }
 
+  const handleNotifyClient = async (job: Job) => {
+    const client = clients.find(c => c.id === job.client_id)
+    if (!client?.phone && !client?.email) {
+      setErrorMessage('No phone or email on file for this client.')
+      setTimeout(() => setErrorMessage(''), 4000)
+      return
+    }
+    setNotifyingJob(job.id)
+    try {
+      await fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-job-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: client.name,
+          clientEmail: client.email || null,
+          clientPhone: client.phone || null,
+          jobTitle: job.title,
+          jobDate: job.date,
+          jobTime: job.time || null,
+        }),
+      })
+      setNotifiedJob(job.id)
+      setTimeout(() => setNotifiedJob(null), 4000)
+    } catch {
+      setErrorMessage('Failed to send notification.')
+      setTimeout(() => setErrorMessage(''), 4000)
+    }
+    setNotifyingJob(null)
+  }
+
   const handleDeleteJob = async (id: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return
     await supabase.from('Jobs').delete().eq('id', id)
@@ -325,14 +358,15 @@ export default function JobsPage() {
 
       if (clientData?.phone && invoice?.share_token) {
         const invoiceUrl = `${window.location.origin}/invoice/${invoice.share_token}`
-        const message = `Hi ${clientData.name}! Your lawn service is complete ✅ Here's your invoice for $${Number(invoice.amount).toFixed(2)}: ${invoiceUrl}`
-        setSmsPrompt({
-          clientName: clientData.name,
-          phone: clientData.phone,
-          amount: invoice.amount,
-          invoiceNumber: invoice.invoice_number,
-          message,
+        const message = `Hi ${clientData.name}! Your lawn service is complete ✅ Your invoice for $${Number(invoice.amount).toFixed(2)} is ready: ${invoiceUrl}`
+        // Auto-send via Twilio
+        fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: clientData.phone, message }),
         })
+        setSuccessMessage(`✅ Job complete! Invoice text sent to ${clientData.name}.`)
+        setTimeout(() => setSuccessMessage(''), 5000)
       }
     }
   }
@@ -711,7 +745,16 @@ export default function JobsPage() {
                 <option>🟢 Completed</option>
                 <option>🔴 Cancelled</option>
               </select>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {(job.status === '🔵 Scheduled' || job.status === '🟡 In Progress') && (clients.find(c => c.id === job.client_id)?.phone || clients.find(c => c.id === job.client_id)?.email) && (
+                  <button
+                    onClick={() => handleNotifyClient(job)}
+                    disabled={notifyingJob === job.id}
+                    className="text-xs font-bold py-1.5 px-3 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {notifyingJob === job.id ? '⏳' : notifiedJob === job.id ? '✓ Sent!' : '📨 Notify'}
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setEditingJob(job)
@@ -725,7 +768,7 @@ export default function JobsPage() {
                     setEditRecurring(job.recurring || '🔂 One-time')
                     setShowPhotos(job.id)
                   }}
-                  className="flex-1 text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
+                  className="text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
                 >
                   📸 Photos
                 </button>
