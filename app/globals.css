@@ -20,7 +20,6 @@
 }
 
 html {
-  overscroll-behavior: none;
   height: 100%;
 }
 
@@ -28,7 +27,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
   min-height: 100%;
 }
 
