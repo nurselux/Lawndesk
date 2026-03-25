@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
@@ -52,6 +53,7 @@ function useCountUp(target: number, duration = 1000) {
 function DashboardContent() {
   const { user, loading } = useAuth()
   const { checking } = useSubscriptionGate()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const stripeSuccess = searchParams.get('success') === 'true'
   const [clientCount, setClientCount] = useState(0)
@@ -77,11 +79,14 @@ function DashboardContent() {
   useEffect(() => {
     if (user) {
       fetchDashboardData()
-      supabase.from('profiles').select('subscription_status, trial_ends_at').eq('id', user.id).single()
+      supabase.from('profiles').select('subscription_status, trial_ends_at, onboarding_complete').eq('id', user.id).single()
         .then(({ data }) => {
           if (data) {
             setSubscriptionStatus(data.subscription_status)
             setTrialEndsAt(data.trial_ends_at)
+            if (data.onboarding_complete === false) {
+              router.replace('/onboarding')
+            }
           }
         })
     }
