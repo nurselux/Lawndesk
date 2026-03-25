@@ -85,6 +85,8 @@ export default function WorkerPage() {
   const [saving, setSaving] = useState<string | null>(null)
   const [workerNotes, setWorkerNotes] = useState<Record<string, string>>({})
   const [isOnline, setIsOnline] = useState(true)
+  const [onMyWaySent, setOnMyWaySent] = useState<Set<string>>(new Set())
+  const [onMyWaySending, setOnMyWaySending] = useState<string | null>(null)
 
   useEffect(() => {
     setIsOnline(navigator.onLine)
@@ -213,6 +215,20 @@ export default function WorkerPage() {
     await supabase.from('Jobs').update({ clocked_out_at: now }).eq('id', jobId)
     applyJobUpdate(jobId, { clocked_out_at: now })
     setSaving(null)
+  }
+
+  const handleOnMyWay = async (job: Job) => {
+    const client = clients.find(c => c.id === job.client_id)
+    if (!client?.phone) return
+    setOnMyWaySending(job.id)
+    const message = `Hi ${client.name}! Your lawn crew is on the way and will arrive shortly. 🌿 — LawnDesk`
+    await fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: client.phone, message }),
+    })
+    setOnMyWaySent(prev => new Set(prev).add(job.id))
+    setOnMyWaySending(null)
   }
 
   const handleSaveWorkerNotes = async (jobId: string) => {
@@ -373,6 +389,21 @@ export default function WorkerPage() {
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50"
             />
           </div>
+
+          {/* On My Way button */}
+          {client?.phone && (job.status === '🔵 Scheduled' || job.status === '🟡 In Progress') && (
+            <button
+              onClick={() => handleOnMyWay(job)}
+              disabled={onMyWaySending === job.id || onMyWaySent.has(job.id)}
+              className={`w-full text-sm font-bold py-2.5 px-3 rounded-xl mb-2 transition-all cursor-pointer ${
+                onMyWaySent.has(job.id)
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-gradient-to-r from-orange-400 to-amber-400 text-white shadow hover:scale-[1.02] active:scale-100'
+              }`}
+            >
+              {onMyWaySending === job.id ? '⏳ Sending...' : onMyWaySent.has(job.id) ? '✅ Client notified!' : '🚗 On My Way'}
+            </button>
+          )}
 
           <div className="flex gap-2">
             {client?.address && (
