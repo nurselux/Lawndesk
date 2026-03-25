@@ -29,6 +29,8 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   overscroll-behavior-x: none;
   min-height: 100%;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 @keyframes springIn {
