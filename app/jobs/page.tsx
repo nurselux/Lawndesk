@@ -139,7 +139,7 @@ export default function JobsPage() {
   const fetchJobs = async () => {
     const { data } = await supabase
       .from('Jobs')
-      .select('id, title, client_name, client_id, date, time, status, notes, worker_notes, clocked_in_at, clocked_out_at, user_id, assigned_to')
+      .select('id, title, client_name, client_id, date, time, status, notes, worker_notes, clocked_in_at, clocked_out_at, user_id, assigned_to, recurring')
       .eq('user_id', user?.id)
       .order('date', { ascending: true })
     if (data) {
