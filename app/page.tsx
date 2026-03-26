@@ -17,36 +17,36 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-20 pb-0 px-4 text-center">
+      <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-16 pb-0 px-4 text-center">
         <div className="max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-full px-4 py-1.5 mb-6">
-            <span className="text-yellow-300 text-sm">🌿</span>
-            <span className="text-green-100 text-xs sm:text-sm font-semibold tracking-wide uppercase">Built for Lawn & Landscaping Businesses</span>
+          <div className="inline-flex items-center gap-2 bg-yellow-400 rounded-full px-5 py-2 mb-7 shadow-lg">
+            <span className="text-xl">🌿</span>
+            <span className="text-green-900 text-xs sm:text-sm font-black tracking-wide uppercase">Built for Lawn & Landscaping Businesses</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-tight">
             Run Your Lawn Business<br className="hidden sm:block" /> Like a Pro
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-green-100 mb-3">
+          <p className="text-2xl sm:text-3xl font-bold text-yellow-300 mb-5">
             Less paperwork, more yardwork.
           </p>
-          <p className="text-green-200 text-base sm:text-lg mb-8 max-w-xl mx-auto">
+          <p className="text-green-200 text-base sm:text-lg mb-10 max-w-xl mx-auto">
             Schedule jobs, send quotes, collect payments, and manage your whole crew — all from your phone.
           </p>
           <div className="flex flex-col items-center gap-4 mb-14">
             <Link href="/login?signup=true" className="w-full max-w-sm">
-              <button className="w-full bg-white text-green-700 font-bold py-4 px-8 rounded-2xl text-xl hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer shadow-lg">
-                Try Free for 14 Days
+              <button className="w-full bg-yellow-400 text-green-900 font-black py-4 px-8 rounded-2xl text-xl hover:scale-105 hover:bg-yellow-300 transition-all duration-200 cursor-pointer shadow-xl">
+                Try Free for 14 Days 🌿
               </button>
             </Link>
             <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5">
-              <span className="flex items-center gap-1.5 text-green-200 text-sm">
-                <span className="text-green-400 font-bold">✓</span> No credit card to start
+              <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
+                ✅ No credit card to start
               </span>
-              <span className="flex items-center gap-1.5 text-green-200 text-sm">
-                <span className="text-green-400 font-bold">✓</span> Cancel anytime
+              <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
+                ✅ Cancel anytime
               </span>
-              <span className="flex items-center gap-1.5 text-green-200 text-sm">
-                <span className="text-green-400 font-bold">✓</span> Set up in minutes
+              <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
+                ✅ Set up in minutes
               </span>
             </div>
             <Link href="/pricing" className="text-green-400 text-sm font-medium hover:text-white transition-colors">
