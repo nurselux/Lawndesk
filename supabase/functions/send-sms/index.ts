@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,13 +18,9 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-
-  const [{ data: TWILIO_ACCOUNT_SID }, { data: TWILIO_AUTH_TOKEN }, { data: TWILIO_PHONE_NUMBER }] = await Promise.all([
-    supabase.rpc('get_secret', { secret_name: 'TWILIO_ACCOUNT_SID' }),
-    supabase.rpc('get_secret', { secret_name: 'TWILIO_AUTH_TOKEN' }),
-    supabase.rpc('get_secret', { secret_name: 'TWILIO_PHONE_NUMBER' }),
-  ]);
+  const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID');
+  const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN');
+  const TWILIO_PHONE_NUMBER = Deno.env.get('TWILIO_PHONE_NUMBER');
 
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
     return new Response(JSON.stringify({ error: 'Twilio credentials not configured' }), {
