@@ -34,12 +34,15 @@ export default function PricingPage() {
       name: 'Starter',
       price: '$19',
       period: '/mo',
-      description: 'Perfect for solo landscapers',
+      description: 'Everything you need to run your business',
       features: [
-        'Up to 10 clients',
-        'Job scheduling',
-        'Basic invoicing',
-        'Dashboard & reporting',
+        'Unlimited clients',
+        'Unlimited job scheduling',
+        'Invoicing & online payments',
+        'Quote sending & client approvals',
+        'Client portal',
+        'Dashboard & reports',
+        'Mobile-friendly — works on any phone',
         'Email support',
       ],
       priceId: 'price_1TDXflC4da9Jmue97LkfChat',
@@ -50,13 +53,16 @@ export default function PricingPage() {
       name: 'Pro',
       price: '$39',
       period: '/mo',
-      description: 'For serious landscaping businesses',
+      description: 'For growing crews & serious businesses',
       features: [
-        'Unlimited clients',
-        'Job scheduling',
-        'Advanced invoicing',
-        'Payment processing',
-        'Multiple team members',
+        'Everything in Starter',
+        'Unlimited team members',
+        'Worker mobile app (On My Way alerts)',
+        'Online booking page (your own URL)',
+        'Recurring job automation',
+        'SMS notifications to clients & crew',
+        'Today\'s route optimization',
+        'Automated Google review requests',
         'Priority support',
       ],
       priceId: 'price_1TDXsmC4da9Jmue93UnMFCbZ',
@@ -104,11 +110,16 @@ export default function PricingPage() {
       </nav>
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <div className="text-center mb-12 pt-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-gray-500 text-lg mb-2">No hidden fees. No contracts. Cancel anytime.</p>
-          <span className="bg-green-100 text-green-700 font-bold py-2 px-6 rounded-full text-sm">
-            🎉 14-Day Pro Trial — No Credit Card Required
-          </span>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3">Simple, Transparent Pricing</h2>
+          <p className="text-gray-500 text-lg mb-5">No hidden fees. No contracts. Cancel anytime.</p>
+          <div className="inline-flex flex-col sm:flex-row items-center gap-3">
+            <span className="bg-green-100 text-green-700 font-bold py-2 px-5 rounded-full text-sm">
+              🎉 14-Day Pro Trial — No Credit Card to Start
+            </span>
+            <span className="bg-yellow-100 text-yellow-800 font-bold py-2 px-5 rounded-full text-sm">
+              ⚡ Up to 70% cheaper than Jobber
+            </span>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
 
@@ -126,7 +137,7 @@ export default function PricingPage() {
                 <span className="text-5xl font-bold text-green-700">{plans[0].price}</span>
                 <span className="text-gray-500 ml-1">{plans[0].period}</span>
               </div>
-              <p className="text-gray-400 text-sm mb-6">{plans[0].price}/mo — no trial</p>
+              <p className="text-gray-400 text-sm mb-6">Same features as Jobber Core — 60% cheaper</p>
               <ul className="mb-8 flex-1">
                 {plans[0].features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2 mb-3 text-gray-600">
