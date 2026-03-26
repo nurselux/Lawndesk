@@ -10,6 +10,7 @@ interface GateProfile {
   subscription_status: string | null
   stripe_customer_id: string | null
   subscription_plan: string | null
+  trial_ends_at: string | null
 }
 
 export function useSubscriptionGate() {
@@ -23,7 +24,7 @@ export function useSubscriptionGate() {
 
     supabase
       .from('profiles')
-      .select('role, subscription_status, stripe_customer_id, subscription_plan')
+      .select('role, subscription_status, stripe_customer_id, subscription_plan, trial_ends_at')
       .eq('id', user.id)
       .single()
       .then(({ data }) => {
@@ -35,12 +36,18 @@ export function useSubscriptionGate() {
           return
         }
 
-        // Block if no stripe customer or cancelled
-        const valid =
-          ['trialing', 'active', 'past_due'].includes(data.subscription_status ?? '') &&
+        // Allow active/past_due Stripe subscribers
+        const hasPaidSub =
+          ['active', 'past_due'].includes(data.subscription_status ?? '') &&
           !!data.stripe_customer_id
 
-        if (!valid) {
+        // Allow users in a valid trial window
+        const inTrial =
+          data.subscription_status === 'trialing' &&
+          !!data.trial_ends_at &&
+          new Date(data.trial_ends_at) > new Date()
+
+        if (!hasPaidSub && !inTrial) {
           router.replace('/pricing')
           return
         }

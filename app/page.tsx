@@ -13,8 +13,8 @@ export default function Home() {
           <div className="flex gap-3 items-center">
             <Link href="/login" className="text-green-100 font-semibold hover:text-white transition-colors">Log In</Link>
             <Link href="/login?signup=true" className="bg-white text-green-700 font-bold py-2 px-4 sm:px-5 rounded-lg hover:scale-105 hover:shadow-md transition-all duration-200 text-xs sm:text-sm whitespace-nowrap">
-              <span className="sm:hidden">Try Free ✨</span>
-              <span className="hidden sm:inline">Try Free for 14 Days</span>
+              <span className="sm:hidden">Try Pro Free ✨</span>
+              <span className="hidden sm:inline">Try Pro Free for 14 Days</span>
             </Link>
           </div>
         </div>
@@ -24,8 +24,8 @@ export default function Home() {
       <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-20 pb-0 px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-green-600 bg-opacity-60 border border-green-400 rounded-full px-4 py-1.5 mb-6">
-            <span className="text-yellow-300 font-bold text-xs sm:text-sm">✨ 14-Day Free Trial</span>
-            <span className="text-green-200 text-xs sm:text-sm">· Cancel anytime</span>
+            <span className="text-yellow-300 font-bold text-xs sm:text-sm">✨ 14-Day Pro Trial Free</span>
+            <span className="text-green-200 text-xs sm:text-sm">· No credit card required</span>
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight">
             Run Your Lawn Business<br className="hidden sm:block" /> Like a Pro

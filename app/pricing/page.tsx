@@ -107,7 +107,7 @@ export default function PricingPage() {
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
           <p className="text-gray-500 text-lg mb-2">No hidden fees. No contracts. Cancel anytime.</p>
           <span className="bg-green-100 text-green-700 font-bold py-2 px-6 rounded-full text-sm">
-            🎉 14 Day Free Trial — No Credit Card Required
+            🎉 14-Day Pro Trial — No Credit Card Required
           </span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
@@ -126,7 +126,7 @@ export default function PricingPage() {
                 <span className="text-5xl font-bold text-green-700">{plans[0].price}</span>
                 <span className="text-gray-500 ml-1">{plans[0].period}</span>
               </div>
-              <p className="text-green-600 text-sm font-bold mb-6">14 days free then {plans[0].price}/mo</p>
+              <p className="text-gray-400 text-sm mb-6">{plans[0].price}/mo — no trial</p>
               <ul className="mb-8 flex-1">
                 {plans[0].features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2 mb-3 text-gray-600">
@@ -147,7 +147,7 @@ export default function PricingPage() {
                   onClick={() => handleSubscribe(plans[0].priceId)}
                   className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
                 >
-                  {loading === plans[0].priceId ? 'Loading...' : 'Start Free Trial'}
+                  {loading === plans[0].priceId ? 'Loading...' : 'Get Started'}
                 </button>
               )}
               <p className="text-center text-gray-400 text-xs mt-3">Cancel anytime</p>
@@ -171,7 +171,7 @@ export default function PricingPage() {
                 <span className="text-5xl font-bold text-white">{plans[1].price}</span>
                 <span className="text-green-300 ml-1">{plans[1].period}</span>
               </div>
-              <p className="text-green-300 text-sm font-bold mb-6">14 days free then {plans[1].price}/mo</p>
+              <p className="text-green-300 text-sm font-bold mb-6">✨ 14-day free trial, then {plans[1].price}/mo</p>
               <ul className="mb-8 flex-1">
                 {plans[1].features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2 mb-3 text-green-100">

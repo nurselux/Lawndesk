@@ -13,6 +13,7 @@ export default function Sidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -20,7 +21,7 @@ export default function Sidebar() {
       setIsLoggedIn(!!session)
       if (session?.user?.email) setUserEmail(session.user.email)
       if (session?.user?.id) {
-        const [invoiceResult, requestResult] = await Promise.all([
+        const [invoiceResult, requestResult, profileResult] = await Promise.all([
           (supabase as any)
             .from('Invoices')
             .select('*', { count: 'exact', head: true })
@@ -31,9 +32,18 @@ export default function Sidebar() {
             .select('*', { count: 'exact', head: true })
             .eq('owner_id', session.user.id)
             .eq('status', 'pending'),
+          (supabase as any)
+            .from('profiles')
+            .select('subscription_status, trial_ends_at')
+            .eq('id', session.user.id)
+            .single(),
         ])
         setOverdueCount(invoiceResult.count ?? 0)
         setPendingRequestsCount(requestResult.count ?? 0)
+        if (profileResult.data?.subscription_status === 'trialing' && profileResult.data?.trial_ends_at) {
+          const days = Math.ceil((new Date(profileResult.data.trial_ends_at).getTime() - Date.now()) / 86400000)
+          setTrialDaysLeft(days > 0 ? days : 0)
+        }
       }
     }
     checkUser()
@@ -97,6 +107,13 @@ export default function Sidebar() {
           ))}
         </nav>
         <div className="p-4 border-t border-green-700">
+          {trialDaysLeft !== null && (
+            <Link href="/pricing">
+              <div className={`mb-3 rounded-lg px-3 py-2 text-xs font-bold text-center cursor-pointer transition-all ${trialDaysLeft <= 3 ? 'bg-red-500 text-white animate-pulse' : 'bg-yellow-400 text-yellow-900'}`}>
+                ⏳ {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left in trial
+              </div>
+            </Link>
+          )}
           {userEmail && <p className="text-green-300 text-xs mb-3 truncate">👤 {userEmail}</p>}
           <button
             onClick={handleLogout}
@@ -181,6 +198,13 @@ export default function Sidebar() {
 
         {/* Drawer footer */}
         <div className="p-4 border-t border-green-700" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+          {trialDaysLeft !== null && (
+            <Link href="/pricing">
+              <div className={`mb-3 rounded-xl px-3 py-2.5 text-sm font-bold text-center cursor-pointer transition-all ${trialDaysLeft <= 3 ? 'bg-red-500 text-white animate-pulse' : 'bg-yellow-400 text-yellow-900'}`}>
+                ⏳ {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left in trial
+              </div>
+            </Link>
+          )}
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 bg-green-700 hover:bg-red-600 transition-all duration-200 text-white font-bold py-3.5 rounded-xl cursor-pointer"

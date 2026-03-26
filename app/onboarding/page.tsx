@@ -63,8 +63,14 @@ export default function OnboardingPage() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
 
+    const trialEnd = new Date()
+    trialEnd.setDate(trialEnd.getDate() + 14)
+
     const updates: Record<string, unknown> = {
       onboarding_complete: true,
+      subscription_status: 'trialing',
+      subscription_plan: 'pro',
+      trial_ends_at: trialEnd.toISOString(),
     }
     if (businessName) updates.business_name = businessName
     if (phone) updates.phone = phone
