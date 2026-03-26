@@ -334,7 +334,7 @@ function InvoicesContent() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">💵</div>
+          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">💲</div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Invoices</h2>
             <p className="text-gray-500 text-sm">
@@ -409,7 +409,7 @@ function InvoicesContent() {
       {showAnyForm && (
         <div className="bg-white border border-purple-200 rounded-2xl p-5 mb-5 shadow-sm">
           <h3 className="font-bold text-gray-800 mb-4 text-base">
-            {isEditing ? `✏️ Edit INV-${String(editingInvoice!.invoice_number).padStart(3, '0')}` : '💵 New Invoice'}
+            {isEditing ? `✏️ Edit INV-${String(editingInvoice!.invoice_number).padStart(3, '0')}` : '💲 New Invoice'}
           </h3>
           <div className="space-y-3">
             <select
@@ -514,7 +514,7 @@ function InvoicesContent() {
       {/* Invoice List */}
       {invoices.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">💵</p>
+          <p className="text-5xl mb-3">💲</p>
           <p className="text-gray-700 font-bold mb-1">No invoices yet</p>
           <p className="text-gray-400 text-sm mb-6">Create your first invoice to start getting paid.</p>
           <button
