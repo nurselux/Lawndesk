@@ -181,32 +181,51 @@ export default function Home() {
       {/* Testimonials */}
       <section className="bg-green-50 py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">Landscapers Love LawnDesk</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-3">Landscapers Love LawnDesk</h2>
+          <p className="text-center text-gray-400 mb-12">Trusted by lawn care businesses across the country</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[
               {
                 quote: "I used to spend Sunday nights doing invoices. Now it takes me 5 minutes. LawnDesk paid for itself in the first week.",
                 name: "Mike T.",
-                business: "T&T Lawn Care, Austin TX",
+                business: "T&T Lawn Care · Austin, TX",
+                initials: "MT",
+                color: "bg-green-600",
               },
               {
                 quote: "The recurring jobs feature is a game changer. My whole weekly schedule is set up once and just runs automatically.",
                 name: "Sarah K.",
-                business: "Green Thumb Services, Nashville TN",
+                business: "Green Thumb Services · Nashville, TN",
+                initials: "SK",
+                color: "bg-emerald-500",
               },
               {
                 quote: "Finally an app that's actually built for landscapers. It's simple, fast, and works great on my phone between jobs.",
                 name: "Dave R.",
-                business: "Riverside Landscaping, Denver CO",
+                business: "Riverside Landscaping · Denver, CO",
+                initials: "DR",
+                color: "bg-teal-600",
               },
             ].map((t) => (
-              <div key={t.name} className="bg-amber-50 rounded-xl p-6 border border-amber-200 shadow-md">
-                <p className="text-green-600 text-4xl font-serif leading-none mb-2">"</p>
-                <p className="text-gray-600 italic mb-5">{t.quote}</p>
-                <div className="border-t border-amber-200 pt-4">
-                  <p className="font-bold text-gray-800">{t.name}</p>
-                  <p className="text-gray-400 text-sm">{t.business}</p>
+              <div key={t.name} className="bg-white rounded-2xl p-6 shadow-md flex flex-col gap-4">
+                {/* Header: avatar + name */}
+                <div className="flex items-center gap-3">
+                  <div className={`${t.color} text-white font-bold text-sm w-10 h-10 rounded-full flex items-center justify-center shrink-0`}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800 leading-tight">{t.name}</p>
+                    <p className="text-gray-400 text-xs">{t.business}</p>
+                  </div>
                 </div>
+                {/* Stars */}
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400 text-lg">★</span>
+                  ))}
+                </div>
+                {/* Quote */}
+                <p className="text-gray-600 text-sm leading-relaxed flex-1">"{t.quote}"</p>
               </div>
             ))}
           </div>
