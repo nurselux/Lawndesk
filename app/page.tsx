@@ -28,19 +28,18 @@ export default function Home() {
           <p className="text-green-200 text-base sm:text-lg mb-8 max-w-xl mx-auto">
             LawnDesk handles your clients, jobs, and invoices so you can focus on what you do best — making yards look great.
           </p>
-          <div className="flex gap-4 flex-wrap justify-center mb-14">
-            <div className="flex flex-col items-center gap-1.5">
-              <Link href="/login?signup=true">
-                <button className="bg-white text-green-700 font-bold py-4 px-10 rounded-xl text-lg hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer shadow-lg">
-                  Start Free Trial — 14 Days Free
-                </button>
-              </Link>
-              <span className="text-green-300 text-xs font-medium">No credit card required</span>
-            </div>
-            <Link href="/pricing">
-              <button className="border-2 border-white border-opacity-60 text-white font-bold py-4 px-10 rounded-xl text-lg hover:scale-105 hover:bg-white hover:bg-opacity-10 transition-all duration-200 cursor-pointer">
-                See Pricing
+          <div className="flex flex-col items-center gap-3 mb-14">
+            <Link href="/login?signup=true" className="w-full max-w-sm">
+              <button className="w-full bg-white text-green-700 font-bold py-4 px-8 rounded-2xl text-lg hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer shadow-lg">
+                Start Your Free 14-Day Trial
               </button>
+            </Link>
+            <div className="flex items-center gap-2 bg-green-600 bg-opacity-40 border border-green-400 border-opacity-50 rounded-full px-5 py-2">
+              <span className="text-green-300 text-base">✓</span>
+              <span className="text-white font-bold text-sm">No credit card required — ever</span>
+            </div>
+            <Link href="/pricing" className="text-green-300 text-sm font-medium hover:text-white transition-colors underline underline-offset-2">
+              See pricing plans →
             </Link>
           </div>
         </div>
