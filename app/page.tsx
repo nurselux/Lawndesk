@@ -9,24 +9,16 @@ export default function Home() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-green-700 shadow-md">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="bg-green-900 text-white text-2xl font-bold px-4 py-1.5 rounded-lg hover:bg-green-950 transition-all duration-200">🌿 LawnDesk</Link>
-          <div className="flex gap-3 items-center">
-            <Link href="/login" className="text-green-100 font-semibold hover:text-white transition-colors">Log In</Link>
-            <Link href="/login?signup=true" className="bg-white text-green-700 font-bold py-2 px-4 sm:px-5 rounded-lg hover:scale-105 hover:shadow-md transition-all duration-200 text-xs sm:text-sm whitespace-nowrap">
-              <span className="sm:hidden">Try Pro Free ✨</span>
-              <span className="hidden sm:inline">Try Pro Free for 14 Days</span>
-            </Link>
-          </div>
+          <Link href="/" className="text-white text-xl font-bold hover:text-green-200 transition-colors">🌿 LawnDesk</Link>
+          <Link href="/login" className="border-2 border-white border-opacity-70 text-white font-bold py-2 px-5 rounded-lg hover:bg-white hover:text-green-700 transition-all duration-200 text-sm">
+            Sign In
+          </Link>
         </div>
       </nav>
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-20 pb-0 px-4 text-center">
         <div className="max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-green-600 bg-opacity-60 border border-green-400 rounded-full px-4 py-1.5 mb-6">
-            <span className="text-yellow-300 font-bold text-xs sm:text-sm">✨ 14-Day Pro Trial Free</span>
-            <span className="text-green-200 text-xs sm:text-sm">· No credit card required</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight">
             Run Your Lawn Business<br className="hidden sm:block" /> Like a Pro
           </h1>
@@ -37,11 +29,14 @@ export default function Home() {
             LawnDesk handles your clients, jobs, and invoices so you can focus on what you do best — making yards look great.
           </p>
           <div className="flex gap-4 flex-wrap justify-center mb-14">
-            <Link href="/login?signup=true">
-              <button className="bg-white text-green-700 font-bold py-4 px-10 rounded-xl text-lg hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer shadow-lg">
-                Start Free Trial
-              </button>
-            </Link>
+            <div className="flex flex-col items-center gap-1.5">
+              <Link href="/login?signup=true">
+                <button className="bg-white text-green-700 font-bold py-4 px-10 rounded-xl text-lg hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer shadow-lg">
+                  Start Free Trial — 14 Days Free
+                </button>
+              </Link>
+              <span className="text-green-300 text-xs font-medium">No credit card required</span>
+            </div>
             <Link href="/pricing">
               <button className="border-2 border-white border-opacity-60 text-white font-bold py-4 px-10 rounded-xl text-lg hover:scale-105 hover:bg-white hover:bg-opacity-10 transition-all duration-200 cursor-pointer">
                 See Pricing
