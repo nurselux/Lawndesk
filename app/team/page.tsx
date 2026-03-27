@@ -60,6 +60,7 @@ export default function TeamPage() {
   const [sending, setSending] = useState(false)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null)
   const [editName, setEditName] = useState('')
   const [editPhone, setEditPhone] = useState('')
@@ -110,7 +111,14 @@ export default function TeamPage() {
       .select()
       .single()
 
-    if (!error && data) {
+    if (error) {
+      setErrorMessage(`Failed to create invite: ${error.message}`)
+      setTimeout(() => setErrorMessage(''), 6000)
+      setSending(false)
+      return
+    }
+
+    if (data) {
       setInviteEmail('')
       fetchInvites()
 
@@ -130,7 +138,7 @@ export default function TeamPage() {
       if (emailRes.ok) {
         setSuccessMessage(`✅ Invite email sent to ${data.email}!`)
       } else {
-        setSuccessMessage('Invite created — use the Share button to send it manually.')
+        setSuccessMessage(`✅ Invite created! Use the Copy Link button to share it manually.`)
       }
       setTimeout(() => setSuccessMessage(''), 6000)
     }
@@ -271,6 +279,12 @@ export default function TeamPage() {
           >
             {sending ? '⏳ Sending…' : '+ Send Invite'}
           </button>
+          {successMessage && (
+            <div className="mt-3 bg-green-100 text-green-700 font-bold p-3 rounded-xl text-sm">{successMessage}</div>
+          )}
+          {errorMessage && (
+            <div className="mt-3 bg-red-100 text-red-600 font-bold p-3 rounded-xl text-sm">{errorMessage}</div>
+          )}
         </div>
         <p className="text-gray-400 text-xs mt-3">
           An invite email will be sent automatically. You can also share the link via text or WhatsApp.
