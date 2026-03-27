@@ -36,6 +36,12 @@ export function useSubscriptionGate() {
           return
         }
 
+        // No role set — user signed up without an invite link; send to join page
+        if (!data.role) {
+          router.replace('/join')
+          return
+        }
+
         // Allow active/past_due Stripe subscribers
         const hasPaidSub =
           ['active', 'past_due'].includes(data.subscription_status ?? '') &&

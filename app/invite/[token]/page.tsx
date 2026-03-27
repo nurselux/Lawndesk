@@ -45,31 +45,39 @@ export default function InvitePage() {
     }
     setSubmitting(true)
 
-    const { data, error } = await supabase.auth.signUp({
+    // Try sign up first; if account already exists, sign in instead
+    let userId: string | null = null
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: invite!.email,
       password,
       options: { data: { name: name.trim() } },
     })
 
-    if (error) {
-      setMessage(error.message)
-      setSubmitting(false)
-      return
-    }
-
-    if (data.user) {
-      // Insert profile (trigger may not have run yet client-side)
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        role: 'worker',
-        name: name.trim(),
+    if (signUpError || !signUpData.user) {
+      // Account likely already exists — try signing in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: invite!.email,
+        password,
       })
-
-      // Accept the invite to link to admin
-      await supabase.rpc('accept_invite', { invite_token: token })
-
-      router.push('/worker')
+      if (signInError || !signInData.user) {
+        setMessage(signInError?.message || 'Something went wrong. Check your password and try again.')
+        setSubmitting(false)
+        return
+      }
+      userId = signInData.user.id
+    } else {
+      userId = signUpData.user.id
     }
+
+    // Set role to worker and accept the invite
+    await supabase.from('profiles').upsert({
+      id: userId,
+      role: 'worker',
+      name: name.trim(),
+    })
+    await supabase.rpc('accept_invite', { invite_token: token })
+
+    router.push('/worker')
     setSubmitting(false)
   }
 
