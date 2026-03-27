@@ -351,13 +351,19 @@ export default function WorkerPage() {
           {job.status !== '🔴 Cancelled' && (
             <div className="mb-3">
               {!job.clocked_in_at && (
-                <button
-                  onClick={() => handleClockIn(job.id)}
-                  disabled={saving === job.id}
-                  className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
-                >
-                  ⏱ Clock In
-                </button>
+                toDateStr(selectedDate) === todayStr ? (
+                  <button
+                    onClick={() => handleClockIn(job.id)}
+                    disabled={saving === job.id}
+                    className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
+                  >
+                    ⏱ Clock In
+                  </button>
+                ) : (
+                  <div className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 text-center">
+                    Clock-in available on job day only
+                  </div>
+                )
               )}
               {isClockedIn && (
                 <div className="flex items-center gap-2">
