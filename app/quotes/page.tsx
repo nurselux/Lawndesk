@@ -271,6 +271,31 @@ export default function QuotesPage() {
     fetchQuotes()
   }
 
+  const convertToInvoice = async (quote: Quote) => {
+    if (!confirm('Convert this quote to an invoice?')) return
+    const { data: invoice, error } = await supabase
+      .from('Invoices')
+      .insert([{
+        user_id: user?.id,
+        client_id: quote.client_id || null,
+        client_name: quote.client_name,
+        client_email: quote.client_email || null,
+        client_phone: quote.client_phone || null,
+        amount: quote.amount,
+        status: '🟡 Unpaid',
+        description: quote.title + (quote.description ? ` — ${quote.description}` : ''),
+        due_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+      }])
+      .select('id')
+      .single()
+    if (!error && invoice) {
+      await supabase.from('Quotes').update({ status: 'converted' }).eq('id', quote.id)
+      setSuccessMessage('Quote converted to invoice!')
+      setTimeout(() => setSuccessMessage(''), 4000)
+      fetchQuotes()
+    }
+  }
+
   const convertToJob = async (quote: Quote) => {
     if (!confirm('Convert this quote to a job?')) return
     const { data: job, error } = await supabase
@@ -625,12 +650,20 @@ export default function QuotesPage() {
 
                 {/* Status actions */}
                 {quote.status === 'approved' && (
-                  <button
-                    onClick={() => convertToJob(quote)}
-                    className="text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors cursor-pointer"
-                  >
-                    🔁 Convert to Job
-                  </button>
+                  <>
+                    <button
+                      onClick={() => convertToJob(quote)}
+                      className="text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors cursor-pointer"
+                    >
+                      🔁 Convert to Job
+                    </button>
+                    <button
+                      onClick={() => convertToInvoice(quote)}
+                      className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer"
+                    >
+                      💲 Convert to Invoice
+                    </button>
+                  </>
                 )}
                 {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
                   <button

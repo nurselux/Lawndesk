@@ -47,6 +47,7 @@ Deno.serve(async (req: Request) => {
     },
     body: JSON.stringify({
       from: 'LawnDesk <noreply@lawndesk.pro>',
+      reply_to: 'support@lawndesk.pro',
       to: [email],
       subject: `You've been invited to join LawnDesk`,
       html: `

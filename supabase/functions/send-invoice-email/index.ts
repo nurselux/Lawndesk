@@ -37,7 +37,8 @@ Deno.serve(async (req: Request) => {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: 'LawnDesk <noreply@lawndesk.pro>',
+      from: `${fromBusiness} <noreply@lawndesk.pro>`,
+      reply_to: 'support@lawndesk.pro',
       to: [recipientEmail],
       subject: `${invNum} from ${fromBusiness} — $${Number(amount).toFixed(2)} due`,
       html: `
