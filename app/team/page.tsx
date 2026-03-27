@@ -19,7 +19,7 @@ interface Invite {
   id: string
   email: string
   token: string
-  status: string
+  used: boolean
   created_at: string
 }
 
@@ -89,7 +89,7 @@ export default function TeamPage() {
   const fetchInvites = async () => {
     const { data } = await supabase
       .from('invites')
-      .select('id, email, token, status, admin_id, created_at')
+      .select('id, email, token, used, admin_id, created_at')
       .eq('admin_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setInvites(data as Invite[])
@@ -106,7 +106,6 @@ export default function TeamPage() {
       .insert({
         admin_id: user?.id,
         email: inviteEmail.trim(),
-        metadata: { preset_role: inviteRole, permissions: preset?.permissions },
       })
       .select()
       .single()
@@ -215,7 +214,7 @@ export default function TeamPage() {
     setTimeout(() => setSuccessMessage(''), 3000)
   }
 
-  const pendingInvites = invites.filter(i => i.status !== 'used')
+  const pendingInvites = invites.filter(i => !i.used)
 
   if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
