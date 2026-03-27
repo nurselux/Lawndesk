@@ -149,7 +149,7 @@ export default function Sidebar() {
       )}
 
       {/* ── Mobile Drawer ── */}
-      <div className={`md:hidden fixed top-0 left-0 h-full w-72 z-50 bg-green-800 text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+      <div className={`md:hidden fixed top-0 left-0 h-dvh w-72 z-50 bg-green-800 text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
         drawerOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Drawer header */}
@@ -168,7 +168,7 @@ export default function Sidebar() {
         </div>
 
         {/* Drawer nav */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             item.external ? (
               <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">
