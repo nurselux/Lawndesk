@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import StructuredData from "@/components/StructuredData";
 import "./globals.css";
+import "@/sentry.client.config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
