@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import StructuredData from "@/components/StructuredData";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,6 +54,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} h-full`}>
+      <head>
+        <StructuredData />
+      </head>
       <body className="min-h-full bg-gray-100">{children}</body>
     </html>
   );

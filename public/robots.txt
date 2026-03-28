@@ -1,0 +1,38 @@
+User-agent: *
+Allow: /
+
+# Public pages
+Allow: /pricing
+Allow: /login
+Allow: /signup-success
+Allow: /terms
+Allow: /privacy
+Allow: /quote/*
+Allow: /invoice/*
+Allow: /requests
+
+# Block authenticated/private areas
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /jobs
+Disallow: /clients
+Disallow: /invoices
+Disallow: /quotes
+Disallow: /team
+Disallow: /worker
+Disallow: /onboarding
+Disallow: /portal
+Disallow: /api/
+
+# Google Search Console
+# Sitemap: https://lawndesk.pro/sitemap.xml
+
+# Crawl delay (optional - be nice to servers)
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: MJ12bot
+Allow: /
+
+User-agent: AhrefsBot
+Disallow: /
