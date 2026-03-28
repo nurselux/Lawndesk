@@ -53,6 +53,13 @@ export default function SettingsPage() {
   const [bookingMessage, setBookingMessage] = useState('')
   const [bookingError, setBookingError] = useState('')
   const [bookingCopied, setBookingCopied] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteEmail, setDeleteEmail] = useState('')
+  const [deleteCountdown, setDeleteCountdown] = useState(30)
+  const [deleteDeleting, setDeleteDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteExpanded, setDeleteExpanded] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -76,6 +83,17 @@ export default function SettingsPage() {
         })
     }
   }, [user])
+
+  useEffect(() => {
+    if (!showDeleteModal) return
+    if (deleteCountdown <= 0) return
+
+    const timer = setTimeout(() => {
+      setDeleteCountdown(deleteCountdown - 1)
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [showDeleteModal, deleteCountdown])
 
   const handleChangePassword = async () => {
     setPwError('')
@@ -134,6 +152,55 @@ export default function SettingsPage() {
       setTimeout(() => setReviewMessage(''), 3000)
     }
     setReviewSaving(false)
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('')
+    if (!deletePassword || !deleteEmail) {
+      setDeleteError('Please enter your password and email')
+      return
+    }
+    if (deleteEmail !== userEmail) {
+      setDeleteError('Email does not match your account')
+      return
+    }
+
+    setDeleteDeleting(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setDeleteError('Session expired. Please log in again.')
+        setDeleteDeleting(false)
+        return
+      }
+
+      const res = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          email: deleteEmail,
+          password: deletePassword,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setDeleteError(data.error || 'Failed to delete account')
+        setDeleteDeleting(false)
+        return
+      }
+
+      // Account successfully deleted - redirect to login
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      window.location.href = '/login'
+    } catch (error: any) {
+      setDeleteError(error.message || 'Something went wrong')
+      setDeleteDeleting(false)
+    }
   }
 
   const handleManageBilling = async () => {
@@ -372,6 +439,112 @@ export default function SettingsPage() {
           </button>
         </a>
       </div>
+
+      {/* Danger Zone */}
+      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow mb-6">
+        <h3 className="text-lg font-bold text-red-700 mb-2">⚠️ Danger Zone</h3>
+        <p className="text-gray-600 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+
+        <button
+          onClick={() => setDeleteExpanded(!deleteExpanded)}
+          className="text-red-700 text-sm font-semibold mb-3 hover:underline"
+        >
+          {deleteExpanded ? '▼ Hide' : '▶ Show'} what gets deleted
+        </button>
+
+        {deleteExpanded && (
+          <div className="bg-white rounded p-3 mb-4 text-sm text-gray-600 border border-red-100">
+            <p className="font-semibold text-gray-700 mb-2">Your account deletion will remove:</p>
+            <ul className="list-disc list-inside space-y-1 text-gray-600">
+              <li>Your profile and personal information</li>
+              <li>All clients and contact information</li>
+              <li>All jobs and job history</li>
+              <li>All invoices and payment records</li>
+              <li>All quotes and booking requests</li>
+              <li>Your online booking page</li>
+            </ul>
+            <p className="font-semibold text-gray-700 mt-3 mb-2">What happens to linked workers:</p>
+            <ul className="list-disc list-inside text-gray-600">
+              <li>Workers will be unlinked from your account</li>
+              <li>They will become independent accounts</li>
+              <li>They can create their own business account if needed</li>
+            </ul>
+            {profile?.subscription_status === 'active' && (
+              <p className="font-semibold text-gray-700 mt-3 mb-1">Your active Stripe subscription will be cancelled.</p>
+            )}
+          </div>
+        )}
+
+        <button
+          onClick={() => {
+            setShowDeleteModal(true)
+            setDeleteCountdown(30)
+            setDeletePassword('')
+            setDeleteEmail('')
+            setDeleteError('')
+          }}
+          className="bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200 cursor-pointer"
+        >
+          🗑️ Delete Account Permanently
+        </button>
+      </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
+            <h4 className="text-xl font-bold text-red-700 mb-2">Delete Account?</h4>
+            <p className="text-gray-600 text-sm mb-4">This action cannot be undone. All your data will be permanently deleted.</p>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Confirm your email</label>
+                <input
+                  type="email"
+                  placeholder={userEmail}
+                  value={deleteEmail}
+                  onChange={e => setDeleteEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Enter your password</label>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={deletePassword}
+                  onChange={e => setDeletePassword(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                />
+              </div>
+            </div>
+
+            {deleteError && <p className="text-red-600 text-sm font-semibold mb-3">{deleteError}</p>}
+
+            <p className="text-red-600 text-sm font-semibold mb-4">
+              ⏱️ Account deletion in {deleteCountdown}s
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteDeleting}
+                className="flex-1 border-2 border-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg hover:bg-gray-50 transition cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteDeleting || deleteCountdown > 0}
+                className="flex-1 bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition cursor-pointer disabled:opacity-50"
+              >
+                {deleteDeleting ? '⏳ Deleting...' : 'Delete Everything'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

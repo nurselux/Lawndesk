@@ -8,8 +8,35 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://lawndesk.pro"),
   title: "LawnDesk - Less paperwork, more yardwork",
   description: "The simplest business management tool for landscaping professionals.",
+  keywords: "lawn care, landscaping, business management, invoicing, scheduling, worker management",
+  authors: [{ name: "LawnDesk" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://lawndesk.pro",
+    title: "LawnDesk - Less paperwork, more yardwork",
+    description: "The simplest business management tool for landscaping professionals.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "LawnDesk - Business management for landscapers",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LawnDesk - Less paperwork, more yardwork",
+    description: "The simplest business management tool for landscaping professionals.",
+    images: ["/og-image.png"],
+    creator: "@lawndesk",
+  },
+  robots: "index, follow",
 };
 
 export const viewport: Viewport = {
