@@ -472,7 +472,7 @@ export default function WorkerPage() {
   const stickyTop = isOnline ? 'top-[60px]' : 'top-[36px]'
 
   return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col">
+    <div className="min-h-dvh bg-gray-50">
 
       {/* Offline banner */}
       {!isOnline && (
@@ -595,7 +595,7 @@ export default function WorkerPage() {
       </div>
 
       {/* Jobs */}
-      <div className="flex-1 p-4 space-y-4">
+      <div className="p-4 space-y-4 pb-16">
 
         {/* Today's summary banner */}
         {view === 'day' && selectedStr === todayStr && jobs.length > 0 && (
@@ -651,7 +651,7 @@ export default function WorkerPage() {
 
       {/* Bottom summary */}
       {view === 'day' && jobs.length > 0 && (
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-5 py-3 flex justify-between text-xs font-semibold text-gray-500">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-5 py-3 flex justify-between text-xs font-semibold text-gray-500">
           <span>{jobs.filter(j => j.status === '🟢 Completed').length} of {jobs.length} completed</span>
           <span>{jobs.filter(j => j.status === '🔵 Scheduled').length} remaining</span>
         </div>
