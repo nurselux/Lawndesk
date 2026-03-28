@@ -110,6 +110,18 @@ export default function AdminPage() {
         ))}
       </div>
 
+      {/* Uptime Status */}
+      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">Uptime Status</h2>
+        <iframe
+          src="https://status.uptimerobot.com/"
+          width="100%"
+          height="280"
+          frameBorder="0"
+          title="UptimeRobot Status"
+        />
+      </div>
+
       {/* Search */}
       <div className="mb-4">
         <input
