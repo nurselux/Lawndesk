@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [testUsername, setTestUsername] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -68,6 +69,18 @@ export default function AdminPage() {
     }
 
     fetchUsers()
+
+    // Fetch a test username for the client preview
+    const fetchTestUsername = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('role', 'admin')
+        .limit(1)
+        .single()
+      if (data?.username) setTestUsername(data.username)
+    }
+    fetchTestUsername()
   }, [user])
 
   const filtered = users.filter(u =>
@@ -120,6 +133,39 @@ export default function AdminPage() {
           frameBorder="0"
           title="UptimeRobot Status"
         />
+      </div>
+
+      {/* Preview as */}
+      <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Preview as</p>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="/dashboard"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
+          >
+            🏠 Owner Dashboard
+          </a>
+          <a
+            href="/worker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+          >
+            👷 Worker View
+          </a>
+          {testUsername && (
+            <a
+              href={`/book/${testUsername}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors"
+            >
+              👤 Client Booking
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Search */}
