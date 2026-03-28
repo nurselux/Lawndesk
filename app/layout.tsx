@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import StructuredData from "@/components/StructuredData";
 import "./globals.css";
-import "@/sentry.client.config";
+import SentryInitializer from "@/components/SentryInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,7 +58,10 @@ export default function RootLayout({
       <head>
         <StructuredData />
       </head>
-      <body className="min-h-full bg-gray-100">{children}</body>
+      <body className="min-h-full bg-gray-100">
+        <SentryInitializer />
+        {children}
+      </body>
     </html>
   );
 }
