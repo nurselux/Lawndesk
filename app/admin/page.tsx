@@ -6,6 +6,17 @@ import { supabase } from '../../lib/supabase'
 import AdminViewBanner from '../../components/AdminViewBanner'
 import UptimeRobotStatus from '../../components/UptimeRobotStatus'
 
+interface CallLog {
+  id: string
+  caller_phone: string
+  status: string
+  outcome: string | null
+  ai_summary: string | null
+  duration_seconds: number | null
+  business_name: string | null
+  created_at: string
+}
+
 interface AdminUser {
   id: string
   email: string
@@ -39,6 +50,7 @@ function trialDaysLeft(trialEndsAt: string | null) {
 export default function AdminPage() {
   const { user, loading } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
+  const [callLogs, setCallLogs] = useState<CallLog[]>([])
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
@@ -66,6 +78,16 @@ export default function AdminPage() {
       } else {
         setUsers(json.users)
       }
+
+      // Fetch call logs
+      const logsRes = await fetch('/api/admin/call-logs', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (logsRes.ok) {
+        const logsJson = await logsRes.json()
+        setCallLogs(logsJson.logs ?? [])
+      }
+
       setFetching(false)
     }
 
@@ -155,7 +177,7 @@ export default function AdminPage() {
         />
       </div>
 
-      {/* Table */}
+      {/* Users Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -186,6 +208,47 @@ export default function AdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* AI Receptionist Call Logs */}
+      <div className="mt-8">
+        <h2 className="text-lg font-bold text-gray-800 mb-4">AI Receptionist — Recent Calls</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  {['Caller', 'Business', 'Outcome', 'Summary', 'Duration', 'Time'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-800 uppercase tracking-wide">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {callLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">No calls yet</td>
+                  </tr>
+                ) : callLogs.map(log => (
+                  <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-gray-800">{log.caller_phone}</td>
+                    <td className="px-4 py-3 text-gray-600">{log.business_name ?? <span className="italic text-gray-400">Unknown</span>}</td>
+                    <td className="px-4 py-3">
+                      {log.outcome === 'booking_created'
+                        ? <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Booking</span>
+                        : log.outcome === 'info_only'
+                        ? <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Info only</span>
+                        : <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">{log.outcome ?? 'In progress'}</span>
+                      }
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{log.ai_summary ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{log.duration_seconds != null ? `${log.duration_seconds}s` : '—'}</td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDate(log.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
