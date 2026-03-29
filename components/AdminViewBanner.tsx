@@ -12,7 +12,7 @@ export default function AdminViewBanner({ view }: Props) {
   const { user } = useAuth()
   const { profile } = useProfile(user?.id)
 
-  if (!profile || profile.role !== 'admin') return null
+  if (!user || user.email !== process.env.NEXT_PUBLIC_ADMIN_EMAIL) return null
 
   return (
     <div className="sticky top-0 z-50 bg-indigo-700 text-white px-4 py-2 flex items-center justify-between text-sm">
