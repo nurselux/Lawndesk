@@ -4,6 +4,5 @@
       "path": "/api/keepalive",
       "schedule": "0 0 */5 * *"
     }
-  ],
-  "toolbar": false
+  ]
 }
