@@ -17,6 +17,8 @@ interface Profile {
   booking_notify_sms: boolean | null
   booking_notify_email: boolean | null
   booking_welcome_message: string | null
+  twilio_number: string | null
+  ai_receptionist_enabled: boolean | null
 }
 
 function subLabel(status: string | null, plan: string | null) {
@@ -53,6 +55,12 @@ export default function SettingsPage() {
   const [bookingMessage, setBookingMessage] = useState('')
   const [bookingError, setBookingError] = useState('')
   const [bookingCopied, setBookingCopied] = useState(false)
+  const [twilioNumber, setTwilioNumber] = useState<string | null>(null)
+  const [aiEnabled, setAiEnabled] = useState(false)
+  const [aiGreeting, setAiGreeting] = useState('')
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiMessage, setAiMessage] = useState('')
+  const [aiCopied, setAiCopied] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteEmail, setDeleteEmail] = useState('')
@@ -66,7 +74,7 @@ export default function SettingsPage() {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -79,6 +87,9 @@ export default function SettingsPage() {
             setBookingNotifySms(data.booking_notify_sms ?? false)
             setBookingNotifyEmail(data.booking_notify_email ?? true)
             setBookingWelcome(data.booking_welcome_message || '')
+            setTwilioNumber(data.twilio_number ?? null)
+            setAiEnabled(data.ai_receptionist_enabled ?? false)
+            setAiGreeting(data.booking_welcome_message || '')
           }
         })
     }
@@ -140,6 +151,18 @@ export default function SettingsPage() {
       setTimeout(() => setBookingMessage(''), 3000)
     }
     setBookingSaving(false)
+  }
+
+  const handleSaveAI = async () => {
+    setAiSaving(true)
+    const { error } = await (supabase.from('profiles') as any)
+      .update({ ai_receptionist_enabled: aiEnabled, booking_welcome_message: aiGreeting || null })
+      .eq('id', user?.id)
+    if (!error) {
+      setAiMessage('Saved!')
+      setTimeout(() => setAiMessage(''), 3000)
+    }
+    setAiSaving(false)
   }
 
   const handleSaveReviewLink = async () => {
@@ -406,6 +429,67 @@ export default function SettingsPage() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* AI Receptionist */}
+      <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-bold text-gray-800">📞 AI Receptionist</h3>
+          {twilioNumber && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-sm text-gray-500">Active</span>
+              <div
+                onClick={() => setAiEnabled(!aiEnabled)}
+                className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${aiEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${aiEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+            </label>
+          )}
+        </div>
+        <p className="text-gray-500 text-sm mb-4">When clients call your number, the AI answers, collects their info, and sends you the lead. You never miss a job.</p>
+
+        {twilioNumber ? (
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Your AI Receptionist Number</label>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-black text-gray-800 tracking-wide">
+                  {twilioNumber.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')}
+                </span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(twilioNumber); setAiCopied(true); setTimeout(() => setAiCopied(false), 2000) }}
+                  className="text-xs px-3 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+                >
+                  {aiCopied ? '✅ Copied' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Give this number to clients — put it on your website, truck, or business card.</p>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Greeting Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+              <textarea
+                placeholder={`Thank you for calling${businessName ? ` ${businessName}` : ''}. How can I help you today?`}
+                value={aiGreeting}
+                onChange={e => setAiGreeting(e.target.value)}
+                rows={2}
+                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+              />
+            </div>
+            {aiMessage && <p className="text-green-600 text-sm font-semibold">{aiMessage}</p>}
+            <button
+              onClick={handleSaveAI}
+              disabled={aiSaving}
+              className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+            >
+              {aiSaving ? '⏳ Saving...' : '💾 Save'}
+            </button>
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-500 border border-dashed border-gray-300">
+            No phone number assigned yet. Contact <a href="mailto:support@lawndesk.pro" className="text-green-700 font-semibold underline">support@lawndesk.pro</a> to get your AI receptionist set up.
+          </div>
+        )}
       </div>
 
       {/* Google Review Link */}
