@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../lib/useAuth'
 import { supabase } from '../../lib/supabase'
+import AdminViewBanner from '../../components/AdminViewBanner'
+import UptimeRobotStatus from '../../components/UptimeRobotStatus'
 
 interface AdminUser {
   id: string
@@ -40,7 +42,6 @@ export default function AdminPage() {
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [testUsername, setTestUsername] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -69,18 +70,6 @@ export default function AdminPage() {
     }
 
     fetchUsers()
-
-    // Fetch a test username for the client preview
-    const fetchTestUsername = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('role', 'admin')
-        .limit(1)
-        .single()
-      if (data?.username) setTestUsername(data.username)
-    }
-    fetchTestUsername()
   }, [user])
 
   const filtered = users.filter(u =>
@@ -126,13 +115,7 @@ export default function AdminPage() {
       {/* Uptime Status */}
       <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
         <h2 className="text-sm font-semibold text-gray-700 mb-3">Uptime Status</h2>
-        <iframe
-          src="https://stats.uptimerobot.com/hAsUIV5kKi"
-          width="100%"
-          height="280"
-          frameBorder="0"
-          title="UptimeRobot Status"
-        />
+        <UptimeRobotStatus />
       </div>
 
       {/* Preview as */}
@@ -155,27 +138,20 @@ export default function AdminPage() {
           >
             👷 Worker View
           </a>
-          {testUsername && (
-            <a
-              href={`/book/${testUsername}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors"
-            >
-              👤 Client Booking
-            </a>
-          )}
         </div>
       </div>
 
       {/* Search */}
       <div className="mb-4">
+        <label htmlFor="user-search" className="block text-xs font-semibold text-gray-800 mb-2">Search Users</label>
         <input
+          id="user-search"
+          name="search"
           type="text"
           placeholder="Search by email or business name..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full md:w-80 border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full md:w-80 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -186,26 +162,26 @@ export default function AdminPage() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 {['Business', 'Email', 'Plan', 'Status', 'Trial Ends', 'Joined'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-800 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400">No users found</td>
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-700">No users found</td>
                 </tr>
               ) : filtered.map(u => (
                 <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-800">{u.business_name || <span className="text-gray-400 italic">No name</span>}</td>
+                  <td className="px-4 py-3 font-medium text-gray-800">{u.business_name || <span className="text-gray-600 italic">No name</span>}</td>
                   <td className="px-4 py-3 text-gray-600">{u.email}</td>
                   <td className="px-4 py-3 capitalize text-gray-600">{u.subscription_plan || '—'}</td>
                   <td className="px-4 py-3">{statusBadge(u.subscription_status)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-gray-700">
                     <div>{formatDate(u.trial_ends_at)}</div>
                     {u.subscription_status === 'trialing' && trialDaysLeft(u.trial_ends_at)}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{formatDate(u.created_at)}</td>
+                  <td className="px-4 py-3 text-gray-700">{formatDate(u.created_at)}</td>
                 </tr>
               ))}
             </tbody>

@@ -12,6 +12,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/admin',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-src 'self' https: data:",
+          },
+        ],
+      },
+    ]
+  },
 }
 
 export default withSentryConfig(nextConfig, {

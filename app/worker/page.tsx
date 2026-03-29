@@ -7,6 +7,7 @@ import { useAuth } from '../../lib/useAuth'
 import { useProfile } from '../../lib/useProfile'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
+import AdminViewBanner from '../../components/AdminViewBanner'
 
 interface Job {
   id: string
@@ -100,12 +101,6 @@ export default function WorkerPage() {
       window.removeEventListener('offline', onOffline)
     }
   }, [])
-
-  useEffect(() => {
-    if (!profileLoading && profile?.role === 'admin') {
-      router.replace('/dashboard')
-    }
-  }, [profile, profileLoading])
 
   useEffect(() => {
     if (profile?.owner_id) {
@@ -472,7 +467,9 @@ export default function WorkerPage() {
   const stickyTop = isOnline ? 'top-[60px]' : 'top-[36px]'
 
   return (
-    <div className="min-h-dvh bg-gray-50">
+    <>
+      <AdminViewBanner view="Worker View" />
+      <div className="min-h-dvh bg-gray-50">
 
       {/* Offline banner */}
       {!isOnline && (
@@ -657,5 +654,6 @@ export default function WorkerPage() {
         </div>
       )}
     </div>
+    </>
   )
 }

@@ -10,6 +10,7 @@ async function getRedirect(userId: string) {
     .select('stripe_customer_id, role')
     .eq('id', userId)
     .single()
+  if (data?.role === 'admin') return '/admin'
   if (data?.role === 'worker') return '/worker'
   if (!data?.stripe_customer_id) return '/pricing'
   return '/dashboard'

@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import AdminViewBanner from '../../components/AdminViewBanner'
 
 interface Job {
   id: string
@@ -229,7 +230,9 @@ function DashboardContent() {
   ]
 
   return (
-    <div className="p-6 pb-6 min-h-dvh bg-gray-50">
+    <>
+      <AdminViewBanner view="Owner Dashboard" />
+      <div className="p-6 pb-6 min-h-dvh bg-gray-50">
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
           🎉 You're all set! Your 14-day free trial has started. No charge until your trial ends.
@@ -460,6 +463,7 @@ function DashboardContent() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

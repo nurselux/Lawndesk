@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import AdminViewBanner from '../../../components/AdminViewBanner'
 
 const JOB_TYPES = [
   '🌿 Lawn Mowing', '✂️ Hedge Trimming', '💨 Leaf Blowing', '🍂 Leaf Removal',
@@ -99,33 +100,44 @@ export default function BookingPage() {
   }
 
   if (loading) return (
-    <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
-      <p className="text-green-700 font-bold text-lg">Loading...</p>
-    </div>
+    <>
+      <AdminViewBanner view="Client Booking" />
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
+        <p className="text-green-700 font-bold text-lg">Loading...</p>
+      </div>
+    </>
   )
 
   if (notFound) return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-      <p className="text-5xl mb-4">🌿</p>
-      <h1 className="text-2xl font-bold text-gray-800 mb-2">Booking page not found</h1>
-      <p className="text-gray-500">This booking link is inactive or doesn't exist.</p>
-    </div>
+    <>
+      <AdminViewBanner view="Client Booking" />
+      <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <p className="text-5xl mb-4">🌿</p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Booking page not found</h1>
+        <p className="text-gray-500">This booking link is inactive or doesn't exist.</p>
+      </div>
+    </>
   )
 
   if (submitted) return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-      <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full">
-        <p className="text-5xl mb-4">✅</p>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Request Sent!</h1>
-        <p className="text-gray-500 mb-2">Thanks, <strong>{clientName}</strong>! Your request has been sent to <strong>{business?.business_name || 'the business'}</strong>.</p>
-        <p className="text-gray-400 text-sm">They'll be in touch shortly to confirm your appointment.</p>
+    <>
+      <AdminViewBanner view="Client Booking" />
+      <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full">
+          <p className="text-5xl mb-4">✅</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Request Sent!</h1>
+          <p className="text-gray-500 mb-2">Thanks, <strong>{clientName}</strong>! Your request has been sent to <strong>{business?.business_name || 'the business'}</strong>.</p>
+          <p className="text-gray-400 text-sm">They'll be in touch shortly to confirm your appointment.</p>
+        </div>
       </div>
-    </div>
+    </>
   )
 
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-50">
-      {/* Header */}
+    <>
+      <AdminViewBanner view="Client Booking" />
+      <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-50">
+        {/* Header */}
       <div className="bg-green-700 text-white px-6 py-8 text-center">
         <p className="text-3xl mb-2">🌿</p>
         <h1 className="text-2xl font-bold">{business?.business_name || 'Book a Service'}</h1>
@@ -211,5 +223,6 @@ export default function BookingPage() {
         <p className="text-center text-gray-400 text-xs pb-6">Powered by <span className="font-semibold text-green-600">LawnDesk</span></p>
       </div>
     </div>
+    </>
   )
 }
