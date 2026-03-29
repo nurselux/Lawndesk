@@ -25,6 +25,8 @@ interface AdminUser {
   subscription_plan: string | null
   trial_ends_at: string | null
   created_at: string
+  twilio_number: string | null
+  ai_receptionist_enabled: boolean
 }
 
 function statusBadge(status: string | null) {
@@ -54,6 +56,7 @@ export default function AdminPage() {
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [provisioning, setProvisioning] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -93,6 +96,21 @@ export default function AdminPage() {
 
     fetchUsers()
   }, [user])
+
+  const provisionNumber = async (ownerId: string, areaCode?: string) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    setProvisioning(ownerId)
+    const res = await fetch('/api/admin/provision-number', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerId, areaCode })
+    })
+    const json = await res.json()
+    setProvisioning(null)
+    if (!res.ok) { alert(json.error || 'Provisioning failed'); return }
+    setUsers(prev => prev.map(u => u.id === ownerId ? { ...u, twilio_number: json.phoneNumber, ai_receptionist_enabled: true } : u))
+  }
 
   const filtered = users.filter(u =>
     u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -183,7 +201,7 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                {['Business', 'Email', 'Plan', 'Status', 'Trial Ends', 'Joined'].map(h => (
+                {['Business', 'Email', 'Plan', 'Status', 'AI Receptionist', 'Joined'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-800 uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -199,9 +217,24 @@ export default function AdminPage() {
                   <td className="px-4 py-3 text-gray-600">{u.email}</td>
                   <td className="px-4 py-3 capitalize text-gray-600">{u.subscription_plan || '—'}</td>
                   <td className="px-4 py-3">{statusBadge(u.subscription_status)}</td>
-                  <td className="px-4 py-3 text-gray-700">
-                    <div>{formatDate(u.trial_ends_at)}</div>
-                    {u.subscription_status === 'trialing' && trialDaysLeft(u.trial_ends_at)}
+                  <td className="px-4 py-3">
+                    {u.twilio_number ? (
+                      <div>
+                        <span className="text-xs font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{u.twilio_number}</span>
+                        {u.ai_receptionist_enabled && <span className="ml-2 text-xs text-green-600">● Active</span>}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          const ac = prompt('Area code (optional, e.g. 404):')
+                          provisionNumber(u.id, ac || undefined)
+                        }}
+                        disabled={provisioning === u.id}
+                        className="px-3 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors"
+                      >
+                        {provisioning === u.id ? 'Provisioning…' : '+ Assign Number'}
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-700">{formatDate(u.created_at)}</td>
                 </tr>

@@ -20,11 +20,11 @@ export async function GET(req: Request) {
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (user.email !== process.env.ADMIN_EMAIL) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  // Fetch all admin profiles (exclude workers)
+  // Fetch all owner + admin profiles (exclude workers)
   const { data: profiles, error } = await supabase
     .from('profiles')
-    .select('id, business_name, subscription_status, subscription_plan, trial_ends_at, created_at')
-    .eq('role', 'admin')
+    .select('id, business_name, subscription_status, subscription_plan, trial_ends_at, created_at, twilio_number, ai_receptionist_enabled, role')
+    .neq('role', 'worker')
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -38,6 +38,8 @@ export async function GET(req: Request) {
   const result = profiles.map(p => ({
     ...p,
     email: emailMap.get(p.id) ?? 'unknown',
+    twilio_number: p.twilio_number ?? null,
+    ai_receptionist_enabled: p.ai_receptionist_enabled ?? false,
   }))
 
   return NextResponse.json({ users: result })
