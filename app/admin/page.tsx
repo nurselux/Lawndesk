@@ -42,6 +42,11 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function formatDateTime(iso: string | null) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
 function trialDaysLeft(trialEndsAt: string | null) {
   if (!trialEndsAt) return null
   const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
@@ -276,7 +281,7 @@ export default function AdminPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 max-w-xs truncate">{log.ai_summary ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{log.duration_seconds != null ? `${log.duration_seconds}s` : '—'}</td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDate(log.created_at)}</td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
