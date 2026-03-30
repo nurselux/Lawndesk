@@ -263,6 +263,7 @@ export default function JobsPage() {
     setEditRecurring(job.recurring || '🔂 One-time')
     setEditCustomRecurring('')
     setShowForm(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleUpdateJob = async () => {
@@ -610,8 +611,14 @@ export default function JobsPage() {
                 <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">📅 Date *</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">🕐 Time (optional)</label>
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
             <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔂 One-time</option>
               <option>📅 Weekly</option>
@@ -695,8 +702,14 @@ export default function JobsPage() {
                 <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
-            <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-            <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">📅 Date *</label>
+              <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">🕐 Time (optional)</label>
+              <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
             <select value={editRecurring} onChange={(e) => setEditRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔂 One-time</option>
               <option>📅 Weekly</option>
