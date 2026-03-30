@@ -438,11 +438,13 @@ export default function JobsPage() {
         const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
         matchesPeriod = jobDate >= today && jobDate < tomorrow
       } else if (filterPeriod === 'This Week') {
-        const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7)
-        matchesPeriod = jobDate >= today && jobDate < weekEnd
+        const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay())
+        const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 7)
+        matchesPeriod = jobDate >= weekStart && jobDate < weekEnd
       } else if (filterPeriod === 'This Month') {
-        const monthEnd = new Date(today); monthEnd.setDate(monthEnd.getDate() + 30)
-        matchesPeriod = jobDate >= today && jobDate < monthEnd
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+        matchesPeriod = jobDate >= monthStart && jobDate < monthEnd
       }
     }
 
