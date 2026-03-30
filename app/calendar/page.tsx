@@ -88,7 +88,7 @@ export default function CalendarPage() {
       .filter((a): a is string => !!a && a.trim().length > 0)
   )]
   const routeUrl = todayAddresses.length >= 2
-    ? `https://www.google.com/maps/dir/${todayAddresses.map(a => encodeURIComponent(a)).join('/')}`
+    ? `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(todayAddresses[0])}&destination=${encodeURIComponent(todayAddresses[todayAddresses.length - 1])}${todayAddresses.length > 2 ? `&waypoints=${todayAddresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
     : null
 
   if (checking) return (
@@ -194,7 +194,7 @@ export default function CalendarPage() {
                   .filter((a): a is string => !!a && a.trim().length > 0)
               )]
               if (addrs.length < 2) return null
-              const url = `https://www.google.com/maps/dir/${addrs.map(a => encodeURIComponent(a)).join('/')}`
+              const url = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(addrs[0])}&destination=${encodeURIComponent(addrs[addrs.length - 1])}${addrs.length > 2 ? `&waypoints=${addrs.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
               return (
                 <a href={url} target="_blank" rel="noopener noreferrer">
                   <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">

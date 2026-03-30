@@ -480,9 +480,9 @@ export default function JobsPage() {
           {(() => {
             const today = new Date().toISOString().split('T')[0]
             const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
-            const addresses = todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter(Boolean)
+            const addresses = [...new Set(todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter((a): a is string => !!a && a.trim().length > 0))]
             if (addresses.length < 2) return null
-            const mapsUrl = `https://www.google.com/maps/dir/${addresses.map(a => encodeURIComponent(a!)).join('/')}`
+            const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(addresses[0])}&destination=${encodeURIComponent(addresses[addresses.length - 1])}${addresses.length > 2 ? `&waypoints=${addresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
             return (
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
                 <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-3 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm whitespace-nowrap">
