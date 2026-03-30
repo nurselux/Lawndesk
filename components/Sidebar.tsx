@@ -68,7 +68,6 @@ export default function Sidebar() {
     { label: 'Invoices', icon: '💲', href: '/invoices', badge: overdueCount > 0 ? overdueCount : undefined },
     { label: 'Requests', icon: '📬', href: '/requests', badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
     { label: 'Team', icon: '👷', href: '/team' },
-    { label: 'Client Portal', icon: '🌐', href: '/portal', external: true },
     { label: 'Settings', icon: '⚙️', href: '/settings' },
   ]
 

@@ -84,9 +84,9 @@ export default function CalendarPage() {
   const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
   const todayAddresses = todayJobs
     .map(j => clients.find(c => c.id === j.client_id)?.address)
-    .filter(Boolean)
+    .filter((a): a is string => !!a && a.trim().length > 0)
   const routeUrl = todayAddresses.length >= 2
-    ? `https://www.google.com/maps/dir/${todayAddresses.map(a => encodeURIComponent(a!)).join('/')}`
+    ? `https://www.google.com/maps/dir/${todayAddresses.map(a => encodeURIComponent(a).replace(/%2C/g, ',').replace(/%20/g, '+')).join('/')}`
     : null
 
   if (checking) return (
@@ -186,9 +186,9 @@ export default function CalendarPage() {
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </h4>
             {(() => {
-              const addrs = selectedJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter(Boolean)
+              const addrs = selectedJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter((a): a is string => !!a && a.trim().length > 0)
               if (addrs.length < 2) return null
-              const url = `https://www.google.com/maps/dir/${addrs.map(a => encodeURIComponent(a!)).join('/')}`
+              const url = `https://www.google.com/maps/dir/${addrs.map(a => encodeURIComponent(a).replace(/%2C/g, ',').replace(/%20/g, '+')).join('/')}`
               return (
                 <a href={url} target="_blank" rel="noopener noreferrer">
                   <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">

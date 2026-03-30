@@ -93,7 +93,7 @@ export default function JobsPage() {
   const [customRecurring, setCustomRecurring] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
-  const [filterPeriod, setFilterPeriod] = useState('This Week')
+  const [filterPeriod, setFilterPeriod] = useState('All')
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingJob, setEditingJob] = useState<Job | null>(null)
