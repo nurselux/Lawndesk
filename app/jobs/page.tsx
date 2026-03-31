@@ -93,7 +93,7 @@ export default function JobsPage() {
   const [customRecurring, setCustomRecurring] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
-  const [filterPeriod, setFilterPeriod] = useState('This Week')
+  const [filterPeriod, setFilterPeriod] = useState('All')
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingJob, setEditingJob] = useState<Job | null>(null)
@@ -263,6 +263,7 @@ export default function JobsPage() {
     setEditRecurring(job.recurring || '🔂 One-time')
     setEditCustomRecurring('')
     setShowForm(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleUpdateJob = async () => {
@@ -438,11 +439,13 @@ export default function JobsPage() {
         const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
         matchesPeriod = jobDate >= today && jobDate < tomorrow
       } else if (filterPeriod === 'This Week') {
-        const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7)
-        matchesPeriod = jobDate >= today && jobDate < weekEnd
+        const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay())
+        const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 7)
+        matchesPeriod = jobDate >= weekStart && jobDate < weekEnd
       } else if (filterPeriod === 'This Month') {
-        const monthEnd = new Date(today); monthEnd.setDate(monthEnd.getDate() + 30)
-        matchesPeriod = jobDate >= today && jobDate < monthEnd
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+        matchesPeriod = jobDate >= monthStart && jobDate < monthEnd
       }
     }
 
@@ -477,9 +480,9 @@ export default function JobsPage() {
           {(() => {
             const today = new Date().toISOString().split('T')[0]
             const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
-            const addresses = todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter(Boolean)
+            const addresses = [...new Set(todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter((a): a is string => !!a && a.trim().length > 0))]
             if (addresses.length < 2) return null
-            const mapsUrl = `https://www.google.com/maps/dir/${addresses.map(a => encodeURIComponent(a!)).join('/')}`
+            const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(addresses[0])}&destination=${encodeURIComponent(addresses[addresses.length - 1])}${addresses.length > 2 ? `&waypoints=${addresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
             return (
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
                 <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-3 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm whitespace-nowrap">
@@ -608,8 +611,14 @@ export default function JobsPage() {
                 <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">📅 Date *</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">🕐 Time (optional)</label>
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
             <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔂 One-time</option>
               <option>📅 Weekly</option>
@@ -693,8 +702,14 @@ export default function JobsPage() {
                 <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
-            <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-            <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">📅 Date *</label>
+              <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 px-1">🕐 Time (optional)</label>
+              <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
+            </div>
             <select value={editRecurring} onChange={(e) => setEditRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option>🔂 One-time</option>
               <option>📅 Weekly</option>

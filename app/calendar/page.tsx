@@ -82,11 +82,13 @@ export default function CalendarPage() {
   const selectedJobs = selectedDate ? (jobsByDate[selectedDate] || []) : []
 
   const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
-  const todayAddresses = todayJobs
-    .map(j => clients.find(c => c.id === j.client_id)?.address)
-    .filter(Boolean)
+  const todayAddresses = [...new Set(
+    todayJobs
+      .map(j => clients.find(c => c.id === j.client_id)?.address)
+      .filter((a): a is string => !!a && a.trim().length > 0)
+  )]
   const routeUrl = todayAddresses.length >= 2
-    ? `https://www.google.com/maps/dir/${todayAddresses.map(a => encodeURIComponent(a!)).join('/')}`
+    ? `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(todayAddresses[0])}&destination=${encodeURIComponent(todayAddresses[todayAddresses.length - 1])}${todayAddresses.length > 2 ? `&waypoints=${todayAddresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
     : null
 
   if (checking) return (
@@ -186,15 +188,27 @@ export default function CalendarPage() {
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </h4>
             {(() => {
-              const addrs = selectedJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter(Boolean)
-              if (addrs.length < 2) return null
-              const url = `https://www.google.com/maps/dir/${addrs.map(a => encodeURIComponent(a!)).join('/')}`
+              const addrs = [...new Set(
+                selectedJobs
+                  .map(j => clients.find(c => c.id === j.client_id)?.address)
+                  .filter((a): a is string => !!a && a.trim().length > 0)
+              )]
+              const url = addrs.length >= 2
+                ? `https://maps.google.com/maps?saddr=${encodeURIComponent(addrs[0])}&daddr=${addrs.slice(1).map(a => encodeURIComponent(a)).join('+to:')}`
+                : null
               return (
-                <a href={url} target="_blank" rel="noopener noreferrer">
-                  <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">
-                    🗺️ Route
-                  </button>
-                </a>
+                <div className="flex flex-col items-end gap-1">
+                  {url && (
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">
+                        🗺️ Route ({addrs.length} stops)
+                      </button>
+                    </a>
+                  )}
+                  {addrs.map((a, i) => (
+                    <p key={i} className="text-xs text-gray-400 text-right">{i + 1}. {a}</p>
+                  ))}
+                </div>
               )
             })()}
           </div>
