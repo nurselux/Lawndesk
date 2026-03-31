@@ -15,6 +15,18 @@ interface Worker {
   created_at: string
 }
 
+interface Job {
+  id: string
+  title: string
+  client_name: string
+  date: string
+  time: string | null
+  status: string
+  clocked_in_at: string | null
+  clocked_out_at: string | null
+  assigned_to: string | null
+}
+
 interface Invite {
   id: string
   email: string
@@ -69,11 +81,16 @@ export default function TeamPage() {
   const [savingWorker, setSavingWorker] = useState(false)
   const [changingRoleFor, setChangingRoleFor] = useState<string | null>(null)
   const [savingRole, setSavingRole] = useState<string | null>(null)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [expandedWorker, setExpandedWorker] = useState<string | null>(null)
+  const [assigningJobTo, setAssigningJobTo] = useState<string | null>(null)
+  const [savingAssign, setSavingAssign] = useState(false)
 
   useEffect(() => {
     if (user) {
       fetchWorkers()
       fetchInvites()
+      fetchJobs()
     }
   }, [user])
 
@@ -93,6 +110,61 @@ export default function TeamPage() {
       .eq('admin_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setInvites(data as Invite[])
+  }
+
+  const fetchJobs = async () => {
+    const { data } = await supabase
+      .from('Jobs')
+      .select('id, title, client_name, date, time, status, clocked_in_at, clocked_out_at, assigned_to')
+      .eq('user_id', user?.id)
+      .not('status', 'eq', '🔴 Cancelled')
+      .order('date', { ascending: true })
+    if (data) setJobs(data as Job[])
+  }
+
+  const fmtDuration = (start: string, end: string) => {
+    const ms = new Date(end).getTime() - new Date(start).getTime()
+    if (ms < 0) return ''
+    const h = Math.floor(ms / 3600000)
+    const m = Math.floor((ms % 3600000) / 60000)
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }
+
+  const totalHours = (workerId: string) => {
+    const completed = jobs.filter(j => j.assigned_to === workerId && j.clocked_in_at && j.clocked_out_at)
+    const totalMs = completed.reduce((sum, j) => {
+      return sum + (new Date(j.clocked_out_at!).getTime() - new Date(j.clocked_in_at!).getTime())
+    }, 0)
+    if (totalMs === 0) return null
+    const h = Math.floor(totalMs / 3600000)
+    const m = Math.floor((totalMs % 3600000) / 60000)
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }
+
+  const handleAssignJob = async (jobId: string, workerId: string) => {
+    setSavingAssign(true)
+    await supabase.from('Jobs').update({ assigned_to: workerId }).eq('id', jobId)
+    await fetchJobs()
+    setSavingAssign(false)
+    setAssigningJobTo(null)
+    setSuccessMessage('Job assigned!')
+    setTimeout(() => setSuccessMessage(''), 3000)
+  }
+
+  const handleUnassignJob = async (jobId: string) => {
+    await supabase.from('Jobs').update({ assigned_to: null }).eq('id', jobId)
+    await fetchJobs()
+    setSuccessMessage('Job unassigned.')
+    setTimeout(() => setSuccessMessage(''), 3000)
+  }
+
+  const fmtDate = (d: string) => {
+    const date = new Date(d + 'T00:00:00')
+    const today = new Date()
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
+    if (d === today.toISOString().slice(0, 10)) return 'Today'
+    if (d === tomorrow.toISOString().slice(0, 10)) return 'Tomorrow'
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
   }
 
   const handleInvite = async () => {
@@ -420,19 +492,42 @@ export default function TeamPage() {
               const roleInfo = PRESET_ROLES.find(r => r.id === (worker.preset_role || 'worker_limited'))
               const isChangingRole = changingRoleFor === worker.id
               const isSaving = savingRole === worker.id
+              const isExpanded = expandedWorker === worker.id
+              const isAssigning = assigningJobTo === worker.id
+              const workerJobs = jobs.filter(j => j.assigned_to === worker.id)
+              const upcomingJobs = workerJobs.filter(j => j.status !== '🟢 Completed')
+              const hours = totalHours(worker.id)
+              const unassignedJobs = jobs.filter(j => !j.assigned_to && j.status !== '🟢 Completed')
+
               return (
                 <div key={worker.id} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
                   {/* Worker row */}
                   <div className="flex items-center justify-between p-4 gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
+                    <button
+                      onClick={() => setExpandedWorker(isExpanded ? null : worker.id)}
+                      className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
+                    >
                       <div className="bg-violet-100 text-violet-700 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0">
                         {worker.name ? worker.name[0].toUpperCase() : '?'}
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-gray-800 truncate">{worker.name || 'Unnamed Worker'}</p>
-                        {worker.phone && <p className="text-xs text-gray-400">{worker.phone}</p>}
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                          {worker.phone && <span className="text-xs text-gray-400">{worker.phone}</span>}
+                          {upcomingJobs.length > 0 && (
+                            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">
+                              {upcomingJobs.length} job{upcomingJobs.length !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                          {hours && (
+                            <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">
+                              ⏱ {hours} logged
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                      <span className="text-gray-400 text-sm shrink-0">{isExpanded ? '▲' : '▼'}</span>
+                    </button>
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => openEditWorker(worker)}
@@ -448,6 +543,83 @@ export default function TeamPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Expanded: jobs + assign */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-200 bg-white px-4 py-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Assigned Jobs</p>
+                        <button
+                          onClick={() => setAssigningJobTo(isAssigning ? null : worker.id)}
+                          className="text-xs font-bold py-1.5 px-3 rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors cursor-pointer"
+                        >
+                          {isAssigning ? 'Cancel' : '+ Assign Job'}
+                        </button>
+                      </div>
+
+                      {/* Assign job picker */}
+                      {isAssigning && (
+                        <div className="mb-4 bg-violet-50 rounded-xl p-3 border border-violet-100">
+                          <p className="text-xs font-bold text-violet-700 mb-2">Pick an unassigned job:</p>
+                          {unassignedJobs.length === 0 ? (
+                            <p className="text-xs text-gray-400">No unassigned jobs available.</p>
+                          ) : (
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {unassignedJobs.map(job => (
+                                <button
+                                  key={job.id}
+                                  onClick={() => handleAssignJob(job.id, worker.id)}
+                                  disabled={savingAssign}
+                                  className="w-full flex items-center justify-between p-2.5 bg-white rounded-lg border border-violet-100 hover:border-violet-400 transition-colors text-left cursor-pointer disabled:opacity-50"
+                                >
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-800">{job.title}</p>
+                                    <p className="text-xs text-gray-400">{job.client_name} · {fmtDate(job.date)}</p>
+                                  </div>
+                                  <span className="text-xs text-violet-600 font-bold shrink-0 ml-2">Assign →</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Worker's jobs list */}
+                      {workerJobs.length === 0 ? (
+                        <p className="text-xs text-gray-400 py-2">No jobs assigned yet.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {workerJobs.map(job => (
+                            <div key={job.id} className="flex items-center justify-between gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-100">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-gray-800 truncate">{job.title}</p>
+                                <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                                  <span className="text-xs text-gray-400">{job.client_name} · {fmtDate(job.date)}</span>
+                                  {job.clocked_in_at && job.clocked_out_at && (
+                                    <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded-full">
+                                      ⏱ {fmtDuration(job.clocked_in_at, job.clocked_out_at)}
+                                    </span>
+                                  )}
+                                  {job.clocked_in_at && !job.clocked_out_at && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-700 font-semibold px-1.5 py-0.5 rounded-full">In progress</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs">{job.status.split(' ')[0]}</span>
+                                <button
+                                  onClick={() => handleUnassignJob(job.id)}
+                                  className="text-xs text-red-400 hover:text-red-600 font-semibold cursor-pointer"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Permission bar */}
                   <div className="border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between gap-3">
@@ -483,9 +655,7 @@ export default function TeamPage() {
                               : 'border-transparent bg-white hover:border-violet-300'
                           }`}
                         >
-                          <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                            (worker.preset_role || 'worker_limited') === r.id ? 'border-violet-600' : 'border-gray-300'
-                          }">
+                          <div className="mt-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
                             {(worker.preset_role || 'worker_limited') === r.id && (
                               <div className="w-2 h-2 rounded-full bg-violet-600" />
                             )}

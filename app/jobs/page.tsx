@@ -827,18 +827,34 @@ export default function JobsPage() {
                 {job.assigned_to && workers.find(w => w.id === job.assigned_to) && (
                   <p className="text-xs"><span className="bg-violet-100 text-violet-700 font-semibold px-2 py-0.5 rounded-full">👷 {workers.find(w => w.id === job.assigned_to)?.name || 'Worker'}</span></p>
                 )}
-                {job.date && <p className="text-sm"><span className="bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full text-xs">📅 {job.date}</span>{job.time && <span className="ml-1 bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full text-xs">🕐 {job.time}</span>}</p>}
-                {job.recurring && job.recurring !== '🔂 One-time' && (
-                  <p className="text-xs"><span className="bg-cyan-50 text-cyan-600 font-semibold px-2 py-0.5 rounded-full">🔄 {job.recurring}</span></p>
+                {job.date && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Date:</span>
+                    <span className="bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full text-xs">📅 {job.date}</span>
+                  </div>
+                )}
+                {job.time && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Time:</span>
+                    <span className="bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full text-xs">🕐 {job.time}</span>
+                  </div>
+                )}
+                {job.recurring && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Sched:</span>
+                    <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${job.recurring === '🔂 One-time' ? 'bg-gray-100 text-gray-500' : 'bg-cyan-50 text-cyan-600'}`}>{job.recurring}</span>
+                  </div>
                 )}
                 {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {job.notes}</p>}
                 {job.worker_notes && <p className="text-gray-500 text-xs mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">📋 <span className="font-semibold">Worker:</span> {job.worker_notes}</p>}
                 {job.clocked_in_at && (
-                  <p className="text-xs mt-2">
-                    <span className={`px-2 py-0.5 rounded-full font-semibold ${job.clocked_out_at ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
-                      ⏱ {fmtClock(job.clocked_in_at)}{job.clocked_out_at ? ` → ${fmtClock(job.clocked_out_at)} (${fmtDuration(job.clocked_in_at, job.clocked_out_at)})` : ' · In progress'}
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Time on job:</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${job.clocked_out_at ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
+                      ⏱ {job.clocked_out_at ? fmtDuration(job.clocked_in_at, job.clocked_out_at) : 'In progress'}
                     </span>
-                  </p>
+                    <span className="text-xs text-gray-400">{fmtClock(job.clocked_in_at)}{job.clocked_out_at ? ` – ${fmtClock(job.clocked_out_at)}` : ''}</span>
+                  </div>
                 )}
               </div>
               {cardPhotos[job.id]?.length > 0 && (

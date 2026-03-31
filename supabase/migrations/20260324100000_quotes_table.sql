@@ -23,12 +23,14 @@ create unique index if not exists quotes_share_token_idx on public."Quotes"(shar
 alter table public."Quotes" enable row level security;
 
 -- Admin: full access to own quotes
+drop policy if exists "quotes_admin_all" on public."Quotes";
 create policy "quotes_admin_all" on public."Quotes"
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- Public: read via share_token (no auth required)
+drop policy if exists "quotes_public_read" on public."Quotes";
 create policy "quotes_public_read" on public."Quotes"
   for select
   using (true);
