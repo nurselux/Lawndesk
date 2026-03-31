@@ -61,6 +61,8 @@ export default function SettingsPage() {
   const [aiSaving, setAiSaving] = useState(false)
   const [aiMessage, setAiMessage] = useState('')
   const [aiCopied, setAiCopied] = useState(false)
+  const [aiProvisioning, setAiProvisioning] = useState(false)
+  const [aiAreaCode, setAiAreaCode] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteEmail, setDeleteEmail] = useState('')
@@ -163,6 +165,28 @@ export default function SettingsPage() {
       setTimeout(() => setAiMessage(''), 3000)
     }
     setAiSaving(false)
+  }
+
+  const handleProvisionNumber = async () => {
+    setAiProvisioning(true)
+    setAiMessage('')
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin/provision-number', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ areaCode: aiAreaCode.trim() || undefined }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setTwilioNumber(data.phoneNumber)
+      setAiEnabled(true)
+      setAiMessage('Your AI receptionist number is ready!')
+      setTimeout(() => setAiMessage(''), 5000)
+    } else {
+      setAiMessage(data.error || 'Failed to get number. Try again.')
+      setTimeout(() => setAiMessage(''), 5000)
+    }
+    setAiProvisioning(false)
   }
 
   const handleSaveReviewLink = async () => {
@@ -486,8 +510,30 @@ export default function SettingsPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-500 border border-dashed border-gray-300">
-            No phone number assigned yet. Contact <a href="mailto:support@lawndesk.pro" className="text-green-700 font-semibold underline">support@lawndesk.pro</a> to get your AI receptionist set up.
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+              <p className="text-sm font-bold text-gray-800 mb-1">Get your dedicated business number</p>
+              <p className="text-xs text-gray-500 mb-4">Clients call this number — your AI answers, collects their info, and sends you the lead instantly.</p>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  placeholder="Area code (optional, e.g. 404)"
+                  value={aiAreaCode}
+                  onChange={e => setAiAreaCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                  maxLength={3}
+                  className="border border-gray-300 rounded-lg p-2.5 text-sm w-44 text-gray-800"
+                />
+                <button
+                  onClick={handleProvisionNumber}
+                  disabled={aiProvisioning}
+                  className="flex-1 bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-green-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
+                >
+                  {aiProvisioning ? '⏳ Getting your number…' : '📞 Get My Number'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400">Enter an area code to get a local number for your city, or leave blank for any available number.</p>
+            </div>
+            {aiMessage && <p className="text-sm font-semibold text-green-700">{aiMessage}</p>}
           </div>
         )}
       </div>

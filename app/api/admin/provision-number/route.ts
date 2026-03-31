@@ -22,17 +22,33 @@ export async function POST(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   )
 
-  // Verify admin
+  // Verify caller — admin can provision for any owner, owners can provision for themselves
   const authHeader = req.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { ownerId, areaCode } = await req.json()
-  if (!ownerId) return NextResponse.json({ error: 'ownerId required' }, { status: 400 })
+  const isAdmin = user.email === process.env.ADMIN_EMAIL
+  const targetOwnerId = isAdmin ? (ownerId || user.id) : user.id
+
+  if (!targetOwnerId) return NextResponse.json({ error: 'ownerId required' }, { status: 400 })
+
+  // Prevent provisioning a second number if one already exists (unless admin)
+  if (!isAdmin) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('twilio_number, subscription_plan')
+      .eq('id', targetOwnerId)
+      .single()
+    if (profile?.twilio_number) {
+      return NextResponse.json({ error: 'Number already provisioned' }, { status: 409 })
+    }
+    if (profile?.subscription_plan !== 'pro') {
+      return NextResponse.json({ error: 'AI Receptionist requires a Pro plan' }, { status: 403 })
+    }
+  }
 
   const sid = process.env.TWILIO_ACCOUNT_SID
   const auth = twilioAuth()
@@ -60,7 +76,7 @@ export async function POST(req: Request) {
     VoiceMethod: 'POST',
     StatusCallback: `${RECEPTIONIST_URL}/call-status`,
     StatusCallbackMethod: 'POST',
-    FriendlyName: `LawnDesk - ${ownerId.slice(0, 8)}`
+    FriendlyName: `LawnDesk - ${targetOwnerId.slice(0, 8)}`
   })
 
   const buyRes = await fetch(
@@ -77,7 +93,7 @@ export async function POST(req: Request) {
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ twilio_number: phoneNumber, ai_receptionist_enabled: true })
-    .eq('id', ownerId)
+    .eq('id', targetOwnerId)
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
 
