@@ -170,7 +170,7 @@ export default function RequestsPage() {
         phone: req.client_phone,
         address: req.address ?? null,
       }])
-      if (err) { setError('Failed to save client. Please try again.'); return }
+      if (err) { setError(`Failed to save client: ${err.message}`); return }
       setSavedClientIds(prev => new Set([...prev, req.id]))
     } finally {
       setActionLoading(null)
