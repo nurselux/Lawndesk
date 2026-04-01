@@ -33,6 +33,7 @@ export default function BookingPage() {
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientPhone, setClientPhone] = useState('')
+  const [address, setAddress] = useState('')
   const [serviceType, setServiceType] = useState('')
   const [preferredDate, setPreferredDate] = useState('')
   const [preferredTime, setPreferredTime] = useState('')
@@ -58,8 +59,8 @@ export default function BookingPage() {
   }, [username])
 
   const handleSubmit = async () => {
-    if (!clientName || !clientPhone || !serviceType) {
-      setError('Name, phone and service type are required.')
+    if (!clientName || !clientPhone || !address || !serviceType) {
+      setError('Name, phone, address and service type are required.')
       return
     }
     setSubmitting(true)
@@ -70,6 +71,7 @@ export default function BookingPage() {
       client_name: clientName,
       client_email: clientEmail || null,
       client_phone: clientPhone,
+      address: address || null,
       service_type: serviceType,
       preferred_date: preferredDate || null,
       preferred_time: preferredTime || null,
@@ -125,9 +127,9 @@ export default function BookingPage() {
       <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full">
           <p className="text-5xl mb-4">✅</p>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Request Sent!</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Request Received!</h1>
           <p className="text-gray-500 mb-2">Thanks, <strong>{clientName}</strong>! Your request has been sent to <strong>{business?.business_name || 'the business'}</strong>.</p>
-          <p className="text-gray-400 text-sm">They'll be in touch shortly to confirm your appointment.</p>
+          <p className="text-gray-400 text-sm">We'll be in touch within 24 hours to schedule your free estimate.</p>
         </div>
       </div>
     </>
@@ -140,10 +142,10 @@ export default function BookingPage() {
         {/* Header */}
       <div className="bg-green-700 text-white px-6 py-8 text-center">
         <p className="text-3xl mb-2">🌿</p>
-        <h1 className="text-2xl font-bold">{business?.business_name || 'Book a Service'}</h1>
-        {business?.booking_welcome_message && (
-          <p className="text-green-200 text-sm mt-2 max-w-sm mx-auto">{business.booking_welcome_message}</p>
-        )}
+        <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
+        <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
+          {business?.booking_welcome_message || "Fill out the form and we'll get back to you within 24 hours with a free estimate."}
+        </p>
       </div>
 
       {/* Form */}
@@ -169,6 +171,12 @@ export default function BookingPage() {
               placeholder="Email (optional)"
               value={clientEmail}
               onChange={e => setClientEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
+            />
+            <input
+              placeholder="Property Address *"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
               className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
             />
           </div>
@@ -217,7 +225,7 @@ export default function BookingPage() {
           disabled={submitting}
           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg hover:scale-[1.02] transition-all shadow-md cursor-pointer disabled:opacity-50"
         >
-          {submitting ? '⏳ Sending...' : '🌿 Send Booking Request'}
+          {submitting ? '⏳ Sending...' : '🌿 Request Free Estimate'}
         </button>
 
         <p className="text-center text-gray-400 text-xs pb-6">Powered by <span className="font-semibold text-green-600">LawnDesk</span></p>
