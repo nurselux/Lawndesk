@@ -64,8 +64,6 @@ export async function POST(req: Request) {
   )
   const searchData = await searchRes.json()
 
-  console.log('Twilio search status:', searchRes.status, 'data:', JSON.stringify(searchData).slice(0, 300))
-
   if (!searchRes.ok || searchData.code) {
     return NextResponse.json({ error: `Twilio error: ${searchData.message || searchData.code || 'Unknown'}` }, { status: 502 })
   }
