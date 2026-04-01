@@ -98,9 +98,11 @@ export default function RequestsPage() {
     await (supabase as any).from('jobs').insert([{
       user_id: session.user.id,
       client_id: clientId,
+      client_name: req.client_name,
       title: req.service_type,
-      scheduled_date: convertDate || req.preferred_date || null,
-      status: '🟡 Scheduled',
+      date: convertDate || req.preferred_date || null,
+      time: req.preferred_time || null,
+      status: '🔵 Scheduled',
       notes: [
         req.message ? `Client note: ${req.message}` : null,
         convertNotes ? `Internal note: ${convertNotes}` : null,
@@ -276,11 +278,11 @@ export default function RequestsPage() {
                   {req.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => updateStatus(req.id, 'approved')}
+                        onClick={() => convertToJob(req)}
                         disabled={actionLoading === req.id}
                         className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                       >
-                        {actionLoading === req.id ? '⏳' : '✅ Approve'}
+                        {actionLoading === req.id ? '⏳ Creating...' : '✅ Approve & Create Job'}
                       </button>
                       <button
                         onClick={() => updateStatus(req.id, 'declined')}
@@ -291,7 +293,7 @@ export default function RequestsPage() {
                       </button>
                     </>
                   )}
-                  {(req.status === 'approved' || req.status === 'pending') && (
+                  {req.status === 'approved' && (
                     <button
                       onClick={() => { setConvertingId(req.id); setConvertDate(req.preferred_date ?? '') }}
                       className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
