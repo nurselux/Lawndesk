@@ -58,9 +58,21 @@ CREATE POLICY "owners manage estimates" ON estimates
   FOR ALL USING (user_id = auth.uid());
 ```
 
+### Migration 3 — `scheduled_date` + `scheduled_time` + `deleted_at` on booking_requests
+Needed so "Schedule Visit" on the Requests page can persist the chosen date/time and soft-delete works.
+
+```sql
+ALTER TABLE booking_requests ADD COLUMN IF NOT EXISTS scheduled_date DATE;
+ALTER TABLE booking_requests ADD COLUMN IF NOT EXISTS scheduled_time TEXT;
+ALTER TABLE booking_requests ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+```
+
+Once applied, the Schedule Visit form will save the date and time to the DB (currently it only updates the status to `approved` and discards the date/time).
+
 ---
 
 **Why these matter:**
 - `CRON_SECRET` — without it, the daily `/api/cron/expire-trials` job returns 401 and never runs
 - Migration 1 — without it, provisioning an AI receptionist number throws a DB error
 - Migration 2 — without it, the new `/estimates` page and approving requests will fail
+- Migration 3 — without it, Schedule Visit discards the date/time and soft-delete (🗑️) on requests silently fails
