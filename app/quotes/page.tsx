@@ -105,7 +105,7 @@ export default function QuotesPage() {
         setTitle(data.service_type || '')
         setShowForm(true)
       })
-  }, [searchParams, user])
+  }, [user])
 
   const fetchQuotes = async () => {
     const { data } = await supabase
