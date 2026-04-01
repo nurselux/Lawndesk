@@ -19,6 +19,8 @@ interface Profile {
   booking_welcome_message: string | null
   twilio_number: string | null
   ai_receptionist_enabled: boolean | null
+  name: string | null
+  phone: string | null
 }
 
 function subLabel(status: string | null, plan: string | null) {
@@ -34,6 +36,14 @@ export default function SettingsPage() {
   const { checking } = useSubscriptionGate()
   const [userEmail, setUserEmail] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [displayName, setDisplayName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [accountSaving, setAccountSaving] = useState(false)
+  const [accountMessage, setAccountMessage] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailMessage, setEmailMessage] = useState('')
+  const [emailError, setEmailError] = useState('')
   const [pwCurrent, setPwCurrent] = useState('')
   const [pwNew, setPwNew] = useState('')
   const [pwConfirm, setPwConfirm] = useState('')
@@ -76,7 +86,7 @@ export default function SettingsPage() {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, name, phone')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -92,6 +102,8 @@ export default function SettingsPage() {
             setTwilioNumber(data.twilio_number ?? null)
             setAiEnabled(data.ai_receptionist_enabled ?? false)
             setAiGreeting(data.booking_welcome_message || '')
+            setDisplayName(data.name || '')
+            setPhone(data.phone || '')
           }
         })
     }
@@ -129,6 +141,32 @@ export default function SettingsPage() {
       setPwConfirm('')
     }
     setPwSaving(false)
+  }
+
+  const handleSaveAccount = async () => {
+    setAccountSaving(true)
+    await (supabase.from('profiles') as any)
+      .update({ name: displayName || null, phone: phone || null })
+      .eq('id', user?.id)
+    setAccountMessage('Saved!')
+    setTimeout(() => setAccountMessage(''), 3000)
+    setAccountSaving(false)
+  }
+
+  const handleChangeEmail = async () => {
+    setEmailError('')
+    setEmailMessage('')
+    if (!newEmail) { setEmailError('Enter a new email address.'); return }
+    if (newEmail === userEmail) { setEmailError('That is already your current email.'); return }
+    setEmailSaving(true)
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    if (error) {
+      setEmailError(error.message)
+    } else {
+      setEmailMessage(`Confirmation sent to ${newEmail}. Check your inbox to confirm the change.`)
+      setNewEmail('')
+    }
+    setEmailSaving(false)
   }
 
   const handleSaveBooking = async () => {
@@ -287,14 +325,67 @@ export default function SettingsPage() {
       {/* Account */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">
         <h3 className="text-lg font-bold text-gray-800 mb-4">Account</h3>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-5">
           <div className="bg-green-700 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
-            {userEmail.charAt(0).toUpperCase()}
+            {(displayName || userEmail).charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="font-bold text-gray-800">{userEmail}</p>
-            <p className="text-gray-500 text-sm">LawnDesk Account</p>
+            <p className="font-bold text-gray-800">{displayName || userEmail}</p>
+            <p className="text-gray-500 text-sm">{userEmail}</p>
           </div>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Your Name</label>
+            <input
+              placeholder="e.g. John Smith"
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Phone Number</label>
+            <input
+              type="tel"
+              placeholder="e.g. (555) 555-5555"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+            />
+            <p className="text-xs text-gray-400 mt-1">Required to receive SMS notifications.</p>
+          </div>
+          {accountMessage && <p className="text-green-600 text-sm font-semibold">{accountMessage}</p>}
+          <button
+            onClick={handleSaveAccount}
+            disabled={accountSaving}
+            className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+          >
+            {accountSaving ? '⏳ Saving...' : '💾 Save'}
+          </button>
+        </div>
+
+        <div className="border-t border-gray-100 mt-5 pt-5">
+          <h4 className="text-sm font-bold text-gray-700 mb-3">Change Email Address</h4>
+          <p className="text-xs text-gray-400 mb-3">A confirmation link will be sent to your new email before the change takes effect.</p>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              placeholder="New email address"
+              value={newEmail}
+              onChange={e => setNewEmail(e.target.value)}
+              className="flex-1 border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+            />
+            <button
+              onClick={handleChangeEmail}
+              disabled={emailSaving}
+              className="bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition cursor-pointer disabled:opacity-50 text-sm whitespace-nowrap"
+            >
+              {emailSaving ? '⏳' : 'Update Email'}
+            </button>
+          </div>
+          {emailError && <p className="text-red-500 text-sm mt-2">{emailError}</p>}
+          {emailMessage && <p className="text-green-600 text-sm font-semibold mt-2">{emailMessage}</p>}
         </div>
       </div>
 
