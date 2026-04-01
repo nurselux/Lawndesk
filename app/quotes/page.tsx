@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
@@ -57,7 +56,6 @@ const emptyItem = (): LineItem => ({ description: '', quantity: 1, unit_price: 0
 export default function QuotesPage() {
   const { user } = useAuth()
   const { checking } = useSubscriptionGate()
-  const searchParams = useSearchParams()
   const [fromEstimateId, setFromEstimateId] = useState<string | null>(null)
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [clients, setClients] = useState<Client[]>([])
@@ -90,7 +88,7 @@ export default function QuotesPage() {
 
   // Pre-fill form when arriving from an estimate
   useEffect(() => {
-    const estimateId = searchParams.get('from_estimate')
+    const estimateId = new URLSearchParams(window.location.search).get('from_estimate')
     if (!estimateId || !user) return
     setFromEstimateId(estimateId)
     ;(supabase as any)
