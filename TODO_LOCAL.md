@@ -13,22 +13,54 @@ Or via Vercel Dashboard → Project → Settings → Environment Variables → a
 
 Then redeploy for it to take effect.
 
-## 2. Run Supabase Migration
+## 2. Run Supabase Migrations
 
-Adds the `twilio_number_sid` column to the `profiles` table (needed for Twilio number reclamation on trial expiry).
+Run both of the following (or just `supabase db push` to apply all pending migrations at once):
 
 ```bash
 supabase db push
 ```
 
-Or paste directly in Supabase Dashboard → SQL Editor:
+### Migration 1 — `twilio_number_sid` on profiles
+Needed for Twilio number reclamation on trial expiry.
 
 ```sql
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS twilio_number_sid text;
 ```
 
+### Migration 2 — `estimates` table + `address` on booking_requests
+Needed for the new Estimates workflow (Request → Estimate → Quote → Job).
+
+```sql
+ALTER TABLE booking_requests ADD COLUMN IF NOT EXISTS address TEXT;
+
+CREATE TABLE IF NOT EXISTS estimates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  client_name TEXT NOT NULL,
+  client_phone TEXT,
+  client_email TEXT,
+  service_type TEXT NOT NULL,
+  address TEXT,
+  scheduled_date DATE,
+  scheduled_time TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  notes TEXT,
+  created_from_request_id UUID REFERENCES booking_requests(id) ON DELETE SET NULL,
+  quote_id UUID,
+  converted_to_job_id UUID,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE estimates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owners manage estimates" ON estimates
+  FOR ALL USING (user_id = auth.uid());
+```
+
 ---
 
 **Why these matter:**
-- `CRON_SECRET` — without it, the daily `/api/cron/expire-trials` job won't run (returns 401)
-- Migration — without it, provisioning a number will throw a DB error trying to write `twilio_number_sid`
+- `CRON_SECRET` — without it, the daily `/api/cron/expire-trials` job returns 401 and never runs
+- Migration 1 — without it, provisioning an AI receptionist number throws a DB error
+- Migration 2 — without it, the new `/estimates` page and approving requests will fail
