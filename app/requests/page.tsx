@@ -42,6 +42,7 @@ export default function RequestsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [savedClientIds, setSavedClientIds] = useState<Set<string>>(new Set())
+  const [error, setError] = useState<string | null>(null)
   // Scheduling form state
   const [schedulingId, setSchedulingId] = useState<string | null>(null)
   const [visitDate, setVisitDate] = useState('')
@@ -124,11 +125,13 @@ export default function RequestsPage() {
   const confirmSchedule = async (req: BookingRequest) => {
     if (!visitDate) return
     setActionLoading(req.id)
+    setError(null)
     try {
-      await (supabase as any)
+      const { error: err } = await (supabase as any)
         .from('booking_requests')
         .update({ status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null })
         .eq('id', req.id)
+      if (err) { setError('Failed to schedule visit. Please try again.'); return }
       setRequests(prev => prev.map(r =>
         r.id === req.id
           ? { ...r, status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null }
@@ -145,12 +148,13 @@ export default function RequestsPage() {
 
   const saveAsClient = async (req: BookingRequest) => {
     setActionLoading(req.id)
+    setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
+      if (!session) { setError('Session expired. Please refresh the page.'); return }
       // Check if client already exists
       const { data: existing } = await (supabase as any)
-        .from('clients')
+        .from('Clients')
         .select('id')
         .eq('user_id', session.user.id)
         .ilike('name', req.client_name)
@@ -159,13 +163,14 @@ export default function RequestsPage() {
         setSavedClientIds(prev => new Set([...prev, req.id]))
         return
       }
-      await (supabase as any).from('clients').insert([{
+      const { error: err } = await (supabase as any).from('Clients').insert([{
         user_id: session.user.id,
         name: req.client_name,
         email: req.client_email ?? null,
         phone: req.client_phone,
         address: req.address ?? null,
       }])
+      if (err) { setError('Failed to save client. Please try again.'); return }
       setSavedClientIds(prev => new Set([...prev, req.id]))
     } finally {
       setActionLoading(null)
@@ -223,6 +228,14 @@ export default function RequestsPage() {
           )}
         </div>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-red-700 font-semibold">⚠️ {error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 font-bold text-lg leading-none cursor-pointer">✕</button>
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
