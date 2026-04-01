@@ -55,7 +55,7 @@ export async function POST(req: Request) {
   const auth = twilioAuth()
 
   // Search for an available local number
-  const searchParams = new URLSearchParams({ VoiceEnabled: 'true', SmsEnabled: 'false' })
+  const searchParams = new URLSearchParams({ VoiceEnabled: 'true' })
   if (areaCode) searchParams.set('AreaCode', areaCode)
 
   const searchRes = await fetch(
