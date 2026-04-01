@@ -9,11 +9,12 @@ interface BookingRequest {
   client_name: string
   client_email: string | null
   client_phone: string
+  address: string | null
   service_type: string
   preferred_date: string | null
   preferred_time: string | null
   message: string | null
-  status: 'pending' | 'approved' | 'declined' | 'converted'
+  status: 'pending' | 'approved' | 'declined'
   created_at: string
 }
 
@@ -21,25 +22,20 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   approved: 'bg-green-100 text-green-800 border-green-300',
   declined: 'bg-red-100 text-red-800 border-red-300',
-  converted: 'bg-blue-100 text-blue-800 border-blue-300',
 }
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '⏳ Pending',
-  approved: '✅ Approved',
+  approved: '📋 Estimate Created',
   declined: '❌ Declined',
-  converted: '🌿 Converted to Job',
 }
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState<BookingRequest[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined' | 'converted'>('pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [convertingId, setConvertingId] = useState<string | null>(null)
-  const [convertDate, setConvertDate] = useState('')
-  const [convertNotes, setConvertNotes] = useState('')
 
   const fetchRequests = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -64,7 +60,7 @@ export default function RequestsPage() {
     setActionLoading(null)
   }
 
-  const convertToJob = async (req: BookingRequest) => {
+  const createEstimate = async (req: BookingRequest) => {
     setActionLoading(req.id)
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
@@ -88,33 +84,32 @@ export default function RequestsPage() {
           name: req.client_name,
           email: req.client_email ?? null,
           phone: req.client_phone,
+          address: req.address ?? null,
         }])
         .select('id')
         .single()
       clientId = newClient?.id ?? null
     }
 
-    // Create job
-    await (supabase as any).from('jobs').insert([{
+    // Create estimate
+    await (supabase as any).from('estimates').insert([{
       user_id: session.user.id,
       client_id: clientId,
       client_name: req.client_name,
-      title: req.service_type,
-      date: convertDate || req.preferred_date || null,
-      time: req.preferred_time || null,
-      status: '🔵 Scheduled',
-      notes: [
-        req.message ? `Client note: ${req.message}` : null,
-        convertNotes ? `Internal note: ${convertNotes}` : null,
-      ].filter(Boolean).join('\n') || null,
+      client_phone: req.client_phone,
+      client_email: req.client_email ?? null,
+      service_type: req.service_type,
+      address: req.address ?? null,
+      scheduled_date: req.preferred_date ?? null,
+      scheduled_time: req.preferred_time ?? null,
+      notes: req.message ?? null,
+      created_from_request_id: req.id,
+      status: 'pending',
     }])
 
-    // Mark request as converted
-    await (supabase as any).from('booking_requests').update({ status: 'converted' }).eq('id', req.id)
-    setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'converted' } : r))
-    setConvertingId(null)
-    setConvertDate('')
-    setConvertNotes('')
+    // Mark request as approved
+    await (supabase as any).from('booking_requests').update({ status: 'approved' }).eq('id', req.id)
+    setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r))
     setActionLoading(null)
   }
 
@@ -143,7 +138,7 @@ export default function RequestsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">📬 Booking Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-800">📬 Service Requests</h1>
           {pendingCount > 0 && (
             <p className="text-sm text-yellow-700 font-semibold mt-0.5">{pendingCount} pending {pendingCount === 1 ? 'request' : 'requests'}</p>
           )}
@@ -152,7 +147,7 @@ export default function RequestsPage() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(['pending', 'approved', 'all', 'declined', 'converted'] as const).map(f => (
+        {(['pending', 'approved', 'all', 'declined'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -220,6 +215,11 @@ export default function RequestsPage() {
                     ✉️ {req.client_email}
                   </a>
                 )}
+                {req.address && (
+                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                    📍 {req.address}
+                  </p>
+                )}
               </div>
 
               {/* Message */}
@@ -230,102 +230,40 @@ export default function RequestsPage() {
                 </div>
               )}
 
-              {/* Convert to job form */}
-              {convertingId === req.id && (
-                <div className="bg-green-50 rounded-xl p-3 space-y-2 border border-green-200">
-                  <p className="text-sm font-bold text-green-800">Convert to Job</p>
-                  <div>
-                    <label className="text-xs text-gray-500 font-semibold">Scheduled Date</label>
-                    <input
-                      type="date"
-                      value={convertDate}
-                      defaultValue={req.preferred_date ?? ''}
-                      onChange={e => setConvertDate(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-gray-800 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 font-semibold">Internal Notes (optional)</label>
-                    <textarea
-                      placeholder="Add any notes for the job..."
-                      value={convertNotes}
-                      onChange={e => setConvertNotes(e.target.value)}
-                      rows={2}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-gray-800 mt-1 resize-none"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => convertToJob(req)}
-                      disabled={actionLoading === req.id}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      {actionLoading === req.id ? '⏳ Creating...' : '✅ Create Job'}
-                    </button>
-                    <button
-                      onClick={() => { setConvertingId(null); setConvertDate(''); setConvertNotes('') }}
-                      className="px-4 bg-gray-100 text-gray-600 font-semibold rounded-xl text-sm cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Action buttons */}
-              {req.status !== 'converted' && convertingId !== req.id && (
+              {req.status === 'pending' && (
                 <div className="flex gap-2 flex-wrap">
-                  {req.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => convertToJob(req)}
-                        disabled={actionLoading === req.id}
-                        className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-                      >
-                        {actionLoading === req.id ? '⏳ Creating...' : '✅ Approve & Create Job'}
-                      </button>
-                      <button
-                        onClick={() => updateStatus(req.id, 'declined')}
-                        disabled={actionLoading === req.id}
-                        className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-                      >
-                        ❌ Decline
-                      </button>
-                    </>
-                  )}
-                  {req.status === 'approved' && (
-                    <button
-                      onClick={() => { setConvertingId(req.id); setConvertDate(req.preferred_date ?? '') }}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
-                    >
-                      🌿 Convert to Job
-                    </button>
-                  )}
-                  {req.status === 'approved' && (
-                    <button
-                      onClick={() => updateStatus(req.id, 'declined')}
-                      disabled={actionLoading === req.id}
-                      className="px-4 bg-gray-100 text-gray-600 font-semibold rounded-xl text-sm cursor-pointer"
-                    >
-                      ❌ Decline
-                    </button>
-                  )}
-                  {req.status === 'declined' && (
-                    <button
-                      onClick={() => updateStatus(req.id, 'approved')}
-                      disabled={actionLoading === req.id}
-                      className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
-                    >
-                      ✅ Approve
-                    </button>
-                  )}
+                  <button
+                    onClick={() => createEstimate(req)}
+                    disabled={actionLoading === req.id}
+                    className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                  >
+                    {actionLoading === req.id ? '⏳ Creating...' : '✅ Approve — Create Estimate'}
+                  </button>
+                  <button
+                    onClick={() => updateStatus(req.id, 'declined')}
+                    disabled={actionLoading === req.id}
+                    className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                  >
+                    ❌ Decline
+                  </button>
                 </div>
               )}
 
-              {req.status === 'converted' && (
-                <div className="text-center text-sm text-blue-700 font-semibold bg-blue-50 rounded-xl py-2">
-                  🌿 This request has been converted to a job
+              {req.status === 'approved' && (
+                <div className="text-center text-sm text-green-700 font-semibold bg-green-50 rounded-xl py-2">
+                  📋 Estimate created — view it in the <a href="/estimates" className="underline">Estimates</a> page
                 </div>
+              )}
+
+              {req.status === 'declined' && (
+                <button
+                  onClick={() => createEstimate(req)}
+                  disabled={actionLoading === req.id}
+                  className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50 w-full"
+                >
+                  ↩️ Approve — Create Estimate
+                </button>
               )}
             </div>
           )}

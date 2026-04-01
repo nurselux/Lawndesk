@@ -49,7 +49,11 @@ export default function PublicQuotePage() {
   const handleAction = async (action: 'approved' | 'declined') => {
     if (!quote) return
     setWorking(true)
-    await supabase.from('Quotes').update({ status: action }).eq('id', quote.id)
+    await fetch('/api/approve-quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quoteId: quote.id, token: quote.share_token, action }),
+    })
     setActionDone(action)
     setQuote((prev) => prev ? { ...prev, status: action } : prev)
     setWorking(false)

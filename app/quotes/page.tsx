@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
@@ -56,6 +57,8 @@ const emptyItem = (): LineItem => ({ description: '', quantity: 1, unit_price: 0
 export default function QuotesPage() {
   const { user } = useAuth()
   const { checking } = useSubscriptionGate()
+  const searchParams = useSearchParams()
+  const [fromEstimateId, setFromEstimateId] = useState<string | null>(null)
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -84,6 +87,27 @@ export default function QuotesPage() {
       fetchClients()
     }
   }, [user])
+
+  // Pre-fill form when arriving from an estimate
+  useEffect(() => {
+    const estimateId = searchParams.get('from_estimate')
+    if (!estimateId || !user) return
+    setFromEstimateId(estimateId)
+    ;(supabase as any)
+      .from('estimates')
+      .select('*')
+      .eq('id', estimateId)
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }: { data: any }) => {
+        if (!data) return
+        setClientName(data.client_name || '')
+        setClientEmail(data.client_email || '')
+        setClientPhone(data.client_phone || '')
+        setTitle(data.service_type || '')
+        setShowForm(true)
+      })
+  }, [searchParams, user])
 
   const fetchQuotes = async () => {
     const { data } = await supabase
@@ -156,6 +180,14 @@ export default function QuotesPage() {
     }]).select().single()
 
     if (!error && quote) {
+      // Link quote back to estimate if this came from one
+      if (fromEstimateId) {
+        await (supabase as any)
+          .from('estimates')
+          .update({ quote_id: quote.id, status: 'quote_sent' })
+          .eq('id', fromEstimateId)
+        setFromEstimateId(null)
+      }
       resetForm()
       fetchQuotes()
       if (clientEmail.trim()) {
