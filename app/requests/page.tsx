@@ -63,35 +63,55 @@ export default function RequestsPage() {
     fetchRequests()
   }, [fetchRequests])
 
+  const notifySidebarUpdate = () => {
+    window.dispatchEvent(new Event('requests-updated'))
+  }
+
   const updateStatus = async (id: string, status: BookingRequest['status']) => {
     setActionLoading(id)
-    await (supabase as any).from('booking_requests').update({ status }).eq('id', id)
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
-    setActionLoading(null)
+    try {
+      await (supabase as any).from('booking_requests').update({ status }).eq('id', id)
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const softDelete = async (id: string) => {
     setActionLoading(id)
-    const now = new Date().toISOString()
-    await (supabase as any).from('booking_requests').update({ deleted_at: now }).eq('id', id)
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, deleted_at: now } : r))
-    setExpandedId(null)
-    setActionLoading(null)
+    try {
+      const now = new Date().toISOString()
+      await (supabase as any).from('booking_requests').update({ deleted_at: now }).eq('id', id)
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, deleted_at: now } : r))
+      setExpandedId(null)
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const restoreRequest = async (id: string) => {
     setActionLoading(id)
-    await (supabase as any).from('booking_requests').update({ deleted_at: null }).eq('id', id)
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, deleted_at: null } : r))
-    setActionLoading(null)
+    try {
+      await (supabase as any).from('booking_requests').update({ deleted_at: null }).eq('id', id)
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, deleted_at: null } : r))
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const permanentDelete = async (id: string) => {
     if (!confirm('Permanently delete this request? This cannot be undone.')) return
     setActionLoading(id)
-    await (supabase as any).from('booking_requests').delete().eq('id', id)
-    setRequests(prev => prev.filter(r => r.id !== id))
-    setActionLoading(null)
+    try {
+      await (supabase as any).from('booking_requests').delete().eq('id', id)
+      setRequests(prev => prev.filter(r => r.id !== id))
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const openScheduleForm = (req: BookingRequest) => {
@@ -104,46 +124,52 @@ export default function RequestsPage() {
   const confirmSchedule = async (req: BookingRequest) => {
     if (!visitDate) return
     setActionLoading(req.id)
-    await (supabase as any)
-      .from('booking_requests')
-      .update({ status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null })
-      .eq('id', req.id)
-    setRequests(prev => prev.map(r =>
-      r.id === req.id
-        ? { ...r, status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null }
-        : r
-    ))
-    setSchedulingId(null)
-    setVisitDate('')
-    setVisitTime('')
-    setActionLoading(null)
+    try {
+      await (supabase as any)
+        .from('booking_requests')
+        .update({ status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null })
+        .eq('id', req.id)
+      setRequests(prev => prev.map(r =>
+        r.id === req.id
+          ? { ...r, status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null }
+          : r
+      ))
+      setSchedulingId(null)
+      setVisitDate('')
+      setVisitTime('')
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const saveAsClient = async (req: BookingRequest) => {
     setActionLoading(req.id)
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-    // Check if client already exists
-    const { data: existing } = await (supabase as any)
-      .from('clients')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .ilike('name', req.client_name)
-      .maybeSingle()
-    if (existing) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      // Check if client already exists
+      const { data: existing } = await (supabase as any)
+        .from('clients')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .ilike('name', req.client_name)
+        .maybeSingle()
+      if (existing) {
+        setSavedClientIds(prev => new Set([...prev, req.id]))
+        return
+      }
+      await (supabase as any).from('clients').insert([{
+        user_id: session.user.id,
+        name: req.client_name,
+        email: req.client_email ?? null,
+        phone: req.client_phone,
+        address: req.address ?? null,
+      }])
       setSavedClientIds(prev => new Set([...prev, req.id]))
+    } finally {
       setActionLoading(null)
-      return
     }
-    await (supabase as any).from('clients').insert([{
-      user_id: session.user.id,
-      name: req.client_name,
-      email: req.client_email ?? null,
-      phone: req.client_phone,
-      address: req.address ?? null,
-    }])
-    setSavedClientIds(prev => new Set([...prev, req.id]))
-    setActionLoading(null)
   }
 
   const goToCreateQuote = (req: BookingRequest) => {

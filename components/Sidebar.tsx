@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar() {
@@ -15,31 +15,35 @@ export default function Sidebar() {
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
 
+  const fetchCounts = useCallback(async (userId: string) => {
+    const [invoiceResult, requestResult] = await Promise.all([
+      (supabase as any)
+        .from('Invoices')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('status', '🔴 Overdue'),
+      (supabase as any)
+        .from('booking_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', userId)
+        .eq('status', 'pending'),
+    ])
+    setOverdueCount(invoiceResult.count ?? 0)
+    setPendingRequestsCount(requestResult.count ?? 0)
+  }, [])
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setIsLoggedIn(!!session)
       if (session?.user?.email) setUserEmail(session.user.email)
       if (session?.user?.id) {
-        const [invoiceResult, requestResult, profileResult] = await Promise.all([
-          (supabase as any)
-            .from('Invoices')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', session.user.id)
-            .eq('status', '🔴 Overdue'),
-          (supabase as any)
-            .from('booking_requests')
-            .select('*', { count: 'exact', head: true })
-            .eq('owner_id', session.user.id)
-            .eq('status', 'pending'),
-          (supabase as any)
-            .from('profiles')
-            .select('subscription_status, trial_ends_at')
-            .eq('id', session.user.id)
-            .single(),
-        ])
-        setOverdueCount(invoiceResult.count ?? 0)
-        setPendingRequestsCount(requestResult.count ?? 0)
+        fetchCounts(session.user.id)
+        const profileResult = await (supabase as any)
+          .from('profiles')
+          .select('subscription_status, trial_ends_at')
+          .eq('id', session.user.id)
+          .single()
         if (profileResult.data?.subscription_status === 'trialing' && profileResult.data?.trial_ends_at) {
           const days = Math.ceil((new Date(profileResult.data.trial_ends_at).getTime() - Date.now()) / 86400000)
           setTrialDaysLeft(days > 0 ? days : 0)
@@ -47,7 +51,17 @@ export default function Sidebar() {
       }
     }
     checkUser()
-  }, [])
+  }, [fetchCounts])
+
+  // Refresh badge counts whenever the requests page actions a request
+  useEffect(() => {
+    const handleRequestsUpdated = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) fetchCounts(session.user.id)
+    }
+    window.addEventListener('requests-updated', handleRequestsUpdated)
+    return () => window.removeEventListener('requests-updated', handleRequestsUpdated)
+  }, [fetchCounts])
 
   // Close drawer on route change
   useEffect(() => {
