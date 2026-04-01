@@ -93,7 +93,7 @@ export async function POST(req: Request) {
   // Save to profile
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ twilio_number: phoneNumber, ai_receptionist_enabled: true })
+    .update({ twilio_number: phoneNumber, twilio_number_sid: buyData.sid, ai_receptionist_enabled: true })
     .eq('id', targetOwnerId)
 
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })

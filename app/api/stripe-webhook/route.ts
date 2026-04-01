@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { withRetry } from '@/lib/webhookRetry'
+import { releaseTwilioNumber } from '@/lib/releaseTwilioNumber'
 
 const STARTER_PRICE_ID = 'price_1TDXflC4da9Jmue97LkfChat'
 const PRO_PRICE_ID = 'price_1TDXsmC4da9Jmue93UnMFCbZ'
@@ -105,9 +106,31 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
+
+        // Fetch the profile so we can release the Twilio number if one was provisioned
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('twilio_number_sid')
+          .eq('stripe_customer_id', subscription.customer as string)
+          .single()
+
+        const updates: Record<string, unknown> = { subscription_status: 'cancelled', subscription_plan: null }
+
+        if (profile?.twilio_number_sid) {
+          try {
+            await releaseTwilioNumber(profile.twilio_number_sid)
+            updates.twilio_number = null
+            updates.twilio_number_sid = null
+            updates.ai_receptionist_enabled = false
+          } catch (err) {
+            // Log but don't block the webhook — the daily cron will catch it
+            console.error('Failed to release Twilio number on subscription delete:', err)
+          }
+        }
+
         const { error } = await supabase
           .from('profiles')
-          .update({ subscription_status: 'cancelled', subscription_plan: null })
+          .update(updates)
           .eq('stripe_customer_id', subscription.customer as string)
         if (error) throw new Error(error.message)
         break
