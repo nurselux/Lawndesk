@@ -291,48 +291,6 @@ export default function RequestsPage() {
                   ↩️ Schedule Estimate Visit
                 </button>
               )}
-
-              {/* Inline scheduling form for declined */}
-              {req.status === 'declined' && schedulingId === req.id && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
-                  <p className="text-sm font-bold text-green-800">Schedule your site visit</p>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <label className="text-xs text-gray-500 font-semibold block mb-1">Date *</label>
-                      <input
-                        type="date"
-                        value={visitDate}
-                        onChange={e => setVisitDate(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="text-xs text-gray-500 font-semibold block mb-1">Time (optional)</label>
-                      <input
-                        type="time"
-                        value={visitTime}
-                        onChange={e => setVisitTime(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => confirmSchedule(req)}
-                      disabled={!visitDate || actionLoading === req.id}
-                      className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      {actionLoading === req.id ? '⏳ Saving...' : '✅ Confirm Visit'}
-                    </button>
-                    <button
-                      onClick={() => { setSchedulingId(null); setVisitDate(''); setVisitTime('') }}
-                      className="px-4 border-2 border-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-sm cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
