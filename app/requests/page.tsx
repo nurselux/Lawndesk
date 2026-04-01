@@ -15,6 +15,8 @@ interface BookingRequest {
   preferred_time: string | null
   message: string | null
   status: 'pending' | 'approved' | 'declined'
+  scheduled_date: string | null
+  scheduled_time: string | null
   created_at: string
 }
 
@@ -26,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '⏳ Pending',
-  approved: '📋 Estimate Created',
+  approved: '📅 Visit Scheduled',
   declined: '❌ Declined',
 }
 
@@ -36,6 +38,10 @@ export default function RequestsPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined'>('pending')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  // Scheduling form state
+  const [schedulingId, setSchedulingId] = useState<string | null>(null)
+  const [visitDate, setVisitDate] = useState('')
+  const [visitTime, setVisitTime] = useState('')
 
   const fetchRequests = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -60,56 +66,28 @@ export default function RequestsPage() {
     setActionLoading(null)
   }
 
-  const createEstimate = async (req: BookingRequest) => {
+  const openScheduleForm = (req: BookingRequest) => {
+    setSchedulingId(req.id)
+    setVisitDate(req.preferred_date ?? '')
+    setVisitTime(req.preferred_time ?? '')
+    setExpandedId(req.id)
+  }
+
+  const confirmSchedule = async (req: BookingRequest) => {
+    if (!visitDate) return
     setActionLoading(req.id)
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-
-    // Find or create client
-    let clientId: string | null = null
-    const { data: existing } = await (supabase as any)
-      .from('clients')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .ilike('name', req.client_name)
-      .maybeSingle()
-
-    if (existing) {
-      clientId = existing.id
-    } else {
-      const { data: newClient } = await (supabase as any)
-        .from('clients')
-        .insert([{
-          user_id: session.user.id,
-          name: req.client_name,
-          email: req.client_email ?? null,
-          phone: req.client_phone,
-          address: req.address ?? null,
-        }])
-        .select('id')
-        .single()
-      clientId = newClient?.id ?? null
-    }
-
-    // Create estimate
-    await (supabase as any).from('estimates').insert([{
-      user_id: session.user.id,
-      client_id: clientId,
-      client_name: req.client_name,
-      client_phone: req.client_phone,
-      client_email: req.client_email ?? null,
-      service_type: req.service_type,
-      address: req.address ?? null,
-      scheduled_date: req.preferred_date ?? null,
-      scheduled_time: req.preferred_time ?? null,
-      notes: req.message ?? null,
-      created_from_request_id: req.id,
-      status: 'pending',
-    }])
-
-    // Mark request as approved
-    await (supabase as any).from('booking_requests').update({ status: 'approved' }).eq('id', req.id)
-    setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'approved' } : r))
+    await (supabase as any)
+      .from('booking_requests')
+      .update({ status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null })
+      .eq('id', req.id)
+    setRequests(prev => prev.map(r =>
+      r.id === req.id
+        ? { ...r, status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null }
+        : r
+    ))
+    setSchedulingId(null)
+    setVisitDate('')
+    setVisitTime('')
     setActionLoading(null)
   }
 
@@ -230,15 +208,15 @@ export default function RequestsPage() {
                 </div>
               )}
 
-              {/* Action buttons */}
-              {req.status === 'pending' && (
+              {/* Action buttons — pending */}
+              {req.status === 'pending' && schedulingId !== req.id && (
                 <div className="flex gap-2 flex-wrap">
                   <button
-                    onClick={() => createEstimate(req)}
+                    onClick={() => openScheduleForm(req)}
                     disabled={actionLoading === req.id}
                     className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                   >
-                    {actionLoading === req.id ? '⏳ Creating...' : '✅ Approve — Create Estimate'}
+                    📅 Schedule Estimate Visit
                   </button>
                   <button
                     onClick={() => updateStatus(req.id, 'declined')}
@@ -250,20 +228,110 @@ export default function RequestsPage() {
                 </div>
               )}
 
-              {req.status === 'approved' && (
-                <div className="text-center text-sm text-green-700 font-semibold bg-green-50 rounded-xl py-2">
-                  📋 Estimate created — view it in the <a href="/estimates" className="underline">Estimates</a> page
+              {/* Inline scheduling form */}
+              {schedulingId === req.id && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                  <p className="text-sm font-bold text-green-800">Schedule your site visit</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-xs text-gray-500 font-semibold block mb-1">Date *</label>
+                      <input
+                        type="date"
+                        value={visitDate}
+                        onChange={e => setVisitDate(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-gray-500 font-semibold block mb-1">Time (optional)</label>
+                      <input
+                        type="time"
+                        value={visitTime}
+                        onChange={e => setVisitTime(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => confirmSchedule(req)}
+                      disabled={!visitDate || actionLoading === req.id}
+                      className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                    >
+                      {actionLoading === req.id ? '⏳ Saving...' : '✅ Confirm Visit'}
+                    </button>
+                    <button
+                      onClick={() => { setSchedulingId(null); setVisitDate(''); setVisitTime('') }}
+                      className="px-4 border-2 border-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-sm cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {req.status === 'declined' && (
+              {/* Approved state */}
+              {req.status === 'approved' && (
+                <div className="bg-green-50 rounded-xl py-3 px-4 space-y-1">
+                  <p className="text-sm text-green-700 font-bold">
+                    📅 Estimate visit scheduled
+                    {req.scheduled_date && ` — ${formatDate(req.scheduled_date)}${req.scheduled_time ? ` at ${formatTime(req.scheduled_time)}` : ''}`}
+                  </p>
+                  <p className="text-xs text-green-600">Shows on your calendar. Create a quote from the Quotes page when ready.</p>
+                </div>
+              )}
+
+              {/* Declined state */}
+              {req.status === 'declined' && schedulingId !== req.id && (
                 <button
-                  onClick={() => createEstimate(req)}
+                  onClick={() => openScheduleForm(req)}
                   disabled={actionLoading === req.id}
-                  className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50 w-full"
+                  className="w-full bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                 >
-                  ↩️ Approve — Create Estimate
+                  ↩️ Schedule Estimate Visit
                 </button>
+              )}
+
+              {/* Inline scheduling form for declined */}
+              {req.status === 'declined' && schedulingId === req.id && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                  <p className="text-sm font-bold text-green-800">Schedule your site visit</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-xs text-gray-500 font-semibold block mb-1">Date *</label>
+                      <input
+                        type="date"
+                        value={visitDate}
+                        onChange={e => setVisitDate(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-gray-500 font-semibold block mb-1">Time (optional)</label>
+                      <input
+                        type="time"
+                        value={visitTime}
+                        onChange={e => setVisitTime(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => confirmSchedule(req)}
+                      disabled={!visitDate || actionLoading === req.id}
+                      className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                    >
+                      {actionLoading === req.id ? '⏳ Saving...' : '✅ Confirm Visit'}
+                    </button>
+                    <button
+                      onClick={() => { setSchedulingId(null); setVisitDate(''); setVisitTime('') }}
+                      className="px-4 border-2 border-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-sm cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}

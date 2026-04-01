@@ -13,7 +13,6 @@ export default function Sidebar() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
-  const [activeEstimatesCount, setActiveEstimatesCount] = useState(0)
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null)
 
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function Sidebar() {
       setIsLoggedIn(!!session)
       if (session?.user?.email) setUserEmail(session.user.email)
       if (session?.user?.id) {
-        const [invoiceResult, requestResult, estimateResult, profileResult] = await Promise.all([
+        const [invoiceResult, requestResult, profileResult] = await Promise.all([
           (supabase as any)
             .from('Invoices')
             .select('*', { count: 'exact', head: true })
@@ -34,11 +33,6 @@ export default function Sidebar() {
             .eq('owner_id', session.user.id)
             .eq('status', 'pending'),
           (supabase as any)
-            .from('estimates')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', session.user.id)
-            .in('status', ['pending', 'scheduled']),
-          (supabase as any)
             .from('profiles')
             .select('subscription_status, trial_ends_at')
             .eq('id', session.user.id)
@@ -46,7 +40,6 @@ export default function Sidebar() {
         ])
         setOverdueCount(invoiceResult.count ?? 0)
         setPendingRequestsCount(requestResult.count ?? 0)
-        setActiveEstimatesCount(estimateResult.count ?? 0)
         if (profileResult.data?.subscription_status === 'trialing' && profileResult.data?.trial_ends_at) {
           const days = Math.ceil((new Date(profileResult.data.trial_ends_at).getTime() - Date.now()) / 86400000)
           setTrialDaysLeft(days > 0 ? days : 0)
@@ -71,7 +64,6 @@ export default function Sidebar() {
     { label: 'Clients', icon: '👥', href: '/clients' },
     { label: 'Jobs', icon: '🌿', href: '/jobs' },
     { label: 'Calendar', icon: '📅', href: '/calendar' },
-    { label: 'Estimates', icon: '📐', href: '/estimates', badge: activeEstimatesCount > 0 ? activeEstimatesCount : undefined },
     { label: 'Quotes', icon: '📋', href: '/quotes' },
     { label: 'Invoices', icon: '💲', href: '/invoices', badge: overdueCount > 0 ? overdueCount : undefined },
     { label: 'Requests', icon: '📬', href: '/requests', badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined },
