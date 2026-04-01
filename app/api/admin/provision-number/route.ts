@@ -39,13 +39,14 @@ export async function POST(req: Request) {
   if (!isAdmin) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('twilio_number, subscription_plan')
+      .select('twilio_number, subscription_plan, subscription_status')
       .eq('id', targetOwnerId)
       .single()
     if (profile?.twilio_number) {
       return NextResponse.json({ error: 'Number already provisioned' }, { status: 409 })
     }
-    if (profile?.subscription_plan !== 'pro') {
+    const isPro = profile?.subscription_plan === 'pro' || profile?.subscription_status === 'trialing'
+    if (!isPro) {
       return NextResponse.json({ error: 'AI Receptionist requires a Pro plan' }, { status: 403 })
     }
   }
