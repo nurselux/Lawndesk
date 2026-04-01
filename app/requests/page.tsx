@@ -166,9 +166,9 @@ export default function RequestsPage() {
       const { error: err } = await (supabase as any).from('Clients').insert([{
         user_id: session.user.id,
         name: req.client_name,
-        email: req.client_email ?? null,
+        email: req.client_email ?? '',
         phone: req.client_phone,
-        address: req.address ?? null,
+        address: req.address ?? '',
       }])
       if (err) { setError(`Failed to save client: ${err.message}`); return }
       setSavedClientIds(prev => new Set([...prev, req.id]))
