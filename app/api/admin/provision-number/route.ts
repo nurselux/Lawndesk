@@ -64,6 +64,10 @@ export async function POST(req: Request) {
   )
   const searchData = await searchRes.json()
 
+  if (!searchRes.ok || searchData.code) {
+    return NextResponse.json({ error: `Twilio error: ${searchData.message || searchData.code || 'Unknown'}` }, { status: 502 })
+  }
+
   if (!searchData.available_phone_numbers?.length) {
     return NextResponse.json({ error: 'No available numbers' + (areaCode ? ` in area code ${areaCode}` : '') }, { status: 404 })
   }
