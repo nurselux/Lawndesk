@@ -131,7 +131,7 @@ export default function RequestsPage() {
         .from('booking_requests')
         .update({ status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null })
         .eq('id', req.id)
-      if (err) { setError('Failed to schedule visit. Please try again.'); return }
+      if (err) { setError(`Failed to schedule visit: ${err.message}`); return }
       setRequests(prev => prev.map(r =>
         r.id === req.id
           ? { ...r, status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null }
