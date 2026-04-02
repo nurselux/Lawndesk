@@ -23,6 +23,21 @@ interface Client {
   address: string
 }
 
+interface BookingRequest {
+  id: string
+  client_name: string
+  service_type: string
+  preferred_date: string
+  preferred_time: string | null
+}
+
+interface Quote {
+  id: string
+  amount: number
+  status: string
+  created_at: string
+}
+
 const STATUS_COLOR: Record<string, string> = {
   '🟢 Completed': 'bg-green-100 text-green-700 border-green-200',
   '🟡 In Progress': 'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -35,6 +50,8 @@ export default function CalendarPage() {
   const { checking } = useSubscriptionGate()
   const [jobs, setJobs] = useState<Job[]>([])
   const [clients, setClients] = useState<Client[]>([])
+  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([])
+  const [quotes, setQuotes] = useState<Quote[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
@@ -42,6 +59,8 @@ export default function CalendarPage() {
     if (user) {
       fetchJobs()
       fetchClients()
+      fetchBookingRequests()
+      fetchQuotes()
     }
   }, [user])
 
@@ -61,6 +80,25 @@ export default function CalendarPage() {
     if (data) setClients(data as Client[])
   }
 
+  const fetchBookingRequests = async () => {
+    const { data } = await (supabase as any)
+      .from('booking_requests')
+      .select('id, client_name, service_type, preferred_date, preferred_time')
+      .eq('owner_id', user?.id)
+      .eq('status', 'approved')
+      .not('preferred_date', 'is', null)
+    if (data) setBookingRequests(data as BookingRequest[])
+  }
+
+  const fetchQuotes = async () => {
+    const { data } = await (supabase as any)
+      .from('quotes')
+      .select('id, amount, status, created_at')
+      .eq('user_id', user?.id)
+      .not('status', 'in', '("declined","converted")')
+    if (data) setQuotes(data as Quote[])
+  }
+
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
 
@@ -73,6 +111,12 @@ export default function CalendarPage() {
   const jobsByDate = jobs.reduce<Record<string, Job[]>>((acc, job) => {
     if (!acc[job.date]) acc[job.date] = []
     acc[job.date].push(job)
+    return acc
+  }, {})
+
+  const requestsByDate = bookingRequests.reduce<Record<string, BookingRequest[]>>((acc, req) => {
+    if (!acc[req.preferred_date]) acc[req.preferred_date] = []
+    acc[req.preferred_date].push(req)
     return acc
   }, {})
 
@@ -140,6 +184,7 @@ export default function CalendarPage() {
           const day = i + 1
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const dayJobs = jobsByDate[dateStr] || []
+          const dayRequests = requestsByDate[dateStr] || []
           const isToday = dateStr === today
           const isSelected = dateStr === selectedDate
 
@@ -174,6 +219,18 @@ export default function CalendarPage() {
                 {dayJobs.length > 3 && (
                   <div className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{dayJobs.length - 3}</div>
                 )}
+                {dayRequests.map((req) => (
+                  <div
+                    key={req.id}
+                    className={`w-full text-xs leading-tight px-1 py-0.5 rounded truncate border ${
+                      isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}
+                    title={`📬 ${req.service_type} — ${req.client_name}`}
+                  >
+                    <span className="hidden md:inline">📬 {req.client_name}</span>
+                    <span className="md:hidden">◇</span>
+                  </div>
+                ))}
               </div>
             </button>
           )
@@ -212,7 +269,8 @@ export default function CalendarPage() {
               )
             })()}
           </div>
-          {selectedJobs.length === 0 ? (
+
+          {selectedJobs.length === 0 && (requestsByDate[selectedDate] || []).length === 0 ? (
             <div className="text-center py-6">
               <p className="text-gray-400">No jobs on this day</p>
               <Link href="/jobs">
@@ -233,6 +291,22 @@ export default function CalendarPage() {
                   <span className="text-xs font-bold opacity-75 shrink-0">{job.status.split(' ')[0]}</span>
                 </div>
               ))}
+              {(requestsByDate[selectedDate] || []).length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">📬 Booking Requests</p>
+                  {(requestsByDate[selectedDate] || []).map((req) => (
+                    <div key={req.id} className="flex items-start gap-3 p-3 rounded-xl border bg-amber-50 text-amber-800 border-amber-200">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate">{req.service_type}</p>
+                        <p className="text-xs opacity-75">👤 {req.client_name}{req.preferred_time ? ` · 🕐 ${req.preferred_time}` : ''}</p>
+                      </div>
+                      <Link href="/requests">
+                        <span className="text-xs font-bold text-amber-600 hover:text-amber-800 cursor-pointer shrink-0">Convert →</span>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -258,6 +332,40 @@ export default function CalendarPage() {
           )
         })}
       </div>
+
+      {/* Estimates / Quotes summary */}
+      {quotes.length > 0 && (
+        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📋</span>
+              <div>
+                <p className="font-bold text-amber-800 text-sm">Open Estimates</p>
+                <p className="text-xs text-amber-600">Potential clients — not confirmed revenue</p>
+              </div>
+            </div>
+            <Link href="/quotes">
+              <span className="text-xs font-bold text-amber-600 hover:text-amber-800 cursor-pointer">View all →</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {(['draft', 'sent', 'approved'] as const).map((status) => {
+              const matching = quotes.filter(q => q.status === status)
+              const total = matching.reduce((sum, q) => sum + (q.amount || 0), 0)
+              const label = status === 'draft' ? 'Draft' : status === 'sent' ? 'Sent' : 'Approved'
+              return (
+                <div key={status} className="bg-white rounded-xl p-3 text-center border border-amber-100">
+                  <p className="text-xl font-bold text-amber-700">{matching.length}</p>
+                  <p className="text-xs text-gray-500 font-medium">{label}</p>
+                  {total > 0 && (
+                    <p className="text-xs text-amber-600 font-semibold">${total.toLocaleString()}</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
