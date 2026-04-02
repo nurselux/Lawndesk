@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
+import { BarChart2, Users, CalendarDays, AlertCircle, TrendingUp } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
@@ -166,8 +167,19 @@ function DashboardContent() {
   }
 
   if (checking) return (
-    <div className="flex items-center justify-center min-h-dvh">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    <div className="p-6 min-h-dvh bg-gray-50">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-gray-200 rounded-xl h-28 animate-pulse" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-gray-200 rounded-2xl h-64 animate-pulse" />
+        <div className="flex flex-col gap-6">
+          <div className="bg-gray-200 rounded-2xl h-40 animate-pulse" />
+          <div className="bg-gray-200 rounded-2xl h-40 animate-pulse" />
+        </div>
+      </div>
     </div>
   )
 
@@ -189,7 +201,7 @@ function DashboardContent() {
   const statCards = [
     {
       gradient: 'from-green-500 to-emerald-600',
-      emoji: '👥',
+      Icon: Users,
       label: 'Total Clients',
       display: String(animatedClients),
       href: '/clients',
@@ -199,7 +211,7 @@ function DashboardContent() {
     },
     {
       gradient: 'from-blue-500 to-cyan-500',
-      emoji: '📅',
+      Icon: CalendarDays,
       label: 'Jobs This Week',
       display: String(animatedJobs),
       href: '/jobs',
@@ -209,7 +221,7 @@ function DashboardContent() {
     },
     {
       gradient: 'from-amber-400 to-orange-500',
-      emoji: '⚠️',
+      Icon: AlertCircle,
       label: 'Unpaid Invoices',
       display: String(animatedUnpaid),
       href: '/invoices',
@@ -219,7 +231,7 @@ function DashboardContent() {
     },
     {
       gradient: 'from-purple-500 to-violet-600',
-      emoji: '💰',
+      Icon: TrendingUp,
       label: 'Total Revenue',
       display: `$${animatedRevenue.toLocaleString()}`,
       href: '/invoices',
@@ -235,14 +247,14 @@ function DashboardContent() {
       <div className="p-6 pb-6 min-h-dvh bg-gray-50">
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
-          🎉 You're all set! Your 14-day free trial has started. No charge until your trial ends.
+          <span aria-hidden="true">🎉</span> You're all set! Your 14-day free trial has started. No charge until your trial ends.
         </div>
       )}
 
       {subscriptionStatus === 'trialing' && !stripeSuccess && (
         <div className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
           <span>
-            🎁 You&apos;re on a free trial —{' '}
+            <span aria-hidden="true">🎁</span> You&apos;re on a free trial —{' '}
             {trialEndsAt
               ? (() => {
                   const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
@@ -259,7 +271,7 @@ function DashboardContent() {
 
       {subscriptionStatus === 'past_due' && (
         <div className="bg-red-50 border border-red-200 text-red-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span>⚠️ Your payment failed. Please update your billing info to keep access.</span>
+          <span><span aria-hidden="true">⚠️</span> Your payment failed. Please update your billing info to keep access.</span>
           <Link href="/pricing" className="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
             Update Billing
           </Link>
@@ -268,7 +280,7 @@ function DashboardContent() {
 
       {subscriptionStatus === 'cancelled' && (
         <div className="bg-amber-50 border border-amber-200 text-amber-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span>⚠️ Your subscription has been cancelled. Reactivate to keep using LawnDesk.</span>
+          <span><span aria-hidden="true">⚠️</span> Your subscription has been cancelled. Reactivate to keep using LawnDesk.</span>
           <Link href="/pricing" className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors">
             Reactivate
           </Link>
@@ -279,7 +291,9 @@ function DashboardContent() {
         className="flex items-center gap-3 mb-8 fade-up"
         style={{ animation: 'fadeUp 0.4s ease-out both' }}
       >
-        <div className="bg-green-700 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📊</div>
+        <div className="bg-green-700 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md">
+          <BarChart2 className="w-6 h-6" aria-hidden="true" />
+        </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800 leading-none">Dashboard</h2>
           <p className="text-gray-500 text-sm">Welcome back! Here's your business at a glance.</p>
@@ -311,14 +325,12 @@ function DashboardContent() {
               <div key={item.step} className="bg-white rounded-xl p-4 border border-green-100 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="bg-green-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">{item.step}</span>
-                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-xl" aria-hidden="true">{item.icon}</span>
                   <p className="font-bold text-gray-800 text-sm">{item.title}</p>
                 </div>
                 <p className="text-gray-400 text-xs mb-3">{item.desc}</p>
-                <Link href={item.href}>
-                  <button className="w-full bg-green-700 text-white text-xs font-bold py-2 rounded-lg hover:bg-green-800 transition cursor-pointer">
-                    {item.label} →
-                  </button>
+                <Link href={item.href} className="w-full block bg-green-700 text-white text-xs font-bold py-2 rounded-lg hover:bg-green-800 transition-colors text-center">
+                  {item.label} →
                 </Link>
               </div>
             ))}
@@ -337,7 +349,9 @@ function DashboardContent() {
               animationDelay: `${card.delay}ms`,
             }}
           >
-            <p className="text-4xl mb-1">{card.emoji}</p>
+            <div className="flex justify-center mb-1">
+              <card.Icon className="w-8 h-8 opacity-90" aria-hidden="true" />
+            </div>
             <p className="text-white/80 mb-1 text-xs sm:text-sm">{card.label}</p>
             <p className="text-3xl sm:text-4xl font-bold tabular-nums">{card.display}</p>
             {card.trend !== null && (
@@ -406,27 +420,21 @@ function DashboardContent() {
           >
             <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
-              <Link href="/clients">
-                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
-                  + Add Client
-                </button>
+              <Link href="/clients" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
+                + Add Client
               </Link>
-              <Link href="/jobs">
-                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
-                  + Schedule Job
-                </button>
+              <Link href="/jobs" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
+                + Schedule Job
               </Link>
-              <Link href="/invoices">
-                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
-                  + Create Invoice
-                </button>
+              <Link href="/invoices" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
+                + Create Invoice
               </Link>
             </div>
           </div>
 
           {/* Overdue Invoices */}
           <div
-            className="bg-amber-50 rounded-2xl p-6 shadow-md"
+            className="bg-red-50 border border-red-100 rounded-2xl p-6 shadow-md"
             style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '420ms' }}
           >
             <div className="flex justify-between items-center mb-4">

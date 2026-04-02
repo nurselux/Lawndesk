@@ -9,7 +9,7 @@ export default function Home() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-green-700 shadow-md">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-white text-xl font-bold hover:text-green-200 transition-colors">🌿 LawnDesk</Link>
+          <Link href="/" className="text-white text-xl font-bold hover:text-green-200 transition-colors"><span aria-hidden="true">🌿 </span>LawnDesk</Link>
           <Link href="/login" className="border-2 border-white border-opacity-70 text-white font-bold py-2 px-5 rounded-lg hover:bg-white hover:text-green-700 transition-all duration-200 text-sm">
             Sign In
           </Link>
@@ -33,20 +33,21 @@ export default function Home() {
             Schedule jobs, send quotes, collect payments, and manage your whole crew — all from your phone.
           </p>
           <div className="flex flex-col items-center gap-4 mb-14">
-            <Link href="/login?signup=true" className="w-full max-w-sm">
-              <button className="w-full bg-yellow-400 text-green-900 font-black py-4 px-8 rounded-2xl text-xl hover:scale-105 hover:bg-yellow-300 transition-all duration-200 cursor-pointer shadow-xl">
-                Try Free for 14 Days 🌿
-              </button>
+            <Link
+              href="/login?signup=true"
+              className="w-full max-w-sm block bg-yellow-400 text-green-900 font-black py-4 px-8 rounded-2xl text-xl hover:bg-yellow-300 transition-colors duration-200 shadow-xl text-center"
+            >
+              Try Free for 14 Days <span aria-hidden="true">🌿</span>
             </Link>
             <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5">
               <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
-                ✅ No credit card to start
+                <span aria-hidden="true">✅</span> No credit card to start
               </span>
               <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
-                ✅ Cancel anytime
+                <span aria-hidden="true">✅</span> Cancel anytime
               </span>
               <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
-                ✅ Set up in minutes
+                <span aria-hidden="true">✅</span> Set up in minutes
               </span>
             </div>
             <Link href="/pricing" className="text-green-400 text-sm font-medium hover:text-white transition-colors">
@@ -74,7 +75,7 @@ export default function Home() {
               { icon: '🔄', title: 'Recurring Jobs', desc: 'Set weekly, biweekly, or monthly jobs and let LawnDesk handle the rest.' },
             ].map((f) => (
               <div key={f.title} className="bg-amber-50 rounded-xl p-6 border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-4 bg-white w-14 h-14 rounded-xl flex items-center justify-center border border-amber-200">{f.icon}</div>
+                <div className="text-3xl mb-4 bg-white w-14 h-14 rounded-xl flex items-center justify-center border border-amber-200" aria-hidden="true">{f.icon}</div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">{f.title}</h3>
                 <p className="text-gray-500">{f.desc}</p>
               </div>
@@ -88,7 +89,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">Simple, Transparent Pricing</h2>
           <p className="text-gray-500 text-lg mb-2">No hidden fees. No contracts. Cancel anytime.</p>
-          <p className="text-yellow-700 font-bold mb-10">⚡ Up to 70% cheaper than Jobber — same features, fraction of the price.</p>
+          <p className="text-yellow-700 font-bold mb-10"><span aria-hidden="true">⚡</span> Up to 70% cheaper than Jobber — same features, fraction of the price.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
             {/* Starter */}
@@ -120,10 +121,11 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/login?signup=true">
-                  <button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md">
-                    Try Free for 14 Days
-                  </button>
+                <Link
+                  href="/login?signup=true"
+                  className="w-full block bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity duration-200 shadow-md text-center"
+                >
+                  Try Free for 14 Days
                 </Link>
                 <p className="text-center text-gray-400 text-xs mt-2">Cancel anytime</p>
               </div>
@@ -162,10 +164,11 @@ export default function Home() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/login?signup=true">
-                  <button className="w-full bg-white text-green-700 font-bold py-3 rounded-xl hover:bg-green-50 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md">
-                    Try Free for 14 Days
-                  </button>
+                <Link
+                  href="/login?signup=true"
+                  className="w-full block bg-white text-green-700 font-bold py-3 rounded-xl hover:bg-green-50 transition-colors duration-200 shadow-md text-center"
+                >
+                  Try Free for 14 Days
                 </Link>
                 <p className="text-center text-green-400 text-xs mt-2">Cancel anytime</p>
               </div>
@@ -219,9 +222,9 @@ export default function Home() {
                   </div>
                 </div>
                 {/* Stars */}
-                <div className="flex gap-0.5">
+                <div className="flex gap-0.5" role="img" aria-label="5 out of 5 stars">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-yellow-400 text-lg">★</span>
+                    <span key={i} className="text-yellow-400 text-lg" aria-hidden="true">★</span>
                   ))}
                 </div>
                 {/* Quote */}
@@ -271,7 +274,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-10 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-xl font-bold text-white">🌿 LawnDesk</div>
+          <div className="text-xl font-bold text-white"><span aria-hidden="true">🌿 </span>LawnDesk</div>
           <div className="flex gap-6 flex-wrap justify-center text-sm">
             <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-white transition-colors">Log In</Link>
