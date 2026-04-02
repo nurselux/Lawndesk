@@ -66,6 +66,9 @@ export default function QuotesPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState('All')
 
+  // Booking request this quote was created from (for back-linking)
+  const [fromReqId, setFromReqId] = useState('')
+
   // Form state
   const [useExistingClient, setUseExistingClient] = useState(false)
   const [clientId, setClientId] = useState('')
@@ -94,6 +97,7 @@ export default function QuotesPage() {
     setClientPhone(p.get('from_req_phone') ?? '')
     setClientEmail(p.get('from_req_email') ?? '')
     setTitle(p.get('from_req_service') ?? '')
+    setFromReqId(p.get('from_req_id') ?? '')
     setShowForm(true)
   }, [])
 
@@ -168,6 +172,14 @@ export default function QuotesPage() {
     }]).select().single()
 
     if (!error && quote) {
+      // If this quote was created from a booking request, link it back
+      if (fromReqId) {
+        await (supabase as any)
+          .from('booking_requests')
+          .update({ quote_id: quote.id })
+          .eq('id', fromReqId)
+        setFromReqId('')
+      }
       resetForm()
       fetchQuotes()
       if (clientEmail.trim()) {

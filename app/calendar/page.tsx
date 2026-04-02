@@ -34,6 +34,7 @@ interface EstimateVisit {
   preferred_time: string | null
   scheduled_date: string | null
   scheduled_time: string | null
+  quote_id: string | null
 }
 
 interface Quote {
@@ -89,7 +90,7 @@ export default function CalendarPage() {
   const fetchEstimateVisits = async () => {
     const { data } = await (supabase as any)
       .from('booking_requests')
-      .select('id, client_name, client_phone, client_email, service_type, address, preferred_date, preferred_time, scheduled_date, scheduled_time')
+      .select('id, client_name, client_phone, client_email, service_type, address, preferred_date, preferred_time, scheduled_date, scheduled_time, quote_id')
       .eq('owner_id', user?.id)
       .eq('status', 'approved')
     if (data) setEstimateVisits(data as EstimateVisit[])
@@ -320,9 +321,9 @@ export default function CalendarPage() {
                     <p className="text-xs opacity-75">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
                     {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
                   </div>
-                  <Link href={`/quotes?from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
+                  <Link href={`/quotes?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
                     <button className="text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded-lg cursor-pointer shrink-0 transition">
-                      + Quote
+                      {visit.quote_id ? '📋 View Quote' : '+ Quote'}
                     </button>
                   </Link>
                 </div>
@@ -382,7 +383,7 @@ export default function CalendarPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">Awaiting quote</span>
-                  <span className="text-sm font-bold text-amber-600">{monthVisits.length}</span>
+                  <span className="text-sm font-bold text-amber-600">{monthVisits.filter(v => !v.quote_id).length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">New requests</span>
