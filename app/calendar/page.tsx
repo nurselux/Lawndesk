@@ -60,6 +60,7 @@ export default function CalendarPage() {
   const [pendingRequestCount, setPendingRequestCount] = useState(0)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [showEstimatesList, setShowEstimatesList] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -366,7 +367,7 @@ export default function CalendarPage() {
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Estimates</p>
-            <Link href="/requests"><span className="text-xs text-purple-500 font-semibold cursor-pointer">View →</span></Link>
+            <button onClick={() => setShowEstimatesList(v => !v)} className="text-xs text-purple-500 font-semibold cursor-pointer">{showEstimatesList ? 'Hide ↑' : 'View →'}</button>
           </div>
           {(() => {
             const monthVisits = estimateVisits.filter(v => {
@@ -394,6 +395,45 @@ export default function CalendarPage() {
           })()}
         </div>
       </div>
+
+      {/* Estimates list — expanded when "View" is clicked */}
+      {showEstimatesList && (
+        <div className="mt-3 bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-purple-50 flex items-center justify-between">
+            <p className="text-sm font-bold text-purple-700">Scheduled Estimate Visits</p>
+            <Link href="/requests"><span className="text-xs text-purple-400 font-semibold cursor-pointer">Manage requests →</span></Link>
+          </div>
+          {estimateVisits.length === 0 ? (
+            <p className="text-gray-400 text-sm text-center py-6">No estimate visits scheduled</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {[...estimateVisits]
+                .sort((a, b) => {
+                  const da = a.scheduled_date || a.preferred_date || ''
+                  const db = b.scheduled_date || b.preferred_date || ''
+                  return da.localeCompare(db)
+                })
+                .map(visit => {
+                  const date = visit.scheduled_date || visit.preferred_date
+                  return (
+                    <div key={visit.id} className="flex items-center gap-3 px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-800 truncate">{visit.client_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{visit.service_type}{date ? ` · ${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}{(visit.scheduled_time || visit.preferred_time) ? ` · ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
+                        {visit.address && <p className="text-xs text-gray-400 truncate">📍 {visit.address}</p>}
+                      </div>
+                      <Link href={`/quotes?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
+                        <button className={`text-xs font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition ${visit.quote_id ? 'bg-gray-100 text-gray-500' : 'bg-purple-100 hover:bg-purple-200 text-purple-700'}`}>
+                          {visit.quote_id ? '📋 Quoted' : '+ Quote'}
+                        </button>
+                      </Link>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pending requests action banner */}
       {pendingRequestCount > 0 && (
