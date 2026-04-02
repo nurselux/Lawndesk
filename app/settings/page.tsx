@@ -316,8 +316,11 @@ export default function SettingsPage() {
   }
 
   if (checking) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    <div className="p-6 max-w-2xl mx-auto space-y-4">
+      <div className="h-9 w-32 bg-gray-200 rounded-xl animate-pulse" />
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-32 bg-gray-200 rounded-2xl animate-pulse" />
+      ))}
     </div>
   )
 
@@ -326,7 +329,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">⚙️ Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6"><span aria-hidden="true">⚙️ </span>Settings</h2>
 
       {/* Account */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">

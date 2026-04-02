@@ -137,8 +137,16 @@ export default function ClientsPage() {
   })
 
   if (checking) return (
-    <div className="flex items-center justify-center min-h-dvh">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    <div className="p-6 bg-gray-50 min-h-dvh">
+      <div className="flex justify-between items-center mb-8">
+        <div className="h-12 w-36 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-10 w-28 bg-gray-200 rounded-xl animate-pulse" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-32 bg-gray-200 rounded-2xl animate-pulse" />
+        ))}
+      </div>
     </div>
   )
 
@@ -146,7 +154,7 @@ export default function ClientsPage() {
     <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">👥</div>
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true">👥</div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Clients</h2>
             <p className="text-gray-500 text-sm">Manage your client roster</p>
@@ -154,7 +162,7 @@ export default function ClientsPage() {
         </div>
         <button
           onClick={() => { setShowForm(!showForm); setEditingClient(null) }}
-          className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 px-6 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
+          className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 px-6 rounded-xl hover:opacity-90 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
         >
           + Add Client
         </button>
@@ -230,13 +238,13 @@ export default function ClientsPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleAddClient}
-              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
+              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow"
             >
               {saving ? 'Saving...' : 'Save Client'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -283,13 +291,13 @@ export default function ClientsPage() {
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleUpdateClient}
-              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow"
+              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               onClick={() => setEditingClient(null)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
             >
               Cancel
             </button>
@@ -321,14 +329,14 @@ export default function ClientsPage() {
                   <Link href={`/clients/${client.id}`} className="text-lg font-bold text-gray-800 hover:text-green-700 transition-colors">{client.name}</Link>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleEditClient(client)} className="text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">✏️</button>
-                  <button onClick={() => handleDeleteClient(client.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
+                  <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer text-lg"><span aria-hidden="true">✏️</span></button>
+                  <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer text-lg"><span aria-hidden="true">🗑️</span></button>
                 </div>
               </div>
               <div className="space-y-1 pl-14 min-w-0">
-                {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-600 transition-colors"><span className="text-base shrink-0">📧</span> <span className="truncate">{client.email}</span></a>}
-                {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 text-sm flex items-center gap-1.5 hover:text-green-600 transition-colors"><span className="text-base">📞</span> {client.phone}</a>}
-                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-600 transition-colors"><span className="text-base shrink-0">📍</span> <span className="truncate">{client.address}</span></a>}
+                {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-600 transition-colors"><span className="text-base shrink-0" aria-hidden="true">📧</span> <span className="truncate">{client.email}</span></a>}
+                {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 text-sm flex items-center gap-1.5 hover:text-green-600 transition-colors"><span className="text-base" aria-hidden="true">📞</span> {client.phone}</a>}
+                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-600 transition-colors"><span className="text-base shrink-0" aria-hidden="true">📍</span> <span className="truncate">{client.address}</span></a>}
                 {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 font-medium">🏠 {client.notes}</p>}
               </div>
               {(client.phone || client.address || client.email) && (

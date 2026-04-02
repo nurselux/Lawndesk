@@ -83,7 +83,7 @@ function LoginContent() {
       <main className="min-h-dvh bg-gray-50 flex items-center justify-center p-5">
         <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
           <div className="bg-green-700 px-6 sm:px-10 py-8 text-center">
-            <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 hover:opacity-80 transition-opacity cursor-pointer">🌿 LawnDesk</h1></Link>
+            <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 hover:opacity-80 transition-opacity cursor-pointer"><span aria-hidden="true">🌿 </span>LawnDesk</h1></Link>
             <p className="text-green-200 text-sm">Less paperwork, more yardwork</p>
           </div>
           <div className="px-6 sm:px-10 pt-6 pb-8">
@@ -116,7 +116,7 @@ function LoginContent() {
             />
             <button
               onClick={handleSignUp}
-              className="w-full bg-green-700 text-white font-bold py-3 rounded-lg mb-3 hover:scale-105 transition-all duration-200 cursor-pointer text-lg"
+              className="w-full bg-green-700 text-white font-bold py-3 rounded-lg mb-3 hover:bg-green-800 transition-colors duration-200 cursor-pointer text-lg"
             >
               {loading ? '⏳ Creating account...' : 'Create Free Account'}
             </button>
@@ -140,7 +140,7 @@ function LoginContent() {
   return (
     <main className="min-h-dvh bg-green-700 flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl p-6 sm:p-10 w-full max-w-md shadow-xl">
-        <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2 hover:opacity-70 transition-opacity cursor-pointer">🌿 LawnDesk</h1></Link>
+        <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2 hover:opacity-70 transition-opacity cursor-pointer"><span aria-hidden="true">🌿 </span>LawnDesk</h1></Link>
         <p className="text-center text-gray-500 mb-8">Less paperwork, more yardwork</p>
         <h2 className="text-xl font-bold text-gray-800 text-center mb-6">Welcome back</h2>
         <input
@@ -159,13 +159,13 @@ function LoginContent() {
         />
         <button
           onClick={handleLogin}
-          className="w-full bg-green-700 text-white font-bold py-3 rounded-lg mb-3 hover:scale-105 transition-all duration-200 cursor-pointer"
+          className="w-full bg-green-700 text-white font-bold py-3 rounded-lg mb-3 hover:bg-green-800 transition-colors duration-200 cursor-pointer"
         >
           {loading ? '⏳ Logging in...' : 'Log In'}
         </button>
         <button
           onClick={() => { setIsSignUp(true); setMessage('') }}
-          className="w-full border-2 border-green-700 text-green-700 font-bold py-3 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
+          className="w-full border-2 border-green-700 text-green-700 font-bold py-3 rounded-lg hover:bg-green-50 transition-colors duration-200 cursor-pointer"
         >
           New to LawnDesk? Sign Up Free
         </button>
@@ -176,7 +176,7 @@ function LoginContent() {
         )}
         <Link href="/forgot-password">
           <p className="text-center text-green-600 text-sm mt-4 hover:underline cursor-pointer">
-            🔑 Forgot your password?
+            <span aria-hidden="true">🔑 </span>Forgot your password?
           </p>
         </Link>
         <p className="text-center mt-4 text-gray-400 text-sm">
