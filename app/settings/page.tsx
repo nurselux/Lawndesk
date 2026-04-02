@@ -19,6 +19,8 @@ interface Profile {
   booking_welcome_message: string | null
   twilio_number: string | null
   ai_receptionist_enabled: boolean | null
+  ai_notify_owner: boolean | null
+  ai_text_caller: boolean | null
   name: string | null
   phone: string | null
 }
@@ -67,6 +69,8 @@ export default function SettingsPage() {
   const [bookingCopied, setBookingCopied] = useState(false)
   const [twilioNumber, setTwilioNumber] = useState<string | null>(null)
   const [aiEnabled, setAiEnabled] = useState(false)
+  const [aiNotifyOwner, setAiNotifyOwner] = useState(true)
+  const [aiTextCaller, setAiTextCaller] = useState(true)
   const [aiGreeting, setAiGreeting] = useState('')
   const [aiSaving, setAiSaving] = useState(false)
   const [aiMessage, setAiMessage] = useState('')
@@ -86,7 +90,7 @@ export default function SettingsPage() {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, name, phone')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -101,6 +105,8 @@ export default function SettingsPage() {
             setBookingWelcome(data.booking_welcome_message || '')
             setTwilioNumber(data.twilio_number ?? null)
             setAiEnabled(data.ai_receptionist_enabled ?? false)
+            setAiNotifyOwner(data.ai_notify_owner ?? true)
+            setAiTextCaller(data.ai_text_caller ?? true)
             setAiGreeting(data.booking_welcome_message || '')
             setDisplayName(data.name || '')
             setPhone(data.phone || '')
@@ -196,7 +202,7 @@ export default function SettingsPage() {
   const handleSaveAI = async () => {
     setAiSaving(true)
     const { error } = await (supabase.from('profiles') as any)
-      .update({ ai_receptionist_enabled: aiEnabled, booking_welcome_message: aiGreeting || null })
+      .update({ ai_receptionist_enabled: aiEnabled, booking_welcome_message: aiGreeting || null, ai_notify_owner: aiNotifyOwner, ai_text_caller: aiTextCaller })
       .eq('id', user?.id)
     if (!error) {
       setAiMessage('Saved!')
@@ -580,6 +586,29 @@ export default function SettingsPage() {
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-1">Give this number to clients — put it on your website, truck, or business card.</p>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Notifications</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div onClick={() => setAiNotifyOwner(!aiNotifyOwner)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${aiNotifyOwner ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiNotifyOwner ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-700 font-medium">📱 Text me when AI takes a call</p>
+                    <p className="text-xs text-gray-400">You receive a lead summary SMS after every AI call</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div onClick={() => setAiTextCaller(!aiTextCaller)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${aiTextCaller ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiTextCaller ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-700 font-medium">💬 Text caller a confirmation link</p>
+                    <p className="text-xs text-gray-400">Caller gets a pre-filled booking link to review and confirm their request</p>
+                  </div>
+                </label>
+              </div>
             </div>
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Greeting Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
