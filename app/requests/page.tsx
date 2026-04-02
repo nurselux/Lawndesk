@@ -129,12 +129,12 @@ export default function RequestsPage() {
     try {
       const { error: err } = await (supabase as any)
         .from('booking_requests')
-        .update({ status: 'approved' })
+        .update({ status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null })
         .eq('id', req.id)
       if (err) { setError(`Failed to schedule visit: ${err.message}`); return }
       setRequests(prev => prev.map(r =>
         r.id === req.id
-          ? { ...r, status: 'approved' }
+          ? { ...r, status: 'approved', scheduled_date: visitDate, scheduled_time: visitTime || null }
           : r
       ))
       setSchedulingId(null)

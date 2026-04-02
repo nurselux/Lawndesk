@@ -28,8 +28,10 @@ interface EstimateVisit {
   client_name: string
   service_type: string
   address: string | null
-  preferred_date: string
+  preferred_date: string | null
   preferred_time: string | null
+  scheduled_date: string | null
+  scheduled_time: string | null
 }
 
 interface Quote {
@@ -83,10 +85,9 @@ export default function CalendarPage() {
   const fetchEstimateVisits = async () => {
     const { data } = await (supabase as any)
       .from('booking_requests')
-      .select('id, client_name, service_type, address, preferred_date, preferred_time')
+      .select('id, client_name, service_type, address, preferred_date, preferred_time, scheduled_date, scheduled_time')
       .eq('owner_id', user?.id)
       .eq('status', 'approved')
-      .not('preferred_date', 'is', null)
     if (data) setEstimateVisits(data as EstimateVisit[])
   }
 
@@ -115,8 +116,10 @@ export default function CalendarPage() {
   }, {})
 
   const visitsByDate = estimateVisits.reduce<Record<string, EstimateVisit[]>>((acc, v) => {
-    if (!acc[v.preferred_date]) acc[v.preferred_date] = []
-    acc[v.preferred_date].push(v)
+    const date = v.scheduled_date || v.preferred_date
+    if (!date) return acc
+    if (!acc[date]) acc[date] = []
+    acc[date].push(v)
     return acc
   }, {})
 
@@ -300,7 +303,7 @@ export default function CalendarPage() {
                 <div key={visit.id} className="flex items-start gap-3 p-3 rounded-xl border bg-purple-50 border-purple-200 text-purple-800">
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate">📐 Estimate Visit — {visit.service_type}</p>
-                    <p className="text-xs opacity-75">👤 {visit.client_name}{visit.preferred_time ? ` · 🕐 ${visit.preferred_time}` : ''}</p>
+                    <p className="text-xs opacity-75">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
                     {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
                   </div>
                   <Link href="/quotes">
