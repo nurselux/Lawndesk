@@ -5,7 +5,7 @@ ALTER TABLE booking_requests ADD COLUMN IF NOT EXISTS address TEXT;
 CREATE TABLE IF NOT EXISTS estimates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+  client_id UUID REFERENCES "Clients"(id) ON DELETE SET NULL,
   client_name TEXT NOT NULL,
   client_phone TEXT,
   client_email TEXT,
