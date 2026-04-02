@@ -42,6 +42,25 @@ export default function BookingPage() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
 
+  // Pre-fill form from URL params (used by AI receptionist SMS link)
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const name = p.get('name')
+    if (!name) return
+    if (name) setClientName(name)
+    const phone = p.get('phone'); if (phone) setClientPhone(phone)
+    const email = p.get('email'); if (email) setClientEmail(email)
+    const addr = p.get('address'); if (addr) setAddress(addr)
+    const date = p.get('date'); if (date) setPreferredDate(date)
+    const time = p.get('time'); if (time) setPreferredTime(time)
+    const msg = p.get('message'); if (msg) setMessage(msg)
+    const service = p.get('service')
+    if (service) {
+      const match = JOB_TYPES.find(t => t.toLowerCase().includes(service.toLowerCase()))
+      if (match) setServiceType(match)
+    }
+  }, [])
+
   useEffect(() => {
     const fetchBusiness = async () => {
       const { data } = await (supabase.from('profiles') as any)
