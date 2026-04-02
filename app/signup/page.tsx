@@ -41,8 +41,13 @@ function SignupContent() {
     if (error) {
       setMessage(error.message)
       setLoading(false)
-    } else if (data.user?.identities?.length === 0) {
-      // Email already registered
+    } else if (!data.user || data.user.identities?.length === 0) {
+      // User object null or email already registered
+      if (!data.user) {
+        setMessage('Something went wrong')
+        setLoading(false)
+        return
+      }
       router.push(`/account-exists?email=${encodeURIComponent(email)}`)
     } else {
       // Save SMS consent to profile

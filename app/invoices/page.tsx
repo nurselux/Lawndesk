@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search } from 'lucide-react'
 
 interface Invoice {
   id: string
@@ -344,7 +345,7 @@ function InvoicesContent() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true">💲</div>
+          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true"><Receipt className="w-6 h-6" /></div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Invoices</h2>
             <p className="text-gray-500 text-sm">
@@ -419,7 +420,7 @@ function InvoicesContent() {
       {showAnyForm && (
         <div className="bg-white border border-purple-200 rounded-2xl p-5 mb-5 shadow-sm">
           <h3 className="font-bold text-gray-800 mb-4 text-base">
-            {isEditing ? `✏️ Edit INV-${String(editingInvoice!.invoice_number).padStart(3, '0')}` : '💲 New Invoice'}
+            {isEditing ? <span className="flex items-center gap-2"><Pencil className="w-4 h-4" />Edit INV-{String(editingInvoice!.invoice_number).padStart(3, '0')}</span> : <span className="flex items-center gap-2"><Receipt className="w-4 h-4" />New Invoice</span>}
           </h3>
           <div className="space-y-3">
             <select
@@ -524,7 +525,7 @@ function InvoicesContent() {
       {/* Invoice List */}
       {invoices.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">💲</p>
+          <Receipt className="w-14 h-14 mx-auto text-gray-300 mb-3" aria-hidden="true" />
           <p className="text-gray-700 font-bold mb-1">No invoices yet</p>
           <p className="text-gray-400 text-sm mb-6">Create your first invoice to start getting paid.</p>
           <button
@@ -536,7 +537,7 @@ function InvoicesContent() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-4xl mb-3">🔍</p>
+          <Search className="w-10 h-10 mx-auto text-gray-300 mb-3" aria-hidden="true" />
           <p className="text-gray-500 font-bold">No invoices match</p>
           <p className="text-gray-400 text-sm">Try a different search or filter.</p>
         </div>
@@ -624,7 +625,7 @@ function InvoicesContent() {
                     }`}
                     title={inv.client_email || 'No email on file'}
                   >
-                    {isSendingEmail ? '⏳' : '📧'} {isSendingEmail ? 'Sending…' : 'Email'}
+                    <Mail className="w-3.5 h-3.5" aria-hidden="true" /> {isSendingEmail ? 'Sending…' : 'Email'}
                   </button>
 
                   {/* Send SMS */}
@@ -637,7 +638,7 @@ function InvoicesContent() {
                     }`}
                     title={inv.client_phone || 'No phone on file'}
                   >
-                    💬 Text
+                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
                   </button>
 
                   {/* Copy link */}
@@ -645,7 +646,7 @@ function InvoicesContent() {
                     onClick={() => copyLink(inv)}
                     className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors cursor-pointer"
                   >
-                    {copiedId === inv.id ? '✓ Copied!' : '🔗 Copy Link'}
+                    <Link2 className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === inv.id ? 'Copied!' : 'Copy Link'}
                   </button>
 
                   {/* Edit */}
@@ -654,7 +655,7 @@ function InvoicesContent() {
                     aria-label="Edit invoice"
                     className="ml-auto text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer"
                   >
-                    <span aria-hidden="true">✏️</span>
+                    <Pencil className="w-4 h-4" aria-hidden="true" />
                   </button>
 
                   {/* Delete */}
@@ -663,7 +664,7 @@ function InvoicesContent() {
                     aria-label="Delete invoice"
                     className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors cursor-pointer"
                   >
-                    <span aria-hidden="true">🗑️</span>
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>

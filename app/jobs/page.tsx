@@ -7,6 +7,7 @@ import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
+import { Leaf, Map, Pencil, Trash2, MessageSquare, Bell, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera } from 'lucide-react'
 
 interface Job {
   id: string
@@ -479,7 +480,7 @@ export default function JobsPage() {
     <div className="pb-6 bg-gray-50 min-h-dvh">
       <div className="flex justify-between items-center mb-6 gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 shrink-0 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true">🌿</div>
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white w-12 h-12 shrink-0 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true"><Leaf className="w-6 h-6" /></div>
           <div className="min-w-0">
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Jobs</h2>
             <p className="text-gray-500 text-sm">Schedule and track your work</p>
@@ -499,7 +500,7 @@ export default function JobsPage() {
                 rel="noopener noreferrer"
                 className="block bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-3 rounded-xl hover:opacity-90 hover:shadow-md transition-all duration-200 shadow text-sm whitespace-nowrap"
               >
-                <span aria-hidden="true">🗺️ </span>Today's Route
+                <Map className="w-4 h-4 inline mr-1" aria-hidden="true" />Today's Route
               </a>
             )
           })()}
@@ -589,7 +590,7 @@ export default function JobsPage() {
 
       {showForm && (
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">🌿 New Job</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Leaf className="w-5 h-5 text-blue-500" aria-hidden="true" />New Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <select
@@ -616,17 +617,17 @@ export default function JobsPage() {
               onChange={(e) => setClientId(e.target.value)}
               className="border border-gray-300 rounded-lg p-3 text-gray-800"
             >
-              <option value="">👤 Select a Client *</option>
+              <option value="">Select a Client *</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 px-1">📅 Date *</label>
+              <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />Date *</label>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 px-1">🕐 Time (optional)</label>
+              <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />Time (optional)</label>
               <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -644,7 +645,7 @@ export default function JobsPage() {
             </select>
             {workers.length > 0 && (
               <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-                <option value="">👷 Assign to Worker (optional)</option>
+                <option value="">Assign to Worker (optional)</option>
                 {workers.map((w) => (
                   <option key={w.id} value={w.id}>{w.name || 'Unnamed Worker'}</option>
                 ))}
@@ -659,7 +660,7 @@ export default function JobsPage() {
               />
             )}
             <textarea
-              placeholder="📝 Notes"
+              placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
@@ -677,7 +678,7 @@ export default function JobsPage() {
           )}
           <div className="flex gap-3 mt-4">
             <button onClick={handleAddJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow">
-              {saving ? '⏳ Saving...' : '💾 Save Job'}
+              {saving ? 'Saving...' : 'Save Job'}
             </button>
             <button onClick={() => setShowForm(false)} className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer">
               Cancel
@@ -688,7 +689,7 @@ export default function JobsPage() {
 
       {editingJob && (
         <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">✏️ Edit Job</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Pencil className="w-5 h-5 text-blue-500" aria-hidden="true" />Edit Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <select value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -707,17 +708,17 @@ export default function JobsPage() {
               )}
             </div>
             <select value={editClientId} onChange={(e) => setEditClientId(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option value="">👤 Select a Client *</option>
+              <option value="">Select a Client *</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>{client.name}</option>
               ))}
             </select>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 px-1">📅 Date *</label>
+              <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />Date *</label>
               <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 px-1">🕐 Time (optional)</label>
+              <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />Time (optional)</label>
               <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <select value={editRecurring} onChange={(e) => setEditRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -735,7 +736,7 @@ export default function JobsPage() {
             </select>
             {workers.length > 0 && (
               <select value={editAssignedTo} onChange={(e) => setEditAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-                <option value="">👷 Assign to Worker (optional)</option>
+                <option value="">Assign to Worker (optional)</option>
                 {workers.map((w) => (
                   <option key={w.id} value={w.id}>{w.name || 'Unnamed Worker'}</option>
                 ))}
@@ -750,7 +751,7 @@ export default function JobsPage() {
               />
             )}
             <textarea
-              placeholder="📝 Notes"
+              placeholder="Notes"
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
               className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
@@ -786,7 +787,7 @@ export default function JobsPage() {
           
           <div className="flex gap-3 mt-4">
             <button onClick={handleUpdateJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow">
-              {saving ? '⏳ Saving...' : '💾 Save Changes'}
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
             <button onClick={() => setEditingJob(null)} className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer">
               Cancel
@@ -798,7 +799,7 @@ export default function JobsPage() {
       <div>
         {jobs.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-6xl mb-4">📅</p>
+            <CalendarDays className="w-16 h-16 mx-auto text-gray-300 mb-4" aria-hidden="true" />
             <p className="text-gray-700 text-xl font-bold mb-2">No jobs scheduled yet</p>
             <p className="text-gray-400 mb-6">Schedule your first job to start tracking your work.</p>
             <button
@@ -810,7 +811,7 @@ export default function JobsPage() {
           </div>
         ) : filteredJobs.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-5xl mb-4">🔍</p>
+            <Search className="w-12 h-12 mx-auto text-gray-300 mb-4" aria-hidden="true" />
             <p className="text-gray-500 text-lg font-bold">No jobs match your search</p>
             <p className="text-gray-400">Try a different period, status, or search term.</p>
           </div>
@@ -843,25 +844,25 @@ export default function JobsPage() {
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-base font-bold text-gray-800">{job.title}</h3>
                 <div className="flex gap-2">
-                  <button onClick={() => handleEditJob(job)} className="text-blue-400 hover:text-blue-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">✏️</button>
-                  <button onClick={() => handleDeleteJob(job.id)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-all duration-200 cursor-pointer text-lg">🗑️</button>
+                  <button onClick={() => handleEditJob(job)} aria-label="Edit job" className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
+                  <button onClick={() => handleDeleteJob(job.id)} aria-label="Delete job" className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
                 </div>
               </div>
               <div className="space-y-1 mb-3">
-                <p className="text-gray-500 text-sm">👤 {job.client_name}</p>
+                <p className="text-gray-500 text-sm flex items-center gap-1"><User className="w-3.5 h-3.5" aria-hidden="true" /> {job.client_name}</p>
                 {job.assigned_to && workers.find(w => w.id === job.assigned_to) && (
-                  <p className="text-xs"><span className="bg-violet-100 text-violet-700 font-semibold px-2 py-0.5 rounded-full">👷 {workers.find(w => w.id === job.assigned_to)?.name || 'Worker'}</span></p>
+                  <p className="text-xs"><span className="bg-violet-100 text-violet-700 font-semibold px-2 py-0.5 rounded-full">{workers.find(w => w.id === job.assigned_to)?.name || 'Worker'}</span></p>
                 )}
                 {job.date && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Date:</span>
-                    <span className="bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full text-xs">📅 {job.date}</span>
+                    <span className="bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full text-xs flex items-center gap-1"><CalendarDays className="w-3 h-3" aria-hidden="true" />{job.date}</span>
                   </div>
                 )}
                 {job.time && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Time:</span>
-                    <span className="bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full text-xs">🕐 {job.time}</span>
+                    <span className="bg-purple-50 text-purple-600 font-semibold px-2 py-0.5 rounded-full text-xs flex items-center gap-1"><Clock className="w-3 h-3" aria-hidden="true" />{job.time}</span>
                   </div>
                 )}
                 {job.recurring && (
@@ -870,13 +871,13 @@ export default function JobsPage() {
                     <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${job.recurring === '🔂 One-time' ? 'bg-gray-100 text-gray-500' : 'bg-cyan-50 text-cyan-600'}`}>{job.recurring}</span>
                   </div>
                 )}
-                {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {job.notes}</p>}
-                {job.worker_notes && <p className="text-gray-500 text-xs mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">📋 <span className="font-semibold">Worker:</span> {job.worker_notes}</p>}
+                {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 flex items-start gap-1.5"><FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{job.notes}</p>}
+                {job.worker_notes && <p className="text-gray-500 text-xs mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2"><span className="font-semibold">Worker:</span> {job.worker_notes}</p>}
                 {job.clocked_in_at && (
                   <div className="mt-2 flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Time on job:</span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${job.clocked_out_at ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
-                      ⏱ {job.clocked_out_at ? fmtDuration(job.clocked_in_at, job.clocked_out_at) : 'In progress'}
+                      <Clock className="w-3 h-3" aria-hidden="true" /> {job.clocked_out_at ? fmtDuration(job.clocked_in_at, job.clocked_out_at) : 'In progress'}
                     </span>
                     <span className="text-xs text-gray-400">{fmtClock(job.clocked_in_at)}{job.clocked_out_at ? ` – ${fmtClock(job.clocked_out_at)}` : ''}</span>
                   </div>
@@ -892,7 +893,7 @@ export default function JobsPage() {
                         className="w-12 h-12 object-cover rounded-lg border border-gray-200"
                       />
                       <span className="absolute -top-1 -right-1 text-xs leading-none">
-                        {photo.photo_type === 'before' ? '📸' : '✨'}
+                        {photo.photo_type === 'before' ? <Camera className="w-3 h-3" aria-hidden="true" /> : <span className="text-xs">✨</span>}
                       </span>
                     </div>
                   ))}
@@ -920,7 +921,7 @@ export default function JobsPage() {
                     disabled={notifyingJob === job.id}
                     className="text-xs font-bold py-1.5 px-3 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    {notifyingJob === job.id ? '⏳' : notifiedJob === job.id ? '✓ Sent!' : '📨 Notify'}
+                    {notifyingJob === job.id ? 'Notifying...' : notifiedJob === job.id ? '✓ Sent!' : <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />} Notify
                   </button>
                 )}
                 <button
@@ -938,14 +939,14 @@ export default function JobsPage() {
                   }}
                   className="text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
                 >
-                  📸 Photos
+                  <Camera className="w-4 h-4 mr-1" aria-hidden="true" />Photos
                 </button>
                 {clients.find(c => c.id === job.client_id)?.phone && (
                   <a
                     href={`tel:${clients.find(c => c.id === job.client_id)!.phone}`}
                     className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
                   >
-                    📞 Call
+                    <Phone className="w-3.5 h-3.5" aria-hidden="true" /> Call
                   </a>
                 )}
                 {clients.find(c => c.id === job.client_id)?.address && (
@@ -955,7 +956,7 @@ export default function JobsPage() {
                     rel="noopener noreferrer"
                     className="text-xs font-bold py-1.5 px-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                   >
-                    📍 Map
+                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Map
                   </a>
                 )}
               </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { Users, Search, Phone, Mail, MapPin, Pencil, Trash2 } from 'lucide-react'
 
 interface Client {
   id: string
@@ -154,7 +155,7 @@ export default function ClientsPage() {
     <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true">👥</div>
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true"><Users className="w-6 h-6" /></div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Clients</h2>
             <p className="text-gray-500 text-sm">Manage your client roster</p>
@@ -308,13 +309,13 @@ export default function ClientsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clients.length === 0 ? (
           <div className="col-span-3 text-center py-12">
-            <p className="text-5xl mb-4">👥</p>
+            <Users className="w-14 h-14 mx-auto text-gray-300 mb-4" aria-hidden="true" />
             <p className="text-gray-500 text-lg font-bold">No clients yet</p>
             <p className="text-gray-400">Click Add Client to get started!</p>
           </div>
         ) : filteredClients.length === 0 ? (
           <div className="col-span-3 text-center py-12">
-            <p className="text-5xl mb-4">🔍</p>
+            <Search className="w-12 h-12 mx-auto text-gray-300 mb-4" aria-hidden="true" />
             <p className="text-gray-500 text-lg font-bold">No clients match your search</p>
             <p className="text-gray-400">Try a different name or filter.</p>
           </div>
@@ -329,31 +330,31 @@ export default function ClientsPage() {
                   <Link href={`/clients/${client.id}`} className="text-lg font-bold text-gray-800 hover:text-green-700 transition-colors">{client.name}</Link>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer text-lg"><span aria-hidden="true">✏️</span></button>
-                  <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer text-lg"><span aria-hidden="true">🗑️</span></button>
+                  <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
+                  <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
                 </div>
               </div>
               <div className="space-y-1 pl-14 min-w-0">
-                {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-600 transition-colors"><span className="text-base shrink-0" aria-hidden="true">📧</span> <span className="truncate">{client.email}</span></a>}
-                {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 text-sm flex items-center gap-1.5 hover:text-green-600 transition-colors"><span className="text-base" aria-hidden="true">📞</span> {client.phone}</a>}
-                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-600 transition-colors"><span className="text-base shrink-0" aria-hidden="true">📍</span> <span className="truncate">{client.address}</span></a>}
-                {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 font-medium">🏠 {client.notes}</p>}
+                {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-600 transition-colors"><Mail className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.email}</span></a>}
+                {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 text-sm flex items-center gap-1.5 hover:text-green-600 transition-colors"><Phone className="w-4 h-4" aria-hidden="true" /> {client.phone}</a>}
+                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-600 transition-colors"><MapPin className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.address}</span></a>}
+                {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 font-medium">{client.notes}</p>}
               </div>
               {(client.phone || client.address || client.email) && (
                 <div className="flex gap-2 mt-3 pt-3 border-t border-amber-100 pl-14">
                   {client.phone && (
-                    <a href={`tel:${client.phone}`} className="flex-1 text-center text-xs font-bold py-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors">
-                      📞 Call
+                    <a href={`tel:${client.phone}`} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors">
+                      <Phone className="w-3.5 h-3.5" aria-hidden="true" /> Call
                     </a>
                   )}
                   {client.address && (
-                    <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="flex-1 text-center text-xs font-bold py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors">
-                      📍 Map
+                    <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors">
+                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Map
                     </a>
                   )}
                   {client.email && (
-                    <a href={`mailto:${client.email}`} className="flex-1 text-center text-xs font-bold py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
-                      📧 Email
+                    <a href={`mailto:${client.email}`} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                      <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
                     </a>
                   )}
                 </div>

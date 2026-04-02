@@ -109,7 +109,7 @@ export default function CalendarPage() {
 
   const fetchQuotes = async () => {
     const { data } = await (supabase as any)
-      .from('quotes')
+      .from('Quotes')
       .select('id, amount, status')
       .eq('user_id', user?.id)
       .not('status', 'in', '("declined","converted")')
@@ -250,9 +250,13 @@ export default function CalendarPage() {
                     <span className="md:hidden">📐</span>
                   </div>
                 ))}
-                {totalItems > 3 && (
-                  <div className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{totalItems - 3}</div>
-                )}
+                {(() => {
+                  const shown = Math.min(dayJobs.length, 2) + Math.min(dayVisits.length, 1)
+                  const hidden = totalItems - shown
+                  return hidden > 0 ? (
+                    <div className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{hidden}</div>
+                  ) : null
+                })()}
               </div>
             </button>
           )

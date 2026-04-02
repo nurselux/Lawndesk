@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { Inbox, Phone, Mail, MapPin, Calendar, ClipboardList, UserPlus, XCircle, Trash2, RotateCcw, CheckCircle } from 'lucide-react'
 
 interface BookingRequest {
   id: string
@@ -29,9 +30,9 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: '⏳ Pending',
-  approved: '📅 Visit Scheduled',
-  declined: '❌ Declined',
+  pending: 'Pending',
+  approved: 'Visit Scheduled',
+  declined: 'Declined',
 }
 
 export default function RequestsPage() {
@@ -228,7 +229,7 @@ export default function RequestsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800"><span aria-hidden="true">📬 </span>Service Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Inbox className="w-6 h-6 text-green-700" aria-hidden="true" />Service Requests</h1>
           {pendingCount > 0 && (
             <p className="text-sm text-yellow-700 font-semibold mt-0.5">{pendingCount} pending {pendingCount === 1 ? 'request' : 'requests'}</p>
           )}
@@ -238,7 +239,7 @@ export default function RequestsPage() {
       {/* Error banner */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center justify-between">
-          <p className="text-sm text-red-700 font-semibold">⚠️ {error}</p>
+          <p className="text-sm text-red-700 font-semibold flex items-center gap-1.5"><span aria-hidden="true">⚠</span> {error}</p>
           <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 font-bold text-lg leading-none cursor-pointer">✕</button>
         </div>
       )}
@@ -263,13 +264,13 @@ export default function RequestsPage() {
         ))}
         <button
           onClick={() => setFilter('deleted')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer ${
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-1 ${
             filter === 'deleted'
               ? 'bg-gray-600 text-white'
               : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400'
           }`}
         >
-          🗑️ Deleted
+          <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />Deleted
           {deletedCount > 0 && (
             <span className="ml-1.5 bg-gray-400 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{deletedCount}</span>
           )}
@@ -279,7 +280,7 @@ export default function RequestsPage() {
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-          <p className="text-4xl mb-3">{filter === 'deleted' ? '🗑️' : '📭'}</p>
+          {filter === 'deleted' ? <Trash2 className="w-10 h-10 mx-auto text-gray-300 mb-3" aria-hidden="true" /> : <Inbox className="w-10 h-10 mx-auto text-gray-300 mb-3" aria-hidden="true" />}
           <p className="text-gray-500 font-medium">
             {filter === 'deleted' ? 'No deleted requests' : `No ${filter === 'all' ? '' : filter} requests yet`}
           </p>
@@ -307,8 +308,8 @@ export default function RequestsPage() {
                     </span>
                   )}
                   {req.deleted_at && (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-500 border-gray-300">
-                      🗑️ Deleted
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-500 border-gray-300 flex items-center gap-1">
+                      <Trash2 className="w-3 h-3" aria-hidden="true" />Deleted
                     </span>
                   )}
                 </div>
@@ -328,11 +329,11 @@ export default function RequestsPage() {
               {/* Contact info */}
               <div className="space-y-1">
                 <a href={`tel:${req.client_phone}`} className="flex items-center gap-2 text-sm text-blue-600 font-medium">
-                  📞 {req.client_phone}
+                  <Phone className="w-4 h-4" aria-hidden="true" /> {req.client_phone}
                 </a>
                 {req.client_email && (
                   <a href={`mailto:${req.client_email}`} className="flex items-center gap-2 text-sm text-blue-600 font-medium">
-                    ✉️ {req.client_email}
+                    <Mail className="w-4 h-4" aria-hidden="true" /> {req.client_email}
                   </a>
                 )}
                 {req.address && (
@@ -342,7 +343,7 @@ export default function RequestsPage() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm text-blue-600 font-medium"
                   >
-                    📍 {req.address}
+                    <MapPin className="w-4 h-4" aria-hidden="true" /> {req.address}
                   </a>
                 )}
               </div>
@@ -367,13 +368,13 @@ export default function RequestsPage() {
                           disabled={actionLoading === req.id}
                           className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          📅 Schedule Visit
+                          <Calendar className="w-4 h-4 inline mr-1" aria-hidden="true" />Schedule Visit
                         </button>
                         <button
                           onClick={() => goToCreateQuote(req)}
                           className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
                         >
-                          📋 Create Quote
+                          <ClipboardList className="w-4 h-4 inline mr-1" aria-hidden="true" />Create Quote
                         </button>
                       </div>
                       <div className="flex gap-2">
@@ -382,14 +383,14 @@ export default function RequestsPage() {
                           disabled={actionLoading === req.id || savedClientIds.has(req.id)}
                           className="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          {savedClientIds.has(req.id) ? '✓ Saved to Clients' : '👤 Save as Client'}
+                          {savedClientIds.has(req.id) ? '✓ Saved to Clients' : <span className="flex items-center justify-center gap-1"><UserPlus className="w-4 h-4" aria-hidden="true" />Save as Client</span>}
                         </button>
                         <button
                           onClick={() => updateStatus(req.id, 'declined')}
                           disabled={actionLoading === req.id}
                           className="flex-1 bg-red-50 text-red-500 border border-red-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          ❌ Decline
+                          <XCircle className="w-4 h-4 inline mr-1" aria-hidden="true" />Decline
                         </button>
                         <button
                           onClick={() => softDelete(req.id)}
@@ -397,7 +398,7 @@ export default function RequestsPage() {
                           aria-label="Delete request"
                           className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          <span aria-hidden="true">🗑️</span>
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </div>
                     </div>
@@ -433,7 +434,7 @@ export default function RequestsPage() {
                           disabled={!visitDate || actionLoading === req.id}
                           className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          {actionLoading === req.id ? '⏳ Saving...' : '✅ Confirm Visit'}
+                          {actionLoading === req.id ? 'Saving...' : <span className="flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4" aria-hidden="true" />Confirm Visit</span>}
                         </button>
                         <button
                           onClick={() => { setSchedulingId(null); setVisitDate(''); setVisitTime('') }}
@@ -450,7 +451,7 @@ export default function RequestsPage() {
                     <div className="space-y-2">
                       <div className="bg-green-50 rounded-xl py-3 px-4 space-y-1">
                         <p className="text-sm text-green-700 font-bold">
-                          📅 Estimate visit scheduled
+                          <Calendar className="w-4 h-4 inline mr-1" aria-hidden="true" />Estimate visit scheduled
                           {req.scheduled_date && ` — ${formatDate(req.scheduled_date)}${req.scheduled_time ? ` at ${formatTime(req.scheduled_time)}` : ''}`}
                         </p>
                         <p className="text-xs text-green-600">Shows on your calendar. Create a quote when ready.</p>
@@ -460,14 +461,14 @@ export default function RequestsPage() {
                           onClick={() => goToCreateQuote(req)}
                           className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
                         >
-                          📋 Create Quote
+                          <ClipboardList className="w-4 h-4 inline mr-1" aria-hidden="true" />Create Quote
                         </button>
                         <button
                           onClick={() => saveAsClient(req)}
                           disabled={actionLoading === req.id || savedClientIds.has(req.id)}
                           className="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          {savedClientIds.has(req.id) ? '✓ Saved' : '👤 Save as Client'}
+                          {savedClientIds.has(req.id) ? '✓ Saved' : <span className="flex items-center justify-center gap-1"><UserPlus className="w-4 h-4" aria-hidden="true" />Save as Client</span>}
                         </button>
                         <button
                           onClick={() => softDelete(req.id)}
@@ -475,7 +476,7 @@ export default function RequestsPage() {
                           className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer"
                           title="Delete request"
                         >
-                          🗑️
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
                         </button>
                       </div>
                     </div>
@@ -489,7 +490,7 @@ export default function RequestsPage() {
                         disabled={actionLoading === req.id}
                         className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                       >
-                        ↩️ Schedule Visit
+                        <RotateCcw className="w-4 h-4 inline mr-1" aria-hidden="true" />Schedule Visit
                       </button>
                       <button
                         onClick={() => softDelete(req.id)}
@@ -497,7 +498,7 @@ export default function RequestsPage() {
                         className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer"
                         title="Delete request"
                       >
-                        🗑️
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                       </button>
                     </div>
                   )}
@@ -512,14 +513,14 @@ export default function RequestsPage() {
                     disabled={actionLoading === req.id}
                     className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50 hover:bg-gray-200"
                   >
-                    {actionLoading === req.id ? '⏳' : '↩️ Restore'}
+                    {actionLoading === req.id ? 'Restoring...' : <span className="flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4" aria-hidden="true" />Restore</span>}
                   </button>
                   <button
                     onClick={() => permanentDelete(req.id)}
                     disabled={actionLoading === req.id}
                     className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                   >
-                    🗑️ Delete Forever
+                    <Trash2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Delete Forever
                   </button>
                 </div>
               )}

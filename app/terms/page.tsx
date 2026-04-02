@@ -49,7 +49,19 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-3">8. Contact</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">8. SMS Messaging</h2>
+            <p>By providing your phone number and opting into SMS notifications, you agree to receive service-related text messages from LawnDesk. Message and data rates may apply based on your carrier plan.</p>
+            <p className="mb-2">You can opt-out of SMS messages at any time by:</p>
+            <ul className="list-disc list-inside ml-5 space-y-2">
+              <li>Replying <strong>STOP</strong> to any SMS message from LawnDesk</li>
+              <li>Disabling SMS notifications in your account settings</li>
+              <li>Contacting us at <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a></li>
+            </ul>
+            <p className="text-gray-500 text-sm">For help with SMS issues, text <strong>HELP</strong> to our messaging service.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">9. Contact</h2>
             <p>Questions about these terms? Reach us at <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a>.</p>
           </section>
         </div>

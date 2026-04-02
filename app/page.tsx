@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import AuthRedirect from '../components/AuthRedirect'
+import { Leaf, CalendarDays, FileText, RefreshCw, Users, Sun, ClipboardList, Receipt, MessageSquare, Star, Check, Smartphone, LayoutDashboard, Shield, Wrench } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -9,7 +10,7 @@ export default function Home() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-green-700 shadow-md">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-white text-xl font-bold hover:text-green-200 transition-colors"><span aria-hidden="true">🌿 </span>LawnDesk</Link>
+          <Link href="/" className="text-white text-xl font-bold hover:text-green-200 transition-colors flex items-center gap-2"><Leaf className="w-6 h-6" aria-hidden="true" />LawnDesk</Link>
           <Link href="/login" className="border-2 border-white border-opacity-70 text-white font-bold py-2 px-5 rounded-lg hover:bg-white hover:text-green-700 transition-all duration-200 text-sm">
             Sign In
           </Link>
@@ -20,7 +21,7 @@ export default function Home() {
       <section className="bg-gradient-to-br from-green-700 to-green-900 text-white pt-16 pb-0 px-4 text-center">
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-yellow-400 rounded-full px-5 py-2 mb-7 shadow-lg">
-            <span className="text-xl">🌿</span>
+            <Leaf className="w-8 h-8" aria-hidden="true" />
             <span className="text-green-900 text-xs sm:text-sm font-black tracking-wide uppercase">Built for Lawn & Landscaping Businesses</span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-tight">
@@ -37,7 +38,7 @@ export default function Home() {
               href="/login?signup=true"
               className="w-full max-w-sm block bg-yellow-400 text-green-900 font-black py-4 px-8 rounded-2xl text-xl hover:bg-yellow-300 transition-colors duration-200 shadow-xl text-center"
             >
-              Try Free for 14 Days <span aria-hidden="true">🌿</span>
+              Try Free for 14 Days <Leaf className="w-5 h-5 inline" aria-hidden="true" />
             </Link>
             <div className="flex flex-wrap justify-center gap-x-5 gap-y-1.5">
               <span className="flex items-center gap-1.5 text-green-200 text-sm font-medium">
@@ -69,13 +70,13 @@ export default function Home() {
           <p className="text-center text-gray-500 mb-12 text-lg">Built specifically for landscaping professionals.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: '👥', title: 'Client Management', desc: 'Store client info, notes, and contact details all in one place.' },
-              { icon: '📅', title: 'Job Scheduling', desc: 'Schedule one-time or recurring jobs and track their status.' },
-              { icon: '📄', title: 'Invoicing', desc: 'Create and send invoices in seconds and track who owes you.' },
-              { icon: '🔄', title: 'Recurring Jobs', desc: 'Set weekly, biweekly, or monthly jobs and let LawnDesk handle the rest.' },
+              { icon: 'Users', title: 'Client Management', desc: 'Store client info, notes, and contact details all in one place.' },
+              { icon: 'CalendarDays', title: 'Job Scheduling', desc: 'Schedule one-time or recurring jobs and track their status.' },
+              { icon: 'FileText', title: 'Invoicing', desc: 'Create and send invoices in seconds and track who owes you.' },
+              { icon: 'RefreshCw', title: 'Recurring Jobs', desc: 'Set weekly, biweekly, or monthly jobs and let LawnDesk handle the rest.' },
             ].map((f) => (
               <div key={f.title} className="bg-amber-50 rounded-xl p-6 border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
-                <div className="text-3xl mb-4 bg-white w-14 h-14 rounded-xl flex items-center justify-center border border-amber-200" aria-hidden="true">{f.icon}</div>
+                <div className="text-3xl mb-4 bg-white w-14 h-14 rounded-xl flex items-center justify-center border border-amber-200" aria-hidden="true"><Users className="w-6 h-6" /></div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">{f.title}</h3>
                 <p className="text-gray-500">{f.desc}</p>
               </div>

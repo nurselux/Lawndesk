@@ -24,7 +24,19 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-3">3. Data Storage & Security</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">3. SMS Communications</h2>
+            <p>If you opt-in to receive SMS notifications, your phone number is used solely for:</p>
+            <ul className="list-disc list-inside ml-5 space-y-2">
+              <li>Service reminders and scheduling notifications</li>
+              <li>Billing and subscription alerts</li>
+              <li>Job status updates</li>
+              <li>Booking request confirmations</li>
+            </ul>
+            <p className="text-gray-500 text-sm mt-3">Your phone number is never shared with third parties or used for marketing purposes.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">4. Data Storage & Security</h2>
             <p>Your data is stored securely using Supabase (PostgreSQL) with row-level security enabled. All data is encrypted in transit using TLS. We take reasonable measures to protect your information from unauthorized access.</p>
           </section>
 

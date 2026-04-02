@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
+import { Leaf, Key } from 'lucide-react'
 
 function LoginContent() {
   const searchParams = useSearchParams()
@@ -11,6 +12,7 @@ function LoginContent() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true')
+  const [smsConsent, setSmsConsent] = useState(false)
   const [message, setMessage] = useState(
     searchParams.get('error') === 'confirmation_failed'
       ? 'Confirmation link expired or invalid. Please sign up again.'
@@ -61,6 +63,10 @@ function LoginContent() {
       setMessage('Password must be at least 6 characters')
       return
     }
+    if (!smsConsent) {
+      setMessage('Please agree to receive SMS notifications')
+      return
+    }
     setLoading(true)
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -70,10 +76,20 @@ function LoginContent() {
     if (error) {
       setMessage(error.message)
       setLoading(false)
-    } else if (data.user?.identities?.length === 0) {
-      // Supabase returns success but empty identities when the email is already registered
+    } else if (!data.user || data.user.identities?.length === 0) {
+      // User object null or email already registered
+      if (!data.user) {
+        setMessage('Something went wrong')
+        setLoading(false)
+        return
+      }
       router.push(`/account-exists?email=${encodeURIComponent(email)}`)
     } else {
+      // Save SMS consent to profile
+      await supabase
+        .from('profiles')
+        .update({ sms_consent: true, sms_consent_at: new Date().toISOString() })
+        .eq('id', data.user.id)
       router.push(`/signup-success?email=${encodeURIComponent(email)}`)
     }
   }
@@ -83,7 +99,7 @@ function LoginContent() {
       <main className="min-h-dvh bg-gray-50 flex items-center justify-center p-5">
         <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
           <div className="bg-green-700 px-6 sm:px-10 py-8 text-center">
-            <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 hover:opacity-80 transition-opacity cursor-pointer"><span aria-hidden="true">🌿 </span>LawnDesk</h1></Link>
+            <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 hover:opacity-80 transition-opacity cursor-pointer flex items-center justify-center gap-2"><Leaf className="w-6 h-6" aria-hidden="true" /> LawnDesk</h1></Link>
             <p className="text-green-200 text-sm">Less paperwork, more yardwork</p>
           </div>
           <div className="px-6 sm:px-10 pt-6 pb-8">
@@ -114,6 +130,17 @@ function LoginContent() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-3 mb-5 text-gray-800"
             />
+            <label className="flex items-start gap-3 mb-5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={smsConsent}
+                onChange={(e) => setSmsConsent(e.target.checked)}
+                className="w-5 h-5 mt-0.5 rounded border-gray-300 cursor-pointer accent-green-700"
+              />
+              <span className="text-xs text-gray-600 leading-relaxed">
+                <strong className="font-semibold">I agree to receive SMS notifications</strong> regarding my service, scheduling, and billing. <a href="/terms" className="text-green-600 hover:underline" target="_blank" rel="noopener">Terms apply</a>.
+              </span>
+            </label>
             <button
               onClick={handleSignUp}
               className="w-full bg-green-700 text-white font-bold py-3 rounded-lg mb-3 hover:bg-green-800 transition-colors duration-200 cursor-pointer text-lg"
@@ -140,7 +167,7 @@ function LoginContent() {
   return (
     <main className="min-h-dvh bg-green-700 flex items-center justify-center p-5">
       <div className="bg-white rounded-2xl p-6 sm:p-10 w-full max-w-md shadow-xl">
-        <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2 hover:opacity-70 transition-opacity cursor-pointer"><span aria-hidden="true">🌿 </span>LawnDesk</h1></Link>
+        <Link href="/"><h1 className="text-2xl sm:text-3xl font-bold text-green-700 text-center mb-2 hover:opacity-70 transition-opacity cursor-pointer flex items-center justify-center gap-2"><Leaf className="w-6 h-6" aria-hidden="true" /> LawnDesk</h1></Link>
         <p className="text-center text-gray-500 mb-8">Less paperwork, more yardwork</p>
         <h2 className="text-xl font-bold text-gray-800 text-center mb-6">Welcome back</h2>
         <input
@@ -175,8 +202,8 @@ function LoginContent() {
           </p>
         )}
         <Link href="/forgot-password">
-          <p className="text-center text-green-600 text-sm mt-4 hover:underline cursor-pointer">
-            <span aria-hidden="true">🔑 </span>Forgot your password?
+          <p className="text-center text-green-600 text-sm mt-4 hover:underline cursor-pointer flex items-center justify-center gap-1.5">
+            <Key className="w-4 h-4" aria-hidden="true" />Forgot your password?
           </p>
         </Link>
         <p className="text-center mt-4 text-gray-400 text-sm">

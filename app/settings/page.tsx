@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList } from 'lucide-react'
 
 interface Profile {
   subscription_status: string | null
@@ -329,7 +330,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6"><span aria-hidden="true">⚙️ </span>Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><SettingsIcon className="w-6 h-6" aria-hidden="true" />Settings</h2>
 
       {/* Account */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">
@@ -354,7 +355,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Phone Number</label>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" aria-hidden="true" />Phone Number</label>
             <input
               type="tel"
               placeholder="e.g. (555) 555-5555"
@@ -370,7 +371,7 @@ export default function SettingsPage() {
             disabled={accountSaving}
             className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
-            {accountSaving ? '⏳ Saving...' : '💾 Save'}
+            Save
           </button>
         </div>
 
@@ -390,7 +391,7 @@ export default function SettingsPage() {
               disabled={emailSaving}
               className="bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition cursor-pointer disabled:opacity-50 text-sm whitespace-nowrap"
             >
-              {emailSaving ? '⏳' : 'Update Email'}
+              {emailSaving ? 'Updating...' : 'Update Email'}
             </button>
           </div>
           {emailError && <p className="text-red-500 text-sm mt-2">{emailError}</p>}
@@ -418,7 +419,7 @@ export default function SettingsPage() {
               disabled={portalLoading}
               className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
             >
-              {portalLoading ? '⏳ Opening...' : '💳 Manage Billing'}
+              {portalLoading ? 'Opening...' : 'Manage Billing'}
             </button>
             <p className="text-gray-400 text-xs mt-2">Update payment method, view invoices, or cancel — all in one place.</p>
             {portalError && <p className="text-red-500 text-sm mt-2">{portalError}</p>}
@@ -464,7 +465,7 @@ export default function SettingsPage() {
             disabled={pwSaving}
             className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
-            {pwSaving ? '⏳ Updating...' : 'Update Password'}
+            {pwSaving ? 'Updating...' : 'Update Password'}
           </button>
         </div>
       </div>
@@ -472,7 +473,7 @@ export default function SettingsPage() {
       {/* Online Booking */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold text-gray-800">📋 Online Booking Page</h3>
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-5 h-5" aria-hidden="true" />Online Booking Page</h3>
           <label className="flex items-center gap-2 cursor-pointer">
             <span className="text-sm text-gray-500">Active</span>
             <div
@@ -523,13 +524,13 @@ export default function SettingsPage() {
                 <div onClick={() => setBookingNotifyEmail(!bookingNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${bookingNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>
                   <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifyEmail ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </div>
-                <span className="text-sm text-gray-700">📧 Email</span>
+                <span className="text-sm text-gray-700 flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Email</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <div onClick={() => setBookingNotifySms(!bookingNotifySms)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${bookingNotifySms ? 'bg-green-500' : 'bg-gray-300'}`}>
                   <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifySms ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </div>
-                <span className="text-sm text-gray-700">📱 SMS</span>
+                <span className="text-sm text-gray-700 flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS</span>
               </label>
             </div>
           </div>
@@ -542,14 +543,14 @@ export default function SettingsPage() {
             disabled={bookingSaving}
             className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
-            {bookingSaving ? '⏳ Saving...' : '💾 Save'}
+            {bookingSaving ? 'Saving...' : 'Save'}
           </button>
           {bookingUsername && (
             <button
               onClick={() => { navigator.clipboard.writeText(`https://lawndesk.pro/book/${bookingUsername}`); setBookingCopied(true); setTimeout(() => setBookingCopied(false), 2000) }}
               className="border-2 border-green-700 text-green-700 font-bold py-3 px-6 rounded-lg hover:bg-green-50 transition cursor-pointer"
             >
-              {bookingCopied ? '✅ Copied!' : '🔗 Copy Link'}
+              {bookingCopied ? '✅ Copied!' : 'Copy Link'}
             </button>
           )}
         </div>
@@ -558,7 +559,7 @@ export default function SettingsPage() {
       {/* AI Receptionist */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold text-gray-800">📞 AI Receptionist</h3>
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Phone className="w-5 h-5" aria-hidden="true" />AI Receptionist</h3>
           {twilioNumber && (
             <label className="flex items-center gap-2 cursor-pointer">
               <span className="text-sm text-gray-500">Active</span>
@@ -598,7 +599,7 @@ export default function SettingsPage() {
                     <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiNotifyOwner ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-700 font-medium">📱 Text me when AI takes a call</p>
+                    <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />Text me when AI takes a call</p>
                     <p className="text-xs text-gray-400">You receive a lead summary SMS after every AI call</p>
                   </div>
                 </label>
@@ -607,7 +608,7 @@ export default function SettingsPage() {
                     <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiTextCaller ? 'translate-x-5' : 'translate-x-0.5'}`} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-700 font-medium">💬 Text caller a confirmation link</p>
+                    <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />Text caller a confirmation link</p>
                     <p className="text-xs text-gray-400">Caller gets a pre-filled booking link to review and confirm their request</p>
                   </div>
                 </label>
@@ -629,7 +630,7 @@ export default function SettingsPage() {
               disabled={aiSaving}
               className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
             >
-              {aiSaving ? '⏳ Saving...' : '💾 Save'}
+              {aiSaving ? 'Saving...' : 'Save'}
             </button>
           </div>
         ) : (
@@ -738,7 +739,7 @@ export default function SettingsPage() {
           }}
           className="bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200 cursor-pointer"
         >
-          🗑️ Delete Account Permanently
+          <Trash2 className="w-4 h-4 mr-1" aria-hidden="true" />Delete Account Permanently
         </button>
       </div>
 
@@ -776,7 +777,7 @@ export default function SettingsPage() {
             {deleteError && <p className="text-red-600 text-sm font-semibold mb-3">{deleteError}</p>}
 
             <p className="text-red-600 text-sm font-semibold mb-4">
-              ⏱️ Account deletion in {deleteCountdown}s
+              Account deletion in {deleteCountdown}s
             </p>
 
             <div className="flex gap-3">
@@ -792,7 +793,7 @@ export default function SettingsPage() {
                 disabled={deleteDeleting || deleteCountdown > 0}
                 className="flex-1 bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition cursor-pointer disabled:opacity-50"
               >
-                {deleteDeleting ? '⏳ Deleting...' : 'Delete Everything'}
+                {deleteDeleting ? 'Deleting...' : 'Delete Everything'}
               </button>
             </div>
           </div>

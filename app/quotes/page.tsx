@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, Check, CheckCircle } from 'lucide-react'
 
 interface LineItem {
   description: string
@@ -373,7 +374,7 @@ export default function QuotesPage() {
       <div className="px-4 pt-4 pb-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800"><span aria-hidden="true">📋 </span>Quotes</h2>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-6 h-6 text-blue-600" aria-hidden="true" />Quotes</h2>
             <p className="text-gray-400 text-sm mt-0.5">Send estimates, win more work</p>
           </div>
           <button
@@ -414,7 +415,7 @@ export default function QuotesPage() {
       {/* Create form */}
       {showForm && (
         <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
-          <h3 className="font-bold text-gray-800 text-base">📋 New Quote</h3>
+          <h3 className="font-bold text-gray-800 text-base flex items-center gap-2"><ClipboardList className="w-4 h-4" aria-hidden="true" />New Quote</h3>
 
           {/* Client section */}
           <div className="space-y-3">
@@ -574,7 +575,7 @@ export default function QuotesPage() {
 
           {clientEmail && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-semibold">
-              ✉️ Quote will be emailed to {clientEmail} on save
+              <Mail className="w-4 h-4 inline mr-1" aria-hidden="true" />Quote will be emailed to {clientEmail} on save
             </div>
           )}
 
@@ -584,7 +585,7 @@ export default function QuotesPage() {
               disabled={saving}
               className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-4 rounded-xl text-base cursor-pointer shadow disabled:opacity-50"
             >
-              {saving ? '⏳ Saving…' : clientEmail ? '📧 Save & Send' : '💾 Save Quote'}
+              {saving ? 'Saving…' : clientEmail ? <span className="flex items-center justify-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Save & Send</span> : 'Save Quote'}
             </button>
             <button
               onClick={resetForm}
@@ -599,7 +600,7 @@ export default function QuotesPage() {
       {/* Quote list */}
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-5xl mb-3">📋</p>
+          <ClipboardList className="w-14 h-14 mx-auto text-gray-300 mb-3" aria-hidden="true" />
           <p className="text-gray-700 font-bold mb-1">No quotes yet</p>
           <p className="text-gray-400 text-sm">Create your first quote above.</p>
         </div>
@@ -656,7 +657,7 @@ export default function QuotesPage() {
                   }`}
                   title={quote.client_email || 'No email on file'}
                 >
-                  {sending === quote.id ? '⏳' : '📧'} Email
+                  <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
                 </button>
 
                 {/* Send SMS */}
@@ -667,7 +668,7 @@ export default function QuotesPage() {
                   }`}
                   title={quote.client_phone || 'No phone on file'}
                 >
-                  💬 Text
+                  <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
                 </button>
 
                 {/* Copy link */}
@@ -675,7 +676,7 @@ export default function QuotesPage() {
                   onClick={() => copyLink(quote.share_token)}
                   className="text-xs font-bold py-2 px-3 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors cursor-pointer"
                 >
-                  {copiedId === quote.share_token ? '✓ Copied!' : '🔗 Copy Link'}
+                  <Link2 className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === quote.share_token ? 'Copied!' : 'Copy Link'}
                 </button>
 
                 {/* Status actions */}
@@ -685,13 +686,13 @@ export default function QuotesPage() {
                       onClick={() => convertToJob(quote)}
                       className="text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors cursor-pointer"
                     >
-                      🔁 Convert to Job
+                      <RefreshCw className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Convert to Job
                     </button>
                     <button
                       onClick={() => convertToInvoice(quote)}
                       className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer"
                     >
-                      💲 Convert to Invoice
+                      <Receipt className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Convert to Invoice
                     </button>
                   </>
                 )}
@@ -700,7 +701,7 @@ export default function QuotesPage() {
                     onClick={() => updateStatus(quote.id, 'approved')}
                     className="text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors cursor-pointer"
                   >
-                    ✅ Mark Approved
+                    <CheckCircle className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Mark Approved
                   </button>
                 )}
 
@@ -709,7 +710,7 @@ export default function QuotesPage() {
                   aria-label="Delete quote"
                   className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer ml-auto"
                 >
-                  <span aria-hidden="true">🗑️</span>
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
