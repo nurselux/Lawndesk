@@ -44,3 +44,6 @@ yarn-error.log*
 next-env.d.ts
 supabase/.temp/
 .env*.local
+
+# local next.js config (machine-specific settings)
+next.config.local.ts
