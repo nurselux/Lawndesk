@@ -26,6 +26,8 @@ interface Client {
 interface EstimateVisit {
   id: string
   client_name: string
+  client_phone: string | null
+  client_email: string | null
   service_type: string
   address: string | null
   preferred_date: string | null
@@ -54,6 +56,7 @@ export default function CalendarPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [estimateVisits, setEstimateVisits] = useState<EstimateVisit[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
+  const [pendingRequestCount, setPendingRequestCount] = useState(0)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
@@ -63,6 +66,7 @@ export default function CalendarPage() {
       fetchClients()
       fetchEstimateVisits()
       fetchQuotes()
+      fetchPendingRequestCount()
     }
   }, [user])
 
@@ -85,10 +89,20 @@ export default function CalendarPage() {
   const fetchEstimateVisits = async () => {
     const { data } = await (supabase as any)
       .from('booking_requests')
-      .select('id, client_name, service_type, address, preferred_date, preferred_time, scheduled_date, scheduled_time')
+      .select('id, client_name, client_phone, client_email, service_type, address, preferred_date, preferred_time, scheduled_date, scheduled_time')
       .eq('owner_id', user?.id)
       .eq('status', 'approved')
     if (data) setEstimateVisits(data as EstimateVisit[])
+  }
+
+  const fetchPendingRequestCount = async () => {
+    const { count } = await (supabase as any)
+      .from('booking_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user?.id)
+      .eq('status', 'pending')
+      .is('deleted_at', null)
+    setPendingRequestCount(count ?? 0)
   }
 
   const fetchQuotes = async () => {
@@ -306,7 +320,7 @@ export default function CalendarPage() {
                     <p className="text-xs opacity-75">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
                     {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
                   </div>
-                  <Link href="/quotes">
+                  <Link href={`/quotes?from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
                     <button className="text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded-lg cursor-pointer shrink-0 transition">
                       + Quote
                     </button>
@@ -318,36 +332,93 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* Month summary */}
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Scheduled', color: 'blue', status: '🔵 Scheduled' },
-          { label: 'In Progress', color: 'yellow', status: '🟡 In Progress' },
-          { label: 'Completed', color: 'green', status: '🟢 Completed' },
-          { label: 'Cancelled', color: 'red', status: '🔴 Cancelled' },
-        ].map(({ label, color, status }) => {
-          const count = jobs.filter(j => {
-            const d = new Date(j.date + 'T00:00:00')
-            return d.getMonth() === month && d.getFullYear() === year && j.status === status
-          }).length
-          return (
-            <div key={label} className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 text-center">
-              <p className={`text-2xl font-bold text-${color}-600`}>{count}</p>
-              <p className="text-xs text-gray-500 font-medium">{label}</p>
-            </div>
-          )
-        })}
+      {/* Month overview — Jobs + Estimates side by side */}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {/* Jobs this month */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Jobs</p>
+            <Link href="/jobs"><span className="text-xs text-indigo-500 font-semibold cursor-pointer">View →</span></Link>
+          </div>
+          <div className="space-y-1.5">
+            {[
+              { label: 'Scheduled', color: 'text-blue-600', status: '🔵 Scheduled' },
+              { label: 'In Progress', color: 'text-yellow-600', status: '🟡 In Progress' },
+              { label: 'Completed', color: 'text-green-600', status: '🟢 Completed' },
+              { label: 'Cancelled', color: 'text-red-400', status: '🔴 Cancelled' },
+            ].map(({ label, color, status }) => {
+              const count = jobs.filter(j => {
+                const d = new Date(j.date + 'T00:00:00')
+                return d.getMonth() === month && d.getFullYear() === year && j.status === status
+              }).length
+              return (
+                <div key={label} className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">{label}</span>
+                  <span className={`text-sm font-bold ${color}`}>{count}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Estimate visits this month */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Estimates</p>
+            <Link href="/requests"><span className="text-xs text-purple-500 font-semibold cursor-pointer">View →</span></Link>
+          </div>
+          {(() => {
+            const monthVisits = estimateVisits.filter(v => {
+              const date = v.scheduled_date || v.preferred_date
+              if (!date) return false
+              const d = new Date(date + 'T00:00:00')
+              return d.getMonth() === month && d.getFullYear() === year
+            })
+            return (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">Visits scheduled</span>
+                  <span className="text-sm font-bold text-purple-600">{monthVisits.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">Awaiting quote</span>
+                  <span className="text-sm font-bold text-amber-600">{monthVisits.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">New requests</span>
+                  <span className={`text-sm font-bold ${pendingRequestCount > 0 ? 'text-red-500' : 'text-gray-400'}`}>{pendingRequestCount}</span>
+                </div>
+              </div>
+            )
+          })()}
+        </div>
       </div>
 
-      {/* Estimates / Quotes summary */}
+      {/* Pending requests action banner */}
+      {pendingRequestCount > 0 && (
+        <Link href="/requests">
+          <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-yellow-100 transition">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📬</span>
+              <div>
+                <p className="text-sm font-bold text-yellow-800">{pendingRequestCount} unscheduled {pendingRequestCount === 1 ? 'request' : 'requests'}</p>
+                <p className="text-xs text-yellow-600">Tap to schedule visits</p>
+              </div>
+            </div>
+            <span className="text-yellow-500 font-bold">→</span>
+          </div>
+        </Link>
+      )}
+
+      {/* Open quotes pipeline */}
       {quotes.length > 0 && (
-        <div className="mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+        <div className="mt-3 bg-amber-50 border border-amber-200 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">📋</span>
               <div>
-                <p className="font-bold text-amber-800 text-sm">Open Estimates</p>
-                <p className="text-xs text-amber-600">Potential clients — not confirmed revenue</p>
+                <p className="font-bold text-amber-800 text-sm">Quote Pipeline</p>
+                <p className="text-xs text-amber-600">Potential revenue — not yet confirmed</p>
               </div>
             </div>
             <Link href="/quotes">
