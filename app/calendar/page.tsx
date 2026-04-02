@@ -23,10 +23,11 @@ interface Client {
   address: string
 }
 
-interface BookingRequest {
+interface EstimateVisit {
   id: string
   client_name: string
   service_type: string
+  address: string | null
   preferred_date: string
   preferred_time: string | null
 }
@@ -35,7 +36,6 @@ interface Quote {
   id: string
   amount: number
   status: string
-  created_at: string
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -50,7 +50,7 @@ export default function CalendarPage() {
   const { checking } = useSubscriptionGate()
   const [jobs, setJobs] = useState<Job[]>([])
   const [clients, setClients] = useState<Client[]>([])
-  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([])
+  const [estimateVisits, setEstimateVisits] = useState<EstimateVisit[]>([])
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -59,7 +59,7 @@ export default function CalendarPage() {
     if (user) {
       fetchJobs()
       fetchClients()
-      fetchBookingRequests()
+      fetchEstimateVisits()
       fetchQuotes()
     }
   }, [user])
@@ -80,20 +80,20 @@ export default function CalendarPage() {
     if (data) setClients(data as Client[])
   }
 
-  const fetchBookingRequests = async () => {
+  const fetchEstimateVisits = async () => {
     const { data } = await (supabase as any)
       .from('booking_requests')
-      .select('id, client_name, service_type, preferred_date, preferred_time')
+      .select('id, client_name, service_type, address, preferred_date, preferred_time')
       .eq('owner_id', user?.id)
       .eq('status', 'approved')
       .not('preferred_date', 'is', null)
-    if (data) setBookingRequests(data as BookingRequest[])
+    if (data) setEstimateVisits(data as EstimateVisit[])
   }
 
   const fetchQuotes = async () => {
     const { data } = await (supabase as any)
       .from('quotes')
-      .select('id, amount, status, created_at')
+      .select('id, amount, status')
       .eq('user_id', user?.id)
       .not('status', 'in', '("declined","converted")')
     if (data) setQuotes(data as Quote[])
@@ -114,9 +114,9 @@ export default function CalendarPage() {
     return acc
   }, {})
 
-  const requestsByDate = bookingRequests.reduce<Record<string, BookingRequest[]>>((acc, req) => {
-    if (!acc[req.preferred_date]) acc[req.preferred_date] = []
-    acc[req.preferred_date].push(req)
+  const visitsByDate = estimateVisits.reduce<Record<string, EstimateVisit[]>>((acc, v) => {
+    if (!acc[v.preferred_date]) acc[v.preferred_date] = []
+    acc[v.preferred_date].push(v)
     return acc
   }, {})
 
@@ -124,13 +124,15 @@ export default function CalendarPage() {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
 
   const selectedJobs = selectedDate ? (jobsByDate[selectedDate] || []) : []
+  const selectedVisits = selectedDate ? (visitsByDate[selectedDate] || []) : []
 
+  // Today's route: job addresses + estimate visit addresses combined
   const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
-  const todayAddresses = [...new Set(
-    todayJobs
-      .map(j => clients.find(c => c.id === j.client_id)?.address)
-      .filter((a): a is string => !!a && a.trim().length > 0)
-  )]
+  const todayVisits = visitsByDate[today] || []
+  const todayAddresses = [...new Set([
+    ...todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter((a): a is string => !!a && a.trim().length > 0),
+    ...todayVisits.map(v => v.address).filter((a): a is string => !!a && a.trim().length > 0),
+  ])]
   const routeUrl = todayAddresses.length >= 2
     ? `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(todayAddresses[0])}&destination=${encodeURIComponent(todayAddresses[todayAddresses.length - 1])}${todayAddresses.length > 2 ? `&waypoints=${todayAddresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
     : null
@@ -184,9 +186,10 @@ export default function CalendarPage() {
           const day = i + 1
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const dayJobs = jobsByDate[dateStr] || []
-          const dayRequests = requestsByDate[dateStr] || []
+          const dayVisits = visitsByDate[dateStr] || []
           const isToday = dateStr === today
           const isSelected = dateStr === selectedDate
+          const totalItems = dayJobs.length + dayVisits.length
 
           return (
             <button
@@ -204,7 +207,7 @@ export default function CalendarPage() {
                 {day}
               </span>
               <div className="flex flex-wrap gap-0.5 mt-0.5">
-                {dayJobs.slice(0, 3).map((job) => (
+                {dayJobs.slice(0, 2).map((job) => (
                   <div
                     key={job.id}
                     className={`w-full text-xs leading-tight px-1 py-0.5 rounded truncate border ${
@@ -216,21 +219,21 @@ export default function CalendarPage() {
                     <span className="md:hidden">•</span>
                   </div>
                 ))}
-                {dayJobs.length > 3 && (
-                  <div className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{dayJobs.length - 3}</div>
-                )}
-                {dayRequests.map((req) => (
+                {dayVisits.slice(0, 1).map((visit) => (
                   <div
-                    key={req.id}
+                    key={visit.id}
                     className={`w-full text-xs leading-tight px-1 py-0.5 rounded truncate border ${
-                      isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-amber-50 text-amber-700 border-amber-200'
+                      isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 text-purple-700 border-purple-200'
                     }`}
-                    title={`📬 ${req.service_type} — ${req.client_name}`}
+                    title={`Estimate: ${visit.client_name} — ${visit.service_type}`}
                   >
-                    <span className="hidden md:inline">📬 {req.client_name}</span>
-                    <span className="md:hidden">◇</span>
+                    <span className="hidden md:inline">📐 {visit.client_name}</span>
+                    <span className="md:hidden">📐</span>
                   </div>
                 ))}
+                {totalItems > 3 && (
+                  <div className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{totalItems - 3}</div>
+                )}
               </div>
             </button>
           )
@@ -245,32 +248,34 @@ export default function CalendarPage() {
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </h4>
             {(() => {
-              const addrs = [...new Set(
-                selectedJobs
-                  .map(j => clients.find(c => c.id === j.client_id)?.address)
-                  .filter((a): a is string => !!a && a.trim().length > 0)
-              )]
-              const url = addrs.length >= 2
-                ? `https://maps.google.com/maps?saddr=${encodeURIComponent(addrs[0])}&daddr=${addrs.slice(1).map(a => encodeURIComponent(a)).join('+to:')}`
+              const jobAddrs = selectedJobs
+                .map(j => clients.find(c => c.id === j.client_id)?.address)
+                .filter((a): a is string => !!a && a.trim().length > 0)
+              const visitAddrs = selectedVisits
+                .map(v => v.address)
+                .filter((a): a is string => !!a && a.trim().length > 0)
+              const allAddrs = [...new Set([...jobAddrs, ...visitAddrs])]
+              const url = allAddrs.length >= 2
+                ? `https://maps.google.com/maps?saddr=${encodeURIComponent(allAddrs[0])}&daddr=${allAddrs.slice(1).map(a => encodeURIComponent(a)).join('+to:')}`
                 : null
               return (
                 <div className="flex flex-col items-end gap-1">
                   {url && (
                     <a href={url} target="_blank" rel="noopener noreferrer">
                       <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">
-                        🗺️ Route ({addrs.length} stops)
+                        🗺️ Route ({allAddrs.length} stops)
                       </button>
                     </a>
                   )}
-                  {addrs.map((a, i) => (
-                    <p key={i} className="text-xs text-gray-400 text-right">{i + 1}. {a}</p>
+                  {allAddrs.map((a, idx) => (
+                    <p key={idx} className="text-xs text-gray-400 text-right">{idx + 1}. {a}</p>
                   ))}
                 </div>
               )
             })()}
           </div>
 
-          {selectedJobs.length === 0 && (requestsByDate[selectedDate] || []).length === 0 ? (
+          {selectedJobs.length === 0 && selectedVisits.length === 0 ? (
             <div className="text-center py-6">
               <p className="text-gray-400">No jobs on this day</p>
               <Link href="/jobs">
@@ -291,22 +296,20 @@ export default function CalendarPage() {
                   <span className="text-xs font-bold opacity-75 shrink-0">{job.status.split(' ')[0]}</span>
                 </div>
               ))}
-              {(requestsByDate[selectedDate] || []).length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">📬 Booking Requests</p>
-                  {(requestsByDate[selectedDate] || []).map((req) => (
-                    <div key={req.id} className="flex items-start gap-3 p-3 rounded-xl border bg-amber-50 text-amber-800 border-amber-200">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate">{req.service_type}</p>
-                        <p className="text-xs opacity-75">👤 {req.client_name}{req.preferred_time ? ` · 🕐 ${req.preferred_time}` : ''}</p>
-                      </div>
-                      <Link href="/requests">
-                        <span className="text-xs font-bold text-amber-600 hover:text-amber-800 cursor-pointer shrink-0">Convert →</span>
-                      </Link>
-                    </div>
-                  ))}
+              {selectedVisits.map((visit) => (
+                <div key={visit.id} className="flex items-start gap-3 p-3 rounded-xl border bg-purple-50 border-purple-200 text-purple-800">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm truncate">📐 Estimate Visit — {visit.service_type}</p>
+                    <p className="text-xs opacity-75">👤 {visit.client_name}{visit.preferred_time ? ` · 🕐 ${visit.preferred_time}` : ''}</p>
+                    {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
+                  </div>
+                  <Link href="/quotes">
+                    <button className="text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded-lg cursor-pointer shrink-0 transition">
+                      + Quote
+                    </button>
+                  </Link>
                 </div>
-              )}
+              ))}
             </div>
           )}
         </div>

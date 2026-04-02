@@ -85,6 +85,18 @@ export default function QuotesPage() {
     }
   }, [user])
 
+  // Pre-fill form when arriving from a service request via ?from_req_* params
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const name = p.get('from_req_name')
+    if (!name) return
+    setClientName(name)
+    setClientPhone(p.get('from_req_phone') ?? '')
+    setClientEmail(p.get('from_req_email') ?? '')
+    setTitle(p.get('from_req_service') ?? '')
+    setShowForm(true)
+  }, [])
+
   const fetchQuotes = async () => {
     const { data } = await supabase
       .from('Quotes')

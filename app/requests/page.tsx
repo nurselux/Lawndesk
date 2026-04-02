@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 
 interface BookingRequest {
@@ -9,11 +10,15 @@ interface BookingRequest {
   client_name: string
   client_email: string | null
   client_phone: string
+  address: string | null
   service_type: string
   preferred_date: string | null
   preferred_time: string | null
   message: string | null
-  status: 'pending' | 'approved' | 'declined' | 'converted'
+  status: 'pending' | 'approved' | 'declined'
+  scheduled_date: string | null
+  scheduled_time: string | null
+  deleted_at: string | null
   created_at: string
 }
 
@@ -21,25 +26,27 @@ const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   approved: 'bg-green-100 text-green-800 border-green-300',
   declined: 'bg-red-100 text-red-800 border-red-300',
-  converted: 'bg-blue-100 text-blue-800 border-blue-300',
 }
 
 const STATUS_LABELS: Record<string, string> = {
   pending: '⏳ Pending',
-  approved: '✅ Approved',
+  approved: '📅 Visit Scheduled',
   declined: '❌ Declined',
-  converted: '🌿 Converted to Job',
 }
 
 export default function RequestsPage() {
+  const router = useRouter()
   const [requests, setRequests] = useState<BookingRequest[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined' | 'converted'>('pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined' | 'deleted'>('pending')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [convertingId, setConvertingId] = useState<string | null>(null)
-  const [convertDate, setConvertDate] = useState('')
-  const [convertNotes, setConvertNotes] = useState('')
+  const [savedClientIds, setSavedClientIds] = useState<Set<string>>(new Set())
+  const [error, setError] = useState<string | null>(null)
+  // Scheduling form state
+  const [schedulingId, setSchedulingId] = useState<string | null>(null)
+  const [visitDate, setVisitDate] = useState('')
+  const [visitTime, setVisitTime] = useState('')
 
   const fetchRequests = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -57,69 +64,141 @@ export default function RequestsPage() {
     fetchRequests()
   }, [fetchRequests])
 
+  const notifySidebarUpdate = () => {
+    window.dispatchEvent(new Event('requests-updated'))
+  }
+
   const updateStatus = async (id: string, status: BookingRequest['status']) => {
     setActionLoading(id)
-    await (supabase as any).from('booking_requests').update({ status }).eq('id', id)
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
-    setActionLoading(null)
-  }
-
-  const convertToJob = async (req: BookingRequest) => {
-    setActionLoading(req.id)
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-
-    // Find or create client
-    let clientId: string | null = null
-    const { data: existing } = await (supabase as any)
-      .from('clients')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .ilike('name', req.client_name)
-      .maybeSingle()
-
-    if (existing) {
-      clientId = existing.id
-    } else {
-      const { data: newClient } = await (supabase as any)
-        .from('clients')
-        .insert([{
-          user_id: session.user.id,
-          name: req.client_name,
-          email: req.client_email ?? null,
-          phone: req.client_phone,
-        }])
-        .select('id')
-        .single()
-      clientId = newClient?.id ?? null
+    try {
+      await (supabase as any).from('booking_requests').update({ status }).eq('id', id)
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r))
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
     }
-
-    // Create job
-    await (supabase as any).from('jobs').insert([{
-      user_id: session.user.id,
-      client_id: clientId,
-      client_name: req.client_name,
-      title: req.service_type,
-      date: convertDate || req.preferred_date || null,
-      time: req.preferred_time || null,
-      status: '🔵 Scheduled',
-      notes: [
-        req.message ? `Client note: ${req.message}` : null,
-        convertNotes ? `Internal note: ${convertNotes}` : null,
-      ].filter(Boolean).join('\n') || null,
-    }])
-
-    // Mark request as converted
-    await (supabase as any).from('booking_requests').update({ status: 'converted' }).eq('id', req.id)
-    setRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: 'converted' } : r))
-    setConvertingId(null)
-    setConvertDate('')
-    setConvertNotes('')
-    setActionLoading(null)
   }
 
-  const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter)
-  const pendingCount = requests.filter(r => r.status === 'pending').length
+  const softDelete = async (id: string) => {
+    setActionLoading(id)
+    try {
+      const now = new Date().toISOString()
+      await (supabase as any).from('booking_requests').update({ deleted_at: now }).eq('id', id)
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, deleted_at: now } : r))
+      setExpandedId(null)
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const restoreRequest = async (id: string) => {
+    setActionLoading(id)
+    try {
+      await (supabase as any).from('booking_requests').update({ deleted_at: null }).eq('id', id)
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, deleted_at: null } : r))
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const permanentDelete = async (id: string) => {
+    if (!confirm('Permanently delete this request? This cannot be undone.')) return
+    setActionLoading(id)
+    try {
+      await (supabase as any).from('booking_requests').delete().eq('id', id)
+      setRequests(prev => prev.filter(r => r.id !== id))
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const openScheduleForm = (req: BookingRequest) => {
+    setSchedulingId(req.id)
+    setVisitDate(req.preferred_date ?? '')
+    setVisitTime(req.preferred_time ?? '')
+    setExpandedId(req.id)
+  }
+
+  const confirmSchedule = async (req: BookingRequest) => {
+    if (!visitDate) return
+    setActionLoading(req.id)
+    setError(null)
+    try {
+      const { error: err } = await (supabase as any)
+        .from('booking_requests')
+        .update({ status: 'approved' })
+        .eq('id', req.id)
+      if (err) { setError(`Failed to schedule visit: ${err.message}`); return }
+      setRequests(prev => prev.map(r =>
+        r.id === req.id
+          ? { ...r, status: 'approved' }
+          : r
+      ))
+      setSchedulingId(null)
+      setVisitDate('')
+      setVisitTime('')
+      notifySidebarUpdate()
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const saveAsClient = async (req: BookingRequest) => {
+    setActionLoading(req.id)
+    setError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setError('Session expired. Please refresh the page.'); return }
+      // Check if client already exists
+      const { data: existing } = await (supabase as any)
+        .from('Clients')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .ilike('name', req.client_name)
+        .maybeSingle()
+      if (existing) {
+        setSavedClientIds(prev => new Set([...prev, req.id]))
+        return
+      }
+      const { error: err } = await (supabase as any).from('Clients').insert([{
+        user_id: session.user.id,
+        name: req.client_name,
+        email: req.client_email ?? '',
+        phone: req.client_phone,
+        address: req.address ?? '',
+      }])
+      if (err) { setError(`Failed to save client: ${err.message}`); return }
+      setSavedClientIds(prev => new Set([...prev, req.id]))
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const goToCreateQuote = (req: BookingRequest) => {
+    const params = new URLSearchParams({
+      from_req_name: req.client_name,
+      from_req_phone: req.client_phone,
+      ...(req.client_email ? { from_req_email: req.client_email } : {}),
+      from_req_service: req.service_type,
+    })
+    router.push(`/quotes?${params.toString()}`)
+  }
+
+  // Split active vs deleted
+  const activeRequests = requests.filter(r => !r.deleted_at)
+  const deletedRequests = requests.filter(r => !!r.deleted_at)
+
+  const filtered = filter === 'deleted'
+    ? deletedRequests
+    : filter === 'all'
+    ? activeRequests
+    : activeRequests.filter(r => r.status === filter)
+
+  const pendingCount = activeRequests.filter(r => r.status === 'pending').length
+  const deletedCount = deletedRequests.length
 
   const formatDate = (iso: string) => {
     const d = new Date(iso)
@@ -143,16 +222,24 @@ export default function RequestsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">📬 Booking Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-800">📬 Service Requests</h1>
           {pendingCount > 0 && (
             <p className="text-sm text-yellow-700 font-semibold mt-0.5">{pendingCount} pending {pendingCount === 1 ? 'request' : 'requests'}</p>
           )}
         </div>
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-red-700 font-semibold">⚠️ {error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 font-bold text-lg leading-none cursor-pointer">✕</button>
+        </div>
+      )}
+
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(['pending', 'approved', 'all', 'declined', 'converted'] as const).map(f => (
+        {(['pending', 'approved', 'all', 'declined'] as const).map(f => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -168,13 +255,28 @@ export default function RequestsPage() {
             )}
           </button>
         ))}
+        <button
+          onClick={() => setFilter('deleted')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer ${
+            filter === 'deleted'
+              ? 'bg-gray-600 text-white'
+              : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-400'
+          }`}
+        >
+          🗑️ Deleted
+          {deletedCount > 0 && (
+            <span className="ml-1.5 bg-gray-400 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{deletedCount}</span>
+          )}
+        </button>
       </div>
 
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-          <p className="text-4xl mb-3">📭</p>
-          <p className="text-gray-500 font-medium">No {filter === 'all' ? '' : filter} requests yet</p>
+          <p className="text-4xl mb-3">{filter === 'deleted' ? '🗑️' : '📭'}</p>
+          <p className="text-gray-500 font-medium">
+            {filter === 'deleted' ? 'No deleted requests' : `No ${filter === 'all' ? '' : filter} requests yet`}
+          </p>
           {filter === 'pending' && (
             <p className="text-gray-400 text-sm mt-1">Share your booking link to start receiving requests</p>
           )}
@@ -183,7 +285,7 @@ export default function RequestsPage() {
 
       {/* Request cards */}
       {filtered.map(req => (
-        <div key={req.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div key={req.id} className={`bg-white rounded-2xl shadow-sm overflow-hidden ${req.deleted_at ? 'opacity-70' : ''}`}>
           {/* Card header */}
           <button
             className="w-full text-left p-4 cursor-pointer"
@@ -193,9 +295,16 @@ export default function RequestsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-bold text-gray-800">{req.client_name}</p>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[req.status]}`}>
-                    {STATUS_LABELS[req.status]}
-                  </span>
+                  {!req.deleted_at && (
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLORS[req.status]}`}>
+                      {STATUS_LABELS[req.status]}
+                    </span>
+                  )}
+                  {req.deleted_at && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-gray-100 text-gray-500 border-gray-300">
+                      🗑️ Deleted
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-green-700 font-semibold mt-0.5">{req.service_type}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -220,6 +329,16 @@ export default function RequestsPage() {
                     ✉️ {req.client_email}
                   </a>
                 )}
+                {req.address && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(req.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-blue-600 font-medium"
+                  >
+                    📍 {req.address}
+                  </a>
+                )}
               </div>
 
               {/* Message */}
@@ -230,101 +349,172 @@ export default function RequestsPage() {
                 </div>
               )}
 
-              {/* Convert to job form */}
-              {convertingId === req.id && (
-                <div className="bg-green-50 rounded-xl p-3 space-y-2 border border-green-200">
-                  <p className="text-sm font-bold text-green-800">Convert to Job</p>
-                  <div>
-                    <label className="text-xs text-gray-500 font-semibold">Scheduled Date</label>
-                    <input
-                      type="date"
-                      value={convertDate}
-                      defaultValue={req.preferred_date ?? ''}
-                      onChange={e => setConvertDate(e.target.value)}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-gray-800 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 font-semibold">Internal Notes (optional)</label>
-                    <textarea
-                      placeholder="Add any notes for the job..."
-                      value={convertNotes}
-                      onChange={e => setConvertNotes(e.target.value)}
-                      rows={2}
-                      className="w-full border border-gray-300 rounded-xl p-2.5 text-gray-800 mt-1 resize-none"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => convertToJob(req)}
-                      disabled={actionLoading === req.id}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-                    >
-                      {actionLoading === req.id ? '⏳ Creating...' : '✅ Create Job'}
-                    </button>
-                    <button
-                      onClick={() => { setConvertingId(null); setConvertDate(''); setConvertNotes('') }}
-                      className="px-4 bg-gray-100 text-gray-600 font-semibold rounded-xl text-sm cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* ── Active request actions ── */}
+              {!req.deleted_at && (
+                <>
+                  {/* Pending actions */}
+                  {req.status === 'pending' && schedulingId !== req.id && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openScheduleForm(req)}
+                          disabled={actionLoading === req.id}
+                          className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                        >
+                          📅 Schedule Visit
+                        </button>
+                        <button
+                          onClick={() => goToCreateQuote(req)}
+                          className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
+                        >
+                          📋 Create Quote
+                        </button>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveAsClient(req)}
+                          disabled={actionLoading === req.id || savedClientIds.has(req.id)}
+                          className="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                        >
+                          {savedClientIds.has(req.id) ? '✓ Saved to Clients' : '👤 Save as Client'}
+                        </button>
+                        <button
+                          onClick={() => updateStatus(req.id, 'declined')}
+                          disabled={actionLoading === req.id}
+                          className="flex-1 bg-red-50 text-red-500 border border-red-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                        >
+                          ❌ Decline
+                        </button>
+                        <button
+                          onClick={() => softDelete(req.id)}
+                          disabled={actionLoading === req.id}
+                          className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                          title="Delete request"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Action buttons */}
-              {req.status !== 'converted' && convertingId !== req.id && (
-                <div className="flex gap-2 flex-wrap">
-                  {req.status === 'pending' && (
-                    <>
+                  {/* Inline scheduling form */}
+                  {schedulingId === req.id && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                      <p className="text-sm font-bold text-green-800">Schedule your site visit</p>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-500 font-semibold block mb-1">Date *</label>
+                          <input
+                            type="date"
+                            value={visitDate}
+                            onChange={e => setVisitDate(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-500 font-semibold block mb-1">Time (optional)</label>
+                          <input
+                            type="time"
+                            value={visitTime}
+                            onChange={e => setVisitTime(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => confirmSchedule(req)}
+                          disabled={!visitDate || actionLoading === req.id}
+                          className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                        >
+                          {actionLoading === req.id ? '⏳ Saving...' : '✅ Confirm Visit'}
+                        </button>
+                        <button
+                          onClick={() => { setSchedulingId(null); setVisitDate(''); setVisitTime('') }}
+                          className="px-4 border-2 border-gray-200 text-gray-600 font-bold py-2.5 rounded-xl text-sm cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Approved state */}
+                  {req.status === 'approved' && (
+                    <div className="space-y-2">
+                      <div className="bg-green-50 rounded-xl py-3 px-4 space-y-1">
+                        <p className="text-sm text-green-700 font-bold">
+                          📅 Estimate visit scheduled
+                          {req.scheduled_date && ` — ${formatDate(req.scheduled_date)}${req.scheduled_time ? ` at ${formatTime(req.scheduled_time)}` : ''}`}
+                        </p>
+                        <p className="text-xs text-green-600">Shows on your calendar. Create a quote when ready.</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => goToCreateQuote(req)}
+                          className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
+                        >
+                          📋 Create Quote
+                        </button>
+                        <button
+                          onClick={() => saveAsClient(req)}
+                          disabled={actionLoading === req.id || savedClientIds.has(req.id)}
+                          className="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                        >
+                          {savedClientIds.has(req.id) ? '✓ Saved' : '👤 Save as Client'}
+                        </button>
+                        <button
+                          onClick={() => softDelete(req.id)}
+                          disabled={actionLoading === req.id}
+                          className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer"
+                          title="Delete request"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Declined state */}
+                  {req.status === 'declined' && schedulingId !== req.id && (
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => convertToJob(req)}
+                        onClick={() => openScheduleForm(req)}
                         disabled={actionLoading === req.id}
                         className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                       >
-                        {actionLoading === req.id ? '⏳ Creating...' : '✅ Approve & Create Job'}
+                        ↩️ Schedule Visit
                       </button>
                       <button
-                        onClick={() => updateStatus(req.id, 'declined')}
+                        onClick={() => softDelete(req.id)}
                         disabled={actionLoading === req.id}
-                        className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                        className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer"
+                        title="Delete request"
                       >
-                        ❌ Decline
+                        🗑️
                       </button>
-                    </>
+                    </div>
                   )}
-                  {req.status === 'approved' && (
-                    <button
-                      onClick={() => { setConvertingId(req.id); setConvertDate(req.preferred_date ?? '') }}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
-                    >
-                      🌿 Convert to Job
-                    </button>
-                  )}
-                  {req.status === 'approved' && (
-                    <button
-                      onClick={() => updateStatus(req.id, 'declined')}
-                      disabled={actionLoading === req.id}
-                      className="px-4 bg-gray-100 text-gray-600 font-semibold rounded-xl text-sm cursor-pointer"
-                    >
-                      ❌ Decline
-                    </button>
-                  )}
-                  {req.status === 'declined' && (
-                    <button
-                      onClick={() => updateStatus(req.id, 'approved')}
-                      disabled={actionLoading === req.id}
-                      className="flex-1 bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
-                    >
-                      ✅ Approve
-                    </button>
-                  )}
-                </div>
+                </>
               )}
 
-              {req.status === 'converted' && (
-                <div className="text-center text-sm text-blue-700 font-semibold bg-blue-50 rounded-xl py-2">
-                  🌿 This request has been converted to a job
+              {/* ── Deleted request actions ── */}
+              {req.deleted_at && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => restoreRequest(req.id)}
+                    disabled={actionLoading === req.id}
+                    className="flex-1 bg-gray-100 text-gray-700 font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50 hover:bg-gray-200"
+                  >
+                    {actionLoading === req.id ? '⏳' : '↩️ Restore'}
+                  </button>
+                  <button
+                    onClick={() => permanentDelete(req.id)}
+                    disabled={actionLoading === req.id}
+                    className="flex-1 bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+                  >
+                    🗑️ Delete Forever
+                  </button>
                 </div>
               )}
             </div>
