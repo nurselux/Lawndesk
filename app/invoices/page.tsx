@@ -323,8 +323,18 @@ function InvoicesContent() {
   const showAnyForm = showForm || isEditing
 
   if (checking) return (
-    <div className="flex items-center justify-center min-h-dvh">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    <div className="p-4 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-10 w-40 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-10 w-20 bg-gray-200 rounded-xl animate-pulse" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="h-20 bg-gray-200 rounded-2xl animate-pulse" />
+        <div className="h-20 bg-gray-200 rounded-2xl animate-pulse" />
+      </div>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-24 bg-gray-200 rounded-2xl mb-3 animate-pulse" />
+      ))}
     </div>
   )
 
@@ -334,7 +344,7 @@ function InvoicesContent() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">💲</div>
+          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true">💲</div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Invoices</h2>
             <p className="text-gray-500 text-sm">
@@ -346,7 +356,7 @@ function InvoicesContent() {
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
-          className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-2.5 px-5 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow text-sm"
+          className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-2.5 px-5 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow text-sm"
         >
           + New
         </button>
@@ -470,7 +480,7 @@ function InvoicesContent() {
             <button
               onClick={isEditing ? handleUpdate : handleCreate}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-3 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow disabled:opacity-50"
             >
               {saving ? '⏳ Saving…' : isEditing ? 'Save Changes' : 'Create Invoice'}
             </button>
@@ -641,17 +651,19 @@ function InvoicesContent() {
                   {/* Edit */}
                   <button
                     onClick={() => openEdit(inv)}
+                    aria-label="Edit invoice"
                     className="ml-auto text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer"
                   >
-                    ✏️
+                    <span aria-hidden="true">✏️</span>
                   </button>
 
                   {/* Delete */}
                   <button
                     onClick={() => handleDelete(inv.id)}
+                    aria-label="Delete invoice"
                     className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors cursor-pointer"
                   >
-                    🗑️
+                    <span aria-hidden="true">🗑️</span>
                   </button>
                 </div>
               </div>

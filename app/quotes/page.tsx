@@ -353,8 +353,14 @@ export default function QuotesPage() {
   )
 
   if (checking) return (
-    <div className="flex items-center justify-center min-h-dvh">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    <div className="pb-8 bg-gray-50 min-h-dvh max-w-2xl mx-auto px-4 pt-4">
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-10 w-36 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-10 w-28 bg-gray-200 rounded-xl animate-pulse" />
+      </div>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-28 bg-gray-200 rounded-2xl mb-4 animate-pulse" />
+      ))}
     </div>
   )
 
@@ -367,7 +373,7 @@ export default function QuotesPage() {
       <div className="px-4 pt-4 pb-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">📋 Quotes</h2>
+            <h2 className="text-2xl font-bold text-gray-800"><span aria-hidden="true">📋 </span>Quotes</h2>
             <p className="text-gray-400 text-sm mt-0.5">Send estimates, win more work</p>
           </div>
           <button
@@ -700,9 +706,10 @@ export default function QuotesPage() {
 
                 <button
                   onClick={() => deleteQuote(quote.id)}
+                  aria-label="Delete quote"
                   className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer ml-auto"
                 >
-                  🗑️
+                  <span aria-hidden="true">🗑️</span>
                 </button>
               </div>
             </div>

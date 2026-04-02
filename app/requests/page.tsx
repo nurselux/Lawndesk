@@ -212,8 +212,14 @@ export default function RequestsPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <p className="text-green-700 font-bold text-lg">Loading...</p>
+    <div className="max-w-2xl mx-auto space-y-4">
+      <div className="h-10 w-48 bg-gray-200 rounded-xl animate-pulse" />
+      <div className="flex gap-2">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-9 w-24 bg-gray-200 rounded-full animate-pulse" />)}
+      </div>
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-20 bg-gray-200 rounded-2xl animate-pulse" />
+      ))}
     </div>
   )
 
@@ -222,7 +228,7 @@ export default function RequestsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">📬 Service Requests</h1>
+          <h1 className="text-2xl font-bold text-gray-800"><span aria-hidden="true">📬 </span>Service Requests</h1>
           {pendingCount > 0 && (
             <p className="text-sm text-yellow-700 font-semibold mt-0.5">{pendingCount} pending {pendingCount === 1 ? 'request' : 'requests'}</p>
           )}
@@ -388,10 +394,10 @@ export default function RequestsPage() {
                         <button
                           onClick={() => softDelete(req.id)}
                           disabled={actionLoading === req.id}
+                          aria-label="Delete request"
                           className="bg-gray-100 text-gray-400 hover:text-gray-600 font-bold py-2 px-3 rounded-xl text-sm cursor-pointer disabled:opacity-50"
-                          title="Delete request"
                         >
-                          🗑️
+                          <span aria-hidden="true">🗑️</span>
                         </button>
                       </div>
                     </div>

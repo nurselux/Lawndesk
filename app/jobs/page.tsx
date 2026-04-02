@@ -461,8 +461,17 @@ export default function JobsPage() {
   const sortedDates = Object.keys(groupedJobs).sort()
 
   if (checking) return (
-    <div className="flex items-center justify-center min-h-dvh">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+    <div className="pb-6 bg-gray-50 min-h-dvh">
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-10 w-32 bg-gray-200 rounded-xl animate-pulse" />
+      </div>
+      <div className="flex gap-2 mb-4">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-9 w-24 bg-gray-200 rounded-full animate-pulse" />)}
+      </div>
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-28 bg-gray-200 rounded-2xl mb-3 animate-pulse" />
+      ))}
     </div>
   )
 
@@ -470,7 +479,7 @@ export default function JobsPage() {
     <div className="pb-6 bg-gray-50 min-h-dvh">
       <div className="flex justify-between items-center mb-6 gap-2">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 shrink-0 rounded-xl flex items-center justify-center shadow-md">🌿</div>
+          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl w-12 h-12 shrink-0 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true">🌿</div>
           <div className="min-w-0">
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Jobs</h2>
             <p className="text-gray-500 text-sm">Schedule and track your work</p>
@@ -484,16 +493,19 @@ export default function JobsPage() {
             if (addresses.length < 2) return null
             const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(addresses[0])}&destination=${encodeURIComponent(addresses[addresses.length - 1])}${addresses.length > 2 ? `&waypoints=${addresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
             return (
-              <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-3 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow text-sm whitespace-nowrap">
-                  🗺️ Today's Route
-                </button>
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-3 rounded-xl hover:opacity-90 hover:shadow-md transition-all duration-200 shadow text-sm whitespace-nowrap"
+              >
+                <span aria-hidden="true">🗺️ </span>Today's Route
               </a>
             )
           })()}
           <button
             onClick={() => { setShowForm(!showForm); setEditingJob(null) }}
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 hover:shadow-md transition-all duration-200 cursor-pointer shadow whitespace-nowrap text-sm"
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-4 rounded-xl hover:opacity-90 hover:shadow-md transition-all duration-200 cursor-pointer shadow whitespace-nowrap text-sm"
           >
             + Schedule Job
           </button>
@@ -561,11 +573,9 @@ export default function JobsPage() {
             <a
               href={`sms:${smsPrompt.phone}?body=${encodeURIComponent(smsPrompt.message)}`}
               onClick={() => setSmsPrompt(null)}
-              className="flex-1"
+              className="flex-1 block bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 transition-colors text-center"
             >
-              <button className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 transition cursor-pointer">
-                📲 Open SMS App
-              </button>
+              <span aria-hidden="true">📲 </span>Open SMS App
             </a>
             <button
               onClick={() => setSmsPrompt(null)}
@@ -666,7 +676,7 @@ export default function JobsPage() {
             </div>
           )}
           <div className="flex gap-3 mt-4">
-            <button onClick={handleAddJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow">
+            <button onClick={handleAddJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow">
               {saving ? '⏳ Saving...' : '💾 Save Job'}
             </button>
             <button onClick={() => setShowForm(false)} className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer">
