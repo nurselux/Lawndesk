@@ -344,11 +344,11 @@ function InvoicesContent() {
 
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true"><Receipt className="w-6 h-6" /></div>
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white w-14 h-14 rounded-xl flex items-center justify-center shadow-lg shadow-green-200" aria-hidden="true"><Receipt className="w-7 h-7" /></div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 leading-none">Invoices</h2>
-            <p className="text-gray-500 text-sm">
+            <h2 className="text-2xl font-bold text-slate-900 leading-none">Invoices</h2>
+            <p className="text-slate-500 text-sm mt-1">
               {invoices.length > 0
                 ? `${invoices.filter(i => i.status !== '🟢 Paid').length} outstanding`
                 : 'Track payments'}
@@ -357,7 +357,7 @@ function InvoicesContent() {
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
-          className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-2.5 px-5 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow text-sm"
+          className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow"
         >
           + New
         </button>
@@ -365,12 +365,12 @@ function InvoicesContent() {
 
       {/* Stats */}
       {invoices.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-white text-center shadow">
-            <p className="text-green-100 text-xs font-semibold mb-0.5">Collected</p>
+        <div className="grid grid-cols-2 gap-4 mb-5">
+          <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-4 text-white text-center shadow-md shadow-green-200">
+            <p className="text-emerald-100 text-xs font-semibold mb-0.5">Collected</p>
             <p className="text-2xl font-bold">${totalRevenue.toFixed(0)}</p>
           </div>
-          <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-4 text-white text-center shadow">
+          <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-4 text-white text-center shadow-md shadow-amber-200">
             <p className="text-amber-100 text-xs font-semibold mb-0.5">Outstanding</p>
             <p className="text-2xl font-bold">${totalOutstanding.toFixed(0)}</p>
           </div>
@@ -401,25 +401,34 @@ function InvoicesContent() {
       </div>
 
       {/* Search */}
-      <input
-        placeholder="🔍 Search client or description…"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 mb-4 bg-white text-sm"
-      />
+      <div className="relative">
+        <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <input
+          placeholder="Search client or description…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+        />
+      </div>
 
       {/* Messages */}
       {successMessage && (
-        <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4 text-sm">✅ {successMessage}</div>
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
+          <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</span>
+          {successMessage}
+        </div>
       )}
       {errorMessage && (
-        <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4 text-sm">❌ {errorMessage}</div>
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
+          <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">!</span>
+          {errorMessage}
+        </div>
       )}
 
       {/* Create / Edit Form */}
       {showAnyForm && (
-        <div className="bg-white border border-purple-200 rounded-2xl p-5 mb-5 shadow-sm">
-          <h3 className="font-bold text-gray-800 mb-4 text-base">
+        <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-2xl p-6 mb-5 shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-4 text-base">
             {isEditing ? <span className="flex items-center gap-2"><Pencil className="w-4 h-4" />Edit INV-{String(editingInvoice!.invoice_number).padStart(3, '0')}</span> : <span className="flex items-center gap-2"><Receipt className="w-4 h-4" />New Invoice</span>}
           </h3>
           <div className="space-y-3">
@@ -464,11 +473,11 @@ function InvoicesContent() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 font-semibold block mb-1">Status</label>
+                <label className="text-xs text-slate-500 font-semibold block mb-1">Status</label>
                 <select
                   value={formStatus}
                   onChange={e => setFormStatus(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white"
+                  className="w-full border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
                 >
                   <option>🟡 Unpaid</option>
                   <option>🟢 Paid</option>
@@ -477,17 +486,18 @@ function InvoicesContent() {
               </div>
             </div>
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-5">
             <button
               onClick={isEditing ? handleUpdate : handleCreate}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? '⏳ Saving…' : isEditing ? 'Save Changes' : 'Create Invoice'}
+              {saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Create Invoice'}
             </button>
             <button
               onClick={resetForm}
-              className="border-2 border-gray-200 text-gray-600 font-bold py-3 px-5 rounded-xl cursor-pointer hover:bg-gray-50"
+              disabled={saving}
+              className="border-2 border-slate-200 text-slate-600 font-bold py-3 px-8 rounded-xl cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -525,21 +535,25 @@ function InvoicesContent() {
       {/* Invoice List */}
       {invoices.length === 0 ? (
         <div className="text-center py-16">
-          <Receipt className="w-14 h-14 mx-auto text-gray-300 mb-3" aria-hidden="true" />
-          <p className="text-gray-700 font-bold mb-1">No invoices yet</p>
-          <p className="text-gray-400 text-sm mb-6">Create your first invoice to start getting paid.</p>
+          <div className="bg-green-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-3">
+            <Receipt className="w-10 h-10 text-green-400" aria-hidden="true" />
+          </div>
+          <p className="text-slate-900 font-bold mb-1">No invoices yet</p>
+          <p className="text-slate-500 text-sm mb-6">Create your first invoice to start getting paid.</p>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-purple-500 to-violet-600 text-white font-bold py-3 px-8 rounded-xl cursor-pointer shadow"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl cursor-pointer shadow hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
           >
             + Create Invoice
           </button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
-          <Search className="w-10 h-10 mx-auto text-gray-300 mb-3" aria-hidden="true" />
-          <p className="text-gray-500 font-bold">No invoices match</p>
-          <p className="text-gray-400 text-sm">Try a different search or filter.</p>
+          <div className="bg-green-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-3">
+            <Search className="w-10 h-10 text-green-400" aria-hidden="true" />
+          </div>
+          <p className="text-slate-900 font-bold mb-1">No invoices match</p>
+          <p className="text-slate-500 text-sm">Try a different search or filter.</p>
         </div>
       ) : (
         <div className="space-y-3">

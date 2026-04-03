@@ -167,27 +167,27 @@ function DashboardContent() {
   }
 
   if (checking) return (
-    <div className="p-6 min-h-dvh bg-gray-50">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+    <div className="p-6 min-h-dvh bg-slate-50">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gray-200 rounded-xl h-28 animate-pulse" />
+          <div key={i} className="bg-slate-200 rounded-2xl h-36 animate-pulse" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gray-200 rounded-2xl h-64 animate-pulse" />
+        <div className="lg:col-span-2 bg-slate-200 rounded-2xl h-72 animate-pulse" />
         <div className="flex flex-col gap-6">
-          <div className="bg-gray-200 rounded-2xl h-40 animate-pulse" />
-          <div className="bg-gray-200 rounded-2xl h-40 animate-pulse" />
+          <div className="bg-slate-200 rounded-2xl h-48 animate-pulse" />
+          <div className="bg-slate-200 rounded-2xl h-48 animate-pulse" />
         </div>
       </div>
     </div>
   )
 
   const statusColor = (status: string) => {
-    if (status === '🟢 Completed') return 'bg-green-100 text-green-700'
-    if (status === '🟡 In Progress') return 'bg-yellow-100 text-yellow-700'
+    if (status === '🟢 Completed') return 'bg-emerald-100 text-emerald-700'
+    if (status === '🟡 In Progress') return 'bg-amber-100 text-amber-700'
     if (status === '🔴 Cancelled') return 'bg-red-100 text-red-700'
-    return 'bg-blue-100 text-blue-700'
+    return 'bg-green-100 text-green-700'
   }
 
   const revenueTrend = lastMonthRevenue > 0
@@ -244,125 +244,137 @@ function DashboardContent() {
   return (
     <>
       <AdminViewBanner view="Owner Dashboard" />
-      <div className="p-6 pb-6 min-h-dvh bg-gray-50">
+      <div className="p-6 pb-6 min-h-dvh bg-slate-50">
       {stripeSuccess && (
-        <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
-          <span aria-hidden="true">🎉</span> You're all set! Your 14-day free trial has started. No charge until your trial ends.
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center gap-3 shadow-sm">
+          <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">🎉</span>
+          <span className="flex-1">You're all set! Your 14-day free trial has started. No charge until your trial ends.</span>
         </div>
       )}
 
       {subscriptionStatus === 'trialing' && !stripeSuccess && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span>
-            <span aria-hidden="true">🎁</span> You&apos;re on a free trial —{' '}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
+          <span className="flex items-center gap-2">
+            <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">🎁</span>
             {trialEndsAt
               ? (() => {
                   const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
-                  return days > 0 ? `${days} day${days === 1 ? '' : 's'} remaining.` : 'trial ending soon.'
+                  return <span>You&apos;re on a free trial — <span className="text-green-700 font-bold">{days} day{days === 1 ? '' : 's'} remaining.</span> Your card won&apos;t be charged until the trial ends.</span>
                 })()
               : 'enjoy full access!'}{' '}
-            Your card won&apos;t be charged until the trial ends.
           </span>
-          <Link href="/settings" className="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap ml-4">
+          <Link href="/settings" className="text-xs font-bold bg-green-600 text-white px-5 py-2.5 rounded-xl hover:bg-green-700 transition-all duration-200 whitespace-nowrap ml-4 shadow-md hover:shadow-lg">
             Manage Billing
           </Link>
         </div>
       )}
 
       {subscriptionStatus === 'past_due' && (
-        <div className="bg-red-50 border border-red-200 text-red-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span><span aria-hidden="true">⚠️</span> Your payment failed. Please update your billing info to keep access.</span>
-          <Link href="/pricing" className="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
+          <span className="flex items-center gap-2">
+            <span className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">⚠️</span>
+            Your payment failed. Please update your billing info to keep access.
+          </span>
+          <Link href="/pricing" className="text-xs font-bold bg-red-600 text-white px-5 py-2.5 rounded-xl hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg">
             Update Billing
           </Link>
         </div>
       )}
 
       {subscriptionStatus === 'cancelled' && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span><span aria-hidden="true">⚠️</span> Your subscription has been cancelled. Reactivate to keep using LawnDesk.</span>
-          <Link href="/pricing" className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors">
+        <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
+          <span className="flex items-center gap-2">
+            <span className="bg-amber-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">⚠️</span>
+            Your subscription has been cancelled. Reactivate to keep using LawnDesk.
+          </span>
+          <Link href="/pricing" className="text-xs font-bold bg-amber-600 text-white px-5 py-2.5 rounded-xl hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg">
             Reactivate
           </Link>
         </div>
       )}
 
       <div
-        className="flex items-center gap-3 mb-8 fade-up"
+        className="flex items-center gap-4 mb-8 fade-up"
         style={{ animation: 'fadeUp 0.4s ease-out both' }}
       >
-        <div className="bg-green-700 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md">
-          <BarChart2 className="w-6 h-6" aria-hidden="true" />
+        <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200">
+          <BarChart2 className="w-7 h-7" aria-hidden="true" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 leading-none">Dashboard</h2>
-          <p className="text-gray-500 text-sm">Welcome back! Here's your business at a glance.</p>
+          <h2 className="text-2xl font-bold text-slate-900 leading-none">Dashboard</h2>
+          <p className="text-slate-500 text-sm mt-1">Welcome back! Here's your business at a glance.</p>
         </div>
       </div>
 
       {/* Onboarding */}
       {clientCount === 0 && upcomingJobs.length === 0 && dataLoaded && !onboardingDismissed && (
         <div
-          className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-8"
+          className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-3xl p-8 mb-8 shadow-sm"
           style={{ animation: 'fadeUp 0.5s ease-out both', animationDelay: '100ms' }}
         >
-          <div className="flex justify-between items-start mb-1">
-            <h3 className="text-xl font-bold text-gray-800">Welcome to LawnDesk! 🌿</h3>
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                <span className="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg">🌿</span>
+                Welcome to LawnDesk!
+              </h3>
+              <p className="text-slate-600 mt-2">Let's get your business set up. Follow these steps to get started:</p>
+            </div>
             <button
               onClick={() => { setOnboardingDismissed(true); localStorage.setItem('onboarding_dismissed', '1') }}
-              className="text-gray-400 hover:text-gray-600 text-sm cursor-pointer"
+              className="text-slate-400 hover:text-slate-600 text-sm font-semibold cursor-pointer transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-100"
             >
-              ✕ Skip
+              Skip
             </button>
           </div>
-          <p className="text-gray-500 mb-5">Let's get your business set up. Follow these steps to get started:</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-6">
             {[
               { step: '1', icon: '👥', title: 'Add Your First Client', desc: 'Store their name, phone, and address.', href: '/clients', label: 'Add Client' },
               { step: '2', icon: '📅', title: 'Schedule a Job', desc: 'Set a date, time, and job type.', href: '/jobs', label: 'Schedule Job' },
               { step: '3', icon: '📄', title: 'Create an Invoice', desc: 'Send it and get paid faster.', href: '/invoices', label: 'Create Invoice' },
             ].map((item) => (
-              <div key={item.step} className="bg-white rounded-xl p-4 border border-green-100 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="bg-green-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">{item.step}</span>
-                  <span className="text-xl" aria-hidden="true">{item.icon}</span>
-                  <p className="font-bold text-gray-800 text-sm">{item.title}</p>
+              <Link key={item.step} href={item.href} className="group bg-white rounded-2xl p-5 border border-green-100 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-200 cursor-pointer">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-gradient-to-br from-green-600 to-emerald-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shrink-0">{item.step}</span>
+                  <span className="text-xl group-hover:scale-110 transition-transform duration-200" aria-hidden="true">{item.icon}</span>
                 </div>
-                <p className="text-gray-400 text-xs mb-3">{item.desc}</p>
-                <Link href={item.href} className="w-full block bg-green-700 text-white text-xs font-bold py-2 rounded-lg hover:bg-green-800 transition-colors text-center">
+                <h4 className="font-bold text-slate-800 text-base mb-1">{item.title}</h4>
+                <p className="text-slate-500 text-xs mb-4 leading-relaxed">{item.desc}</p>
+                <div className="w-full block bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 text-center shadow-sm">
                   {item.label} →
-                </Link>
-              </div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
         {statCards.map((card) => (
-          <div
+          <Link
             key={card.label}
-            className={`bg-gradient-to-br ${card.gradient} rounded-xl p-4 sm:p-6 shadow text-center text-white spring-in`}
+            href={card.href}
+            className={`bg-gradient-to-br ${card.gradient} rounded-2xl p-5 sm:p-6 shadow-lg shadow-green-100 text-center text-white spring-in group cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-200`}
             style={{
               animation: 'springIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both',
               animationDelay: `${card.delay}ms`,
             }}
           >
-            <div className="flex justify-center mb-1">
-              <card.Icon className="w-8 h-8 opacity-90" aria-hidden="true" />
+            <div className="flex justify-center mb-2 group-hover:scale-110 transition-transform duration-200">
+              <card.Icon className="w-9 h-9 opacity-95" aria-hidden="true" />
             </div>
-            <p className="text-white/80 mb-1 text-xs sm:text-sm">{card.label}</p>
-            <p className="text-3xl sm:text-4xl font-bold tabular-nums">{card.display}</p>
+            <p className="text-white/90 mb-1.5 text-xs sm:text-sm font-medium">{card.label}</p>
+            <p className="text-3xl sm:text-4xl font-bold tabular-nums mb-1">{card.display}</p>
             {card.trend !== null && (
-              <p className={`text-xs mt-0.5 font-semibold ${card.trend >= 0 ? 'text-white/90' : 'text-white/70'}`}>
+              <p className={`text-xs font-semibold ${card.trend >= 0 ? 'text-white/90' : 'text-white/70'}`}>
                 {card.trend >= 0 ? '↑' : '↓'} {Math.abs(card.trend)}% vs last mo
               </p>
             )}
-            <Link href={card.href} className="text-xs text-white/70 hover:text-white mt-1 inline-block">
+            <p className="text-xs text-white/70 mt-1.5 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               {card.linkLabel}
-            </Link>
-          </div>
+            </p>
+          </Link>
         ))}
       </div>
 
@@ -370,38 +382,40 @@ function DashboardContent() {
 
         {/* Upcoming Jobs */}
         <div
-          className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-md"
+          className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100"
           style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '320ms' }}
         >
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">Upcoming Jobs</h3>
-            <Link href="/jobs" className="text-sm text-green-600 hover:underline">View all →</Link>
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="text-lg font-bold text-slate-900">Upcoming Jobs</h3>
+            <Link href="/jobs" className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">View all →</Link>
           </div>
           {upcomingJobs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-3xl mb-2">📅</p>
-              <p className="text-gray-400">No upcoming jobs</p>
+            <div className="text-center py-10">
+              <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                <CalendarDays className="w-8 h-8 text-green-500" aria-hidden="true" />
+              </div>
+              <p className="text-slate-500">No upcoming jobs</p>
             </div>
           ) : (
             <div className="space-y-3">
               {upcomingJobs.map((job, i) => (
                 <div
                   key={job.id}
-                  className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0 slide-in-row"
+                  className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-200 slide-in-row group"
                   style={{
                     animation: 'slideInRow 0.35s ease-out both',
                     animationDelay: `${360 + i * 70}ms`,
                   }}
                 >
-                  <div>
-                    <p className="font-semibold text-gray-800">{job.title}</p>
-                    <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                      <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">📅 {job.date}</span>
-                      <span className="text-xs text-gray-500">👤 {job.client_name}</span>
-                      {job.time && <span className="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full">🕐 {job.time}</span>}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 mb-2 truncate">{job.title}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs bg-green-100 text-green-700 font-semibold px-2.5 py-1 rounded-full">{job.date}</span>
+                      <span className="text-xs text-slate-500 flex items-center gap-1"><Users className="w-3 h-3" aria-hidden="true" /> {job.client_name}</span>
+                      {job.time && <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2.5 py-1 rounded-full">{job.time}</span>}
                     </div>
                   </div>
-                  <span className={`text-xs font-bold py-1 px-3 rounded-full ${statusColor(job.status)}`}>
+                  <span className={`text-xs font-bold py-2 px-3 rounded-full ${statusColor(job.status)}`}>
                     {job.status}
                   </span>
                 </div>
@@ -415,53 +429,58 @@ function DashboardContent() {
 
           {/* Quick Actions */}
           <div
-            className="bg-amber-50 rounded-2xl p-6 shadow-md"
+            className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-2xl p-6 shadow-sm"
             style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '360ms' }}
           >
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
-              <Link href="/clients" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
-                + Add Client
+              <Link href="/clients" className="w-full block bg-white text-slate-700 font-semibold py-3 px-4 rounded-xl border-2 border-green-200 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all duration-200 text-center flex items-center justify-center gap-2 group">
+                <Users className="w-4 h-4" aria-hidden="true" />
+                <span>Add Client</span>
               </Link>
-              <Link href="/jobs" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
-                + Schedule Job
+              <Link href="/jobs" className="w-full block bg-white text-slate-700 font-semibold py-3 px-4 rounded-xl border-2 border-green-200 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all duration-200 text-center flex items-center justify-center gap-2 group">
+                <CalendarDays className="w-4 h-4" aria-hidden="true" />
+                <span>Schedule Job</span>
               </Link>
-              <Link href="/invoices" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
-                + Create Invoice
+              <Link href="/invoices" className="w-full block bg-white text-slate-700 font-semibold py-3 px-4 rounded-xl border-2 border-green-200 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all duration-200 text-center flex items-center justify-center gap-2 group">
+                <TrendingUp className="w-4 h-4" aria-hidden="true" />
+                <span>Create Invoice</span>
               </Link>
             </div>
           </div>
 
           {/* Overdue Invoices */}
           <div
-            className="bg-red-50 border border-red-100 rounded-2xl p-6 shadow-md"
+            className="bg-white border border-red-100 rounded-2xl p-6 shadow-sm"
             style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '420ms' }}
           >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Overdue Invoices</h3>
-              <Link href="/invoices?filter=Overdue" className="text-sm text-green-600 hover:underline">View all →</Link>
+              <h3 className="text-lg font-bold text-slate-900">Overdue Invoices</h3>
+              <Link href="/invoices?filter=Overdue" className="text-sm font-semibold text-red-600 hover:text-red-700 transition-colors">View all →</Link>
             </div>
             {overdueInvoices.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-2xl mb-1">✅</p>
-                <p className="text-gray-400 text-sm">Nothing overdue</p>
+              <div className="text-center py-6">
+                <div className="bg-green-50 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
+                  <TrendingUp className="w-6 h-6 text-green-500" aria-hidden="true" />
+                </div>
+                <p className="text-slate-500 text-sm">Nothing overdue</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {overdueInvoices.map((inv, i) => (
                   <div
                     key={inv.id}
-                    className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0 slide-in-row"
+                    className="flex justify-between items-center p-3 bg-red-50 rounded-xl border border-red-100 slide-in-row"
                     style={{
                       animation: 'slideInRow 0.35s ease-out both',
                       animationDelay: `${440 + i * 60}ms`,
                     }}
                   >
-                    <div>
-                      <p className="font-semibold text-gray-800 text-sm">{inv.client_name}</p>
-                      {inv.due_date && <p className="text-xs text-red-400">Due {inv.due_date}</p>}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900 text-sm truncate">{inv.client_name}</p>
+                      {inv.due_date && <p className="text-xs text-red-500 font-medium">Due {inv.due_date}</p>}
                     </div>
-                    <p className="font-bold text-red-500">${inv.amount.toFixed(2)}</p>
+                    <p className="font-bold text-red-600 text-sm">${inv.amount.toFixed(2)}</p>
                   </div>
                 ))}
               </div>

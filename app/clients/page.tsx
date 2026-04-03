@@ -138,48 +138,51 @@ export default function ClientsPage() {
   })
 
   if (checking) return (
-    <div className="p-6 bg-gray-50 min-h-dvh">
+    <div className="p-6 bg-slate-50 min-h-dvh">
       <div className="flex justify-between items-center mb-8">
-        <div className="h-12 w-36 bg-gray-200 rounded-xl animate-pulse" />
-        <div className="h-10 w-28 bg-gray-200 rounded-xl animate-pulse" />
+        <div className="h-12 w-36 bg-slate-200 rounded-xl animate-pulse" />
+        <div className="h-10 w-28 bg-slate-200 rounded-xl animate-pulse" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-32 bg-gray-200 rounded-2xl animate-pulse" />
+          <div key={i} className="h-36 bg-slate-200 rounded-2xl animate-pulse" />
         ))}
       </div>
     </div>
   )
 
   return (
-    <div className="p-6 pb-6 bg-gray-50 min-h-dvh">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md" aria-hidden="true"><Users className="w-6 h-6" /></div>
+    <div className="p-6 pb-6 bg-slate-50 min-h-dvh">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200" aria-hidden="true"><Users className="w-7 h-7" /></div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 leading-none">Clients</h2>
-            <p className="text-gray-500 text-sm">Manage your client roster</p>
+            <h2 className="text-2xl font-bold text-slate-900 leading-none">Clients</h2>
+            <p className="text-slate-500 text-sm mt-1">Manage your client roster</p>
           </div>
         </div>
         <button
           onClick={() => { setShowForm(!showForm); setEditingClient(null) }}
-          className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2 px-6 rounded-xl hover:opacity-90 hover:shadow-md transition-all duration-200 cursor-pointer shadow"
+          className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow whitespace-nowrap"
         >
           + Add Client
         </button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          placeholder="🔍 Search by name, email, phone, address..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded-lg p-3 text-gray-800 flex-1"
-        />
+        <div className="flex-1 relative">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            placeholder="Search by name, email, phone, address..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+          />
+        </div>
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full sm:w-auto"
+          className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full sm:w-auto"
         >
           <option>All</option>
           <option>Has Email</option>
@@ -189,63 +192,67 @@ export default function ClientsPage() {
       </div>
 
       {successMessage && (
-        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-lg mb-4">
-          ✅ {successMessage}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
+          <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</span>
+          {successMessage}
         </div>
       )}
 
       {errorMessage && (
-        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-lg mb-4">
-          ❌ {errorMessage}
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
+          <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">!</span>
+          {errorMessage}
         </div>
       )}
 
       {showForm && (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">New Client</h3>
+        <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">New Client</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               placeholder="Full Name *"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <input
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <input
               placeholder="Phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <input
               placeholder="Address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <textarea
-              placeholder="🏠 Property Notes — gate code, dog in yard, where to park, special instructions..."
+              placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="border border-amber-300 rounded-lg p-3 text-gray-800 sm:col-span-2 bg-amber-50"
+              className="border border-amber-200 rounded-xl p-3 text-slate-800 sm:col-span-2 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
               rows={3}
             />
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-5">
             <button
               onClick={handleAddClient}
-              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow"
+              disabled={saving}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Client'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+              disabled={saving}
+              className="border-2 border-slate-200 text-slate-600 font-bold py-3 px-8 rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -254,51 +261,53 @@ export default function ClientsPage() {
       )}
 
       {editingClient && (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Client</h3>
+        <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">Edit Client</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               placeholder="Full Name *"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <input
               placeholder="Email"
               value={editEmail}
               onChange={(e) => setEditEmail(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <input
               placeholder="Phone"
               value={editPhone}
               onChange={(e) => setEditPhone(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <input
               placeholder="Address"
               value={editAddress}
               onChange={(e) => setEditAddress(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
             <textarea
-              placeholder="🏠 Property Notes — gate code, dog in yard, where to park, special instructions..."
+              placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
-              className="border border-amber-300 rounded-lg p-3 text-gray-800 sm:col-span-2 bg-amber-50"
+              className="border border-amber-200 rounded-xl p-3 text-slate-800 sm:col-span-2 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
               rows={3}
             />
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-5">
             <button
               onClick={handleUpdateClient}
-              className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow"
+              disabled={saving}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               onClick={() => setEditingClient(null)}
-              className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+              disabled={saving}
+              className="border-2 border-slate-200 text-slate-600 font-bold py-3 px-8 rounded-xl hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -308,52 +317,56 @@ export default function ClientsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {clients.length === 0 ? (
-          <div className="col-span-3 text-center py-12">
-            <Users className="w-14 h-14 mx-auto text-gray-300 mb-4" aria-hidden="true" />
-            <p className="text-gray-500 text-lg font-bold">No clients yet</p>
-            <p className="text-gray-400">Click Add Client to get started!</p>
+          <div className="col-span-3 text-center py-16">
+            <div className="bg-green-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-10 h-10 text-green-400" aria-hidden="true" />
+            </div>
+            <p className="text-slate-900 text-lg font-bold mb-1">No clients yet</p>
+            <p className="text-slate-500">Click Add Client to get started!</p>
           </div>
         ) : filteredClients.length === 0 ? (
-          <div className="col-span-3 text-center py-12">
-            <Search className="w-12 h-12 mx-auto text-gray-300 mb-4" aria-hidden="true" />
-            <p className="text-gray-500 text-lg font-bold">No clients match your search</p>
-            <p className="text-gray-400">Try a different name or filter.</p>
+          <div className="col-span-3 text-center py-16">
+            <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-slate-400" aria-hidden="true" />
+            </div>
+            <p className="text-slate-900 text-lg font-bold mb-1">No clients match your search</p>
+            <p className="text-slate-500">Try a different name or filter.</p>
           </div>
         ) : (
           filteredClients.map((client) => (
-            <div key={client.id} className="bg-amber-50 rounded-2xl p-5 shadow-md border-l-4 border-green-500 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+            <div key={client.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-lg hover:border-green-200 hover:-translate-y-0.5 transition-all duration-200 group">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold text-lg w-11 h-11 rounded-xl flex items-center justify-center shadow-sm shrink-0">
+                  <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white font-bold text-lg w-11 h-11 rounded-xl flex items-center justify-center shadow-md shadow-green-100 shrink-0 group-hover:scale-105 transition-transform duration-200">
                     {client.name.charAt(0).toUpperCase()}
                   </div>
-                  <Link href={`/clients/${client.id}`} className="text-lg font-bold text-gray-800 hover:text-green-700 transition-colors">{client.name}</Link>
+                  <Link href={`/clients/${client.id}`} className="text-lg font-bold text-slate-900 hover:text-green-600 transition-colors">{client.name}</Link>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
-                  <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
+                  <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-slate-400 hover:text-blue-500 transition-colors duration-200 cursor-pointer hover:bg-blue-50 p-1.5 rounded-lg"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
+                  <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-slate-400 hover:text-red-500 transition-colors duration-200 cursor-pointer hover:bg-red-50 p-1.5 rounded-lg"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
                 </div>
               </div>
-              <div className="space-y-1 pl-14 min-w-0">
-                {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-600 transition-colors"><Mail className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.email}</span></a>}
-                {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 text-sm flex items-center gap-1.5 hover:text-green-600 transition-colors"><Phone className="w-4 h-4" aria-hidden="true" /> {client.phone}</a>}
-                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-600 transition-colors"><MapPin className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.address}</span></a>}
-                {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 font-medium">{client.notes}</p>}
+              <div className="space-y-1.5 pl-14 min-w-0">
+                {client.email && <a href={`mailto:${client.email}`} className="text-slate-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-500 hover:underline transition-colors"><Mail className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.email}</span></a>}
+                {client.phone && <a href={`tel:${client.phone}`} className="text-slate-500 text-sm flex items-center gap-1.5 hover:text-green-500 hover:underline transition-colors"><Phone className="w-4 h-4" aria-hidden="true" /> {client.phone}</a>}
+                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-slate-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-500 hover:underline transition-colors"><MapPin className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.address}</span></a>}
+                {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium leading-relaxed">{client.notes}</p>}
               </div>
               {(client.phone || client.address || client.email) && (
-                <div className="flex gap-2 mt-3 pt-3 border-t border-amber-100 pl-14">
+                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 pl-14">
                   {client.phone && (
-                    <a href={`tel:${client.phone}`} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-1.5 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors">
+                    <a href={`tel:${client.phone}`} className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
                       <Phone className="w-3.5 h-3.5" aria-hidden="true" /> Call
                     </a>
                   )}
                   {client.address && (
-                    <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors">
+                    <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-lg bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors">
                       <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Map
                     </a>
                   )}
                   {client.email && (
-                    <a href={`mailto:${client.email}`} className="flex-1 flex items-center justify-center gap-1 text-xs font-bold py-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                    <a href={`mailto:${client.email}`} className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
                       <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
                     </a>
                   )}

@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "setup-photos": "tsx scripts/setup-photos.ts"
+    "setup-photos": "tsx scripts/setup-photos.ts",
+    "apply-migration": "node scripts/apply-migration.js",
+    "run-supabase-migration": "node scripts/run-supabase-migration.js",
+    "migrate-supabase": "npm run supabase-migration"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.46.0",
