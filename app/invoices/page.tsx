@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { InvoiceStatusBadge, INVOICE_STATUS_CONFIG, InvoiceStatus } from '../../lib/status-config'
 
 interface Invoice {
   id: string
@@ -53,7 +54,7 @@ function InvoicesContent() {
   const [amount, setAmount] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [description, setDescription] = useState('')
-  const [formStatus, setFormStatus] = useState('🟡 Unpaid')
+  const [formStatus, setFormStatus] = useState('unpaid')
 
   useEffect(() => {
     if (user) {
@@ -64,8 +65,8 @@ function InvoicesContent() {
 
   const markOverdueInvoices = async () => {
     const today = new Date().toISOString().split('T')[0]
-    await supabase.from('Invoices').update({ status: '🔴 Overdue' })
-      .eq('user_id', user?.id).eq('status', '🟡 Unpaid')
+    await supabase.from('Invoices').update({ status: 'overdue' })
+      .eq('user_id', user?.id).eq('status', 'unpaid')
       .lt('due_date', today).not('due_date', 'is', null)
   }
 
@@ -173,7 +174,7 @@ function InvoicesContent() {
     setAmount('')
     setDueDate('')
     setDescription('')
-    setFormStatus('🟡 Unpaid')
+    setFormStatus('unpaid')
     setShowForm(false)
     setEditingInvoice(null)
   }
@@ -190,8 +191,8 @@ function InvoicesContent() {
   }
 
   const markPaid = async (id: string) => {
-    await supabase.from('Invoices').update({ status: '🟢 Paid' }).eq('id', id)
-    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: '🟢 Paid' } : inv))
+    await supabase.from('Invoices').update({ status: 'paid' }).eq('id', id)
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: 'paid' } : inv))
     setSuccessMessage('Marked as paid!')
     setTimeout(() => setSuccessMessage(''), 3000)
   }
@@ -200,8 +201,8 @@ function InvoicesContent() {
     if (selectedIds.size === 0) return
     setBulkSaving(true)
     const ids = Array.from(selectedIds)
-    await supabase.from('Invoices').update({ status: '🟢 Paid' }).in('id', ids)
-    setInvoices(prev => prev.map(inv => selectedIds.has(inv.id) ? { ...inv, status: '🟢 Paid' } : inv))
+    await supabase.from('Invoices').update({ status: 'paid' }).in('id', ids)
+    setInvoices(prev => prev.map(inv => selectedIds.has(inv.id) ? { ...inv, status: 'paid' } : inv))
     setSelectedIds(new Set())
     setSuccessMessage(`✅ ${ids.length} invoice${ids.length !== 1 ? 's' : ''} marked as paid!`)
     setTimeout(() => setSuccessMessage(''), 4000)
@@ -305,17 +306,17 @@ function InvoicesContent() {
     setSending(null)
   }
 
-  const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)
-  const totalOutstanding = invoices.filter(i => i.status !== '🟢 Paid').reduce((s, i) => s + i.amount, 0)
+  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
+  const totalOutstanding = invoices.filter(i => i.status !== 'paid').reduce((s, i) => s + i.amount, 0)
 
   const filtered = invoices.filter(inv => {
     const q = search.toLowerCase()
     const matchSearch = !q || inv.client_name.toLowerCase().includes(q) || inv.description?.toLowerCase().includes(q)
     const matchStatus =
       filterStatus === 'All' ||
-      (filterStatus === 'Unpaid' && inv.status === '🟡 Unpaid') ||
-      (filterStatus === 'Overdue' && inv.status === '🔴 Overdue') ||
-      (filterStatus === 'Paid' && inv.status === '🟢 Paid')
+      (filterStatus === 'Unpaid' && inv.status === 'unpaid') ||
+      (filterStatus === 'Overdue' && inv.status === 'overdue') ||
+      (filterStatus === 'Paid' && inv.status === 'paid')
     return matchSearch && matchStatus
   })
 
@@ -349,7 +350,7 @@ function InvoicesContent() {
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Invoices</h2>
             <p className="text-gray-500 text-sm">
               {invoices.length > 0
-                ? `${invoices.filter(i => i.status !== '🟢 Paid').length} outstanding`
+                ? `${invoices.filter(i => i.status !== 'paid').length} outstanding`
                 : 'Track payments'}
             </p>
           </div>
@@ -392,9 +393,9 @@ function InvoicesContent() {
             }`}
           >
             {s === 'All' ? `All (${invoices.length})` :
-             s === 'Unpaid' ? `Unpaid (${invoices.filter(i => i.status === '🟡 Unpaid').length})` :
-             s === 'Overdue' ? `Overdue (${invoices.filter(i => i.status === '🔴 Overdue').length})` :
-             `Paid (${invoices.filter(i => i.status === '🟢 Paid').length})`}
+             s === 'Unpaid' ? `Unpaid (${invoices.filter(i => i.status === 'unpaid').length})` :
+             s === 'Overdue' ? `Overdue (${invoices.filter(i => i.status === 'overdue').length})` :
+             `Paid (${invoices.filter(i => i.status === 'paid').length})`}
           </button>
         ))}
       </div>
@@ -469,9 +470,9 @@ function InvoicesContent() {
                   onChange={e => setFormStatus(e.target.value)}
                   className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white"
                 >
-                  <option>🟡 Unpaid</option>
-                  <option>🟢 Paid</option>
-                  <option>🔴 Overdue</option>
+                  <option value="unpaid">Unpaid</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
                 </select>
               </div>
             </div>
@@ -543,8 +544,8 @@ function InvoicesContent() {
       ) : (
         <div className="space-y-3">
           {filtered.map(inv => {
-            const isPaid = inv.status === '🟢 Paid'
-            const isOverdue = inv.status === '🔴 Overdue'
+            const isPaid = inv.status === 'paid'
+            const isOverdue = inv.status === 'overdue'
             const isSendingEmail = sending?.id === inv.id && sending.type === 'email'
             return (
               <div
@@ -596,9 +597,9 @@ function InvoicesContent() {
                         'bg-amber-100 text-amber-700'
                       }`}
                     >
-                      <option>🟡 Unpaid</option>
-                      <option>🟢 Paid</option>
-                      <option>🔴 Overdue</option>
+                      <option value="unpaid">Unpaid</option>
+                      <option value="paid">Paid</option>
+                      <option value="overdue">Overdue</option>
                     </select>
                     {!isPaid && (
                       <button

@@ -100,9 +100,9 @@ function DashboardContent() {
 
     await supabase
       .from('Invoices')
-      .update({ status: '🔴 Overdue' })
+      .update({ status: 'overdue' })
       .eq('user_id', user!.id)
-      .eq('status', '🟡 Unpaid')
+      .eq('status', 'unpaid')
       .lt('due_date', todayStr)
       .not('due_date', 'is', null)
 
@@ -134,7 +134,7 @@ function DashboardContent() {
         .limit(5),
       (supabase as any).from('Invoices').select('id, client_name, amount, status, due_date')
         .eq('user_id', user!.id)
-        .eq('status', '🔴 Overdue')
+        .eq('status', 'overdue')
         .order('due_date', { ascending: true })
         .limit(5),
     ])
@@ -143,8 +143,8 @@ function DashboardContent() {
     setJobsThisWeek(thisWeek ?? 0)
 
     if (invoiceData) {
-      const unpaid = invoiceData.filter((inv: any) => inv.status === '🟡 Unpaid')
-      const paid = invoiceData.filter((inv: any) => inv.status === '🟢 Paid')
+      const unpaid = invoiceData.filter((inv: any) => inv.status === 'unpaid')
+      const paid = invoiceData.filter((inv: any) => inv.status === 'paid')
       setUnpaidCount(unpaid.length)
       setTotalRevenue(paid.reduce((sum: number, inv: any) => sum + inv.amount, 0))
     }
@@ -158,7 +158,7 @@ function DashboardContent() {
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0]
     const [{ data: lastInvoices }, { count: lastJobCount }] = await Promise.all([
       (supabase as any).from('Invoices').select('amount, status').eq('user_id', user!.id)
-        .eq('status', '🟢 Paid').gte('created_at', lastMonthStart).lte('created_at', lastMonthEnd),
+        .eq('status', 'paid').gte('created_at', lastMonthStart).lte('created_at', lastMonthEnd),
       (supabase as any).from('Jobs').select('*', { count: 'exact', head: true }).eq('user_id', user!.id)
         .gte('date', lastMonthStart).lte('date', lastMonthEnd),
     ])
