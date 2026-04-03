@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
 
 interface Worker {
   id: string
@@ -117,7 +118,7 @@ export default function TeamPage() {
       .from('Jobs')
       .select('id, title, client_name, date, time, status, clocked_in_at, clocked_out_at, assigned_to')
       .eq('user_id', user?.id)
-      .not('status', 'eq', '🔴 Cancelled')
+      .not('status', 'eq', 'cancelled')
       .order('date', { ascending: true })
     if (data) setJobs(data as Job[])
   }
@@ -495,9 +496,9 @@ export default function TeamPage() {
               const isExpanded = expandedWorker === worker.id
               const isAssigning = assigningJobTo === worker.id
               const workerJobs = jobs.filter(j => j.assigned_to === worker.id)
-              const upcomingJobs = workerJobs.filter(j => j.status !== '🟢 Completed')
+              const upcomingJobs = workerJobs.filter(j => j.status !== 'completed')
               const hours = totalHours(worker.id)
-              const unassignedJobs = jobs.filter(j => !j.assigned_to && j.status !== '🟢 Completed')
+              const unassignedJobs = jobs.filter(j => !j.assigned_to && j.status !== 'completed')
 
               return (
                 <div key={worker.id} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
@@ -606,7 +607,7 @@ export default function TeamPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs">{job.status.split(' ')[0]}</span>
+                                <span className="text-xs">{JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}</span>
                                 <button
                                   onClick={() => handleUnassignJob(job.id)}
                                   className="text-xs text-red-400 hover:text-red-600 font-semibold cursor-pointer"

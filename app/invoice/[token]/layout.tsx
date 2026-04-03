@@ -33,7 +33,7 @@ export async function generateMetadata({
     }).format(invoice.amount)
 
     const invoiceNum = `INV-${String(invoice.invoice_number).padStart(3, '0')}`
-    const statusEmoji = invoice.status === '🟢 Paid' ? '✅' : invoice.status === '🔴 Overdue' ? '⚠️' : '📄'
+    const statusEmoji = invoice.status === 'paid' ? '✅' : invoice.status === 'overdue' ? '⚠️' : '📄'
 
     return {
       title: `${invoiceNum} - Invoice for ${invoice.client_name}`,

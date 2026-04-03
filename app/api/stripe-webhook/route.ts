@@ -69,7 +69,7 @@ export async function POST(req: Request) {
           const { invoiceId } = session.metadata
           const { error } = await supabase
             .from('Invoices')
-            .update({ status: '🟢 Paid', stripe_payment_id: session.payment_intent as string })
+            .update({ status: 'paid', stripe_payment_id: session.payment_intent as string })
             .eq('id', invoiceId)
           if (error) throw new Error(error.message)
           break

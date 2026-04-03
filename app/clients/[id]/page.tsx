@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../lib/useAuth'
+import { JOB_STATUS_CONFIG, JobStatus, INVOICE_STATUS_CONFIG, InvoiceStatus } from '../../../lib/status-config'
 
 interface Client {
   id: string
@@ -148,19 +149,19 @@ export default function ClientDetailPage() {
     }
   }
 
-  const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)
-  const totalOwed = invoices.filter(i => i.status === '🟡 Unpaid' || i.status === '🔴 Overdue').reduce((s, i) => s + i.amount, 0)
+  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
+  const totalOwed = invoices.filter(i => i.status === 'unpaid' || i.status === 'overdue').reduce((s, i) => s + i.amount, 0)
 
   const jobStatusColor = (status: string) => {
-    if (status === '🟢 Completed') return 'bg-green-100 text-green-700'
-    if (status === '🟡 In Progress') return 'bg-yellow-100 text-yellow-700'
-    if (status === '🔴 Cancelled') return 'bg-red-100 text-red-700'
+    if (status === 'completed') return 'bg-green-100 text-green-700'
+    if (status === 'in_progress') return 'bg-yellow-100 text-yellow-700'
+    if (status === 'cancelled') return 'bg-red-100 text-red-700'
     return 'bg-blue-100 text-blue-700'
   }
 
   const invoiceStatusColor = (status: string) => {
-    if (status === '🟢 Paid') return 'bg-green-100 text-green-700'
-    if (status === '🔴 Overdue') return 'bg-red-100 text-red-700'
+    if (status === 'paid') return 'bg-green-100 text-green-700'
+    if (status === 'overdue') return 'bg-red-100 text-red-700'
     return 'bg-yellow-100 text-yellow-700'
   }
 
@@ -294,7 +295,7 @@ export default function ClientDetailPage() {
                     <p className="text-xs text-gray-400">{job.date}{job.time ? ` · ${job.time}` : ''}</p>
                   </div>
                   <span className={`text-xs font-bold py-1 px-2 rounded-full ${jobStatusColor(job.status)}`}>
-                    {job.status}
+                    {JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}
                   </span>
                 </div>
               ))}
@@ -360,7 +361,7 @@ export default function ClientDetailPage() {
                     {inv.due_date && <p className="text-xs text-gray-400">Due {inv.due_date}</p>}
                   </div>
                   <span className={`text-xs font-bold py-1 px-2 rounded-full ${invoiceStatusColor(inv.status)}`}>
-                    {inv.status}
+                    {INVOICE_STATUS_CONFIG[inv.status as InvoiceStatus]?.label ?? inv.status}
                   </span>
                 </div>
               ))}

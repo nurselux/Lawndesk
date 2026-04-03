@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
   }
 
-  if (invoice.status === '🟢 Paid') {
+  if (invoice.status === 'paid') {
     return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 })
   }
 

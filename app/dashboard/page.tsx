@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import AdminViewBanner from '../../components/AdminViewBanner'
+import { JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
 
 interface Job {
   id: string
@@ -184,9 +185,9 @@ function DashboardContent() {
   )
 
   const statusColor = (status: string) => {
-    if (status === '🟢 Completed') return 'bg-green-100 text-green-700'
-    if (status === '🟡 In Progress') return 'bg-yellow-100 text-yellow-700'
-    if (status === '🔴 Cancelled') return 'bg-red-100 text-red-700'
+    if (status === 'completed') return 'bg-green-100 text-green-700'
+    if (status === 'in_progress') return 'bg-yellow-100 text-yellow-700'
+    if (status === 'cancelled') return 'bg-red-100 text-red-700'
     return 'bg-blue-100 text-blue-700'
   }
 
@@ -402,7 +403,7 @@ function DashboardContent() {
                     </div>
                   </div>
                   <span className={`text-xs font-bold py-1 px-3 rounded-full ${statusColor(job.status)}`}>
-                    {job.status}
+                    {JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}
                   </span>
                 </div>
               ))}

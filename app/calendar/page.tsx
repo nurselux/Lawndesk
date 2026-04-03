@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import Link from 'next/link'
+import { RECURRING_CONFIG, JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
 
 interface Job {
   id: string
@@ -44,10 +45,10 @@ interface Quote {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  '🟢 Completed': 'bg-green-100 text-green-700 border-green-200',
-  '🟡 In Progress': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  '🔴 Cancelled': 'bg-red-100 text-red-700 border-red-200',
-  '🔵 Scheduled': 'bg-blue-100 text-blue-700 border-blue-200',
+  completed:   'bg-green-100 text-green-700 border-green-200',
+  in_progress: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  cancelled:   'bg-red-100 text-red-700 border-red-200',
+  scheduled:   'bg-blue-100 text-blue-700 border-blue-200',
 }
 
 export default function CalendarPage() {
@@ -146,7 +147,7 @@ export default function CalendarPage() {
   const selectedVisits = selectedDate ? (visitsByDate[selectedDate] || []) : []
 
   // Today's route: job addresses + estimate visit addresses combined
-  const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
+  const todayJobs = jobs.filter(j => j.date === today && j.status !== 'cancelled')
   const todayVisits = visitsByDate[today] || []
   const todayAddresses = [...new Set([
     ...todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter((a): a is string => !!a && a.trim().length > 0),
@@ -230,7 +231,7 @@ export default function CalendarPage() {
                   <div
                     key={job.id}
                     className={`w-full text-xs leading-tight px-1 py-0.5 rounded truncate border ${
-                      isSelected ? 'bg-white/20 text-white border-white/30' : STATUS_COLOR[job.status] || STATUS_COLOR['🔵 Scheduled']
+                      isSelected ? 'bg-white/20 text-white border-white/30' : STATUS_COLOR[job.status] || STATUS_COLOR['scheduled']
                     }`}
                     title={`${job.title} — ${job.client_name}`}
                   >
@@ -304,15 +305,15 @@ export default function CalendarPage() {
           ) : (
             <div className="space-y-3">
               {selectedJobs.map((job) => (
-                <div key={job.id} className={`flex items-start gap-3 p-3 rounded-xl border ${STATUS_COLOR[job.status] || STATUS_COLOR['🔵 Scheduled']}`}>
+                <div key={job.id} className={`flex items-start gap-3 p-3 rounded-xl border ${STATUS_COLOR[job.status] || STATUS_COLOR['scheduled']}`}>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate">{job.title}</p>
                     <p className="text-xs opacity-75">👤 {job.client_name}{job.time ? ` · 🕐 ${job.time}` : ''}</p>
-                    {job.recurring && job.recurring !== '🔂 One-time' && (
-                      <p className="text-xs opacity-60">🔄 {job.recurring}</p>
+                    {job.recurring && job.recurring !== 'one_time' && (
+                      <p className="text-xs opacity-60">🔄 {(RECURRING_CONFIG as any)[job.recurring]?.label ?? job.recurring}</p>
                     )}
                   </div>
-                  <span className="text-xs font-bold opacity-75 shrink-0">{job.status.split(' ')[0]}</span>
+                  <span className="text-xs font-bold opacity-75 shrink-0">{JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}</span>
                 </div>
               ))}
               {selectedVisits.map((visit) => (
@@ -344,10 +345,10 @@ export default function CalendarPage() {
           </div>
           <div className="space-y-1.5">
             {[
-              { label: 'Scheduled', color: 'text-blue-600', status: '🔵 Scheduled' },
-              { label: 'In Progress', color: 'text-yellow-600', status: '🟡 In Progress' },
-              { label: 'Completed', color: 'text-green-600', status: '🟢 Completed' },
-              { label: 'Cancelled', color: 'text-red-400', status: '🔴 Cancelled' },
+              { label: 'Scheduled', color: 'text-blue-600', status: 'scheduled' },
+              { label: 'In Progress', color: 'text-yellow-600', status: 'in_progress' },
+              { label: 'Completed', color: 'text-green-600', status: 'completed' },
+              { label: 'Cancelled', color: 'text-red-400', status: 'cancelled' },
             ].map(({ label, color, status }) => {
               const count = jobs.filter(j => {
                 const d = new Date(j.date + 'T00:00:00')

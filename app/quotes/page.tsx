@@ -306,7 +306,7 @@ export default function QuotesPage() {
         client_email: quote.client_email || null,
         client_phone: quote.client_phone || null,
         amount: quote.amount,
-        status: '🟡 Unpaid',
+        status: 'unpaid',
         description: quote.title + (quote.description ? ` — ${quote.description}` : ''),
         due_date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
       }])
@@ -330,7 +330,7 @@ export default function QuotesPage() {
         client_name: quote.client_name,
         title: quote.title,
         notes: quote.description || quote.notes || '',
-        status: '🔵 Scheduled',
+        status: 'scheduled',
       }])
       .select('id')
       .single()

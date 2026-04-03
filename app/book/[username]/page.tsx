@@ -5,12 +5,26 @@ import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
 
-const JOB_TYPES = [
-  '🌿 Lawn Mowing', '✂️ Hedge Trimming', '💨 Leaf Blowing', '🍂 Leaf Removal',
-  '🌳 Bush Trimming', '🪓 Tree Trimming', '🪴 Mulching', '🌱 Fertilizing',
-  '🌾 Weed Control', '🕳️ Aeration', '🌻 Overseeding', '🟩 Sod Installation',
-  '🌺 Garden Bed Maintenance', '💧 Irrigation System Check', '🚿 Pressure Washing',
-  '❄️ Snow Removal', '🍃 Gutter Cleaning', '🧹 General Cleanup', '✏️ Other',
+const SERVICE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'lawn_mowing',              label: 'Lawn Mowing' },
+  { value: 'hedge_trimming',           label: 'Hedge Trimming' },
+  { value: 'leaf_blowing',             label: 'Leaf Blowing' },
+  { value: 'leaf_removal',             label: 'Leaf Removal' },
+  { value: 'bush_trimming',            label: 'Bush Trimming' },
+  { value: 'tree_trimming',            label: 'Tree Trimming' },
+  { value: 'mulching',                 label: 'Mulching' },
+  { value: 'fertilizing',              label: 'Fertilizing' },
+  { value: 'weed_control',             label: 'Weed Control' },
+  { value: 'aeration',                 label: 'Aeration' },
+  { value: 'overseeding',              label: 'Overseeding' },
+  { value: 'sod_installation',         label: 'Sod Installation' },
+  { value: 'garden_bed_maintenance',   label: 'Garden Bed Maintenance' },
+  { value: 'irrigation_system_check',  label: 'Irrigation System Check' },
+  { value: 'pressure_washing',         label: 'Pressure Washing' },
+  { value: 'snow_removal',             label: 'Snow Removal' },
+  { value: 'gutter_cleaning',          label: 'Gutter Cleaning' },
+  { value: 'general_cleanup',          label: 'General Cleanup' },
+  { value: 'other',                    label: 'Other' },
 ]
 
 interface BusinessProfile {
@@ -56,8 +70,8 @@ export default function BookingPage() {
     const msg = p.get('message'); if (msg) setMessage(msg)
     const service = p.get('service')
     if (service) {
-      const match = JOB_TYPES.find(t => t.toLowerCase().includes(service.toLowerCase()))
-      if (match) setServiceType(match)
+      const match = SERVICE_OPTIONS.find(t => t.label.toLowerCase().includes(service.toLowerCase()) || t.value.toLowerCase().includes(service.toLowerCase()))
+      if (match) setServiceType(match.value)
     }
   }, [])
 
@@ -111,7 +125,7 @@ export default function BookingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: (business as any).phone,
-          message: `🌿 New booking request from ${clientName}! Service: ${serviceType}${preferredDate ? ` on ${preferredDate}` : ''}. Check your LawnDesk Requests.`,
+          message: `🌿 New booking request from ${clientName}! Service: ${SERVICE_OPTIONS.find(t => t.value === serviceType)?.label ?? serviceType}${preferredDate ? ` on ${preferredDate}` : ''}. Check your LawnDesk Requests.`,
         }),
       })
     }
@@ -210,7 +224,7 @@ export default function BookingPage() {
               className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
             >
               <option value="">Select a Service *</option>
-              {JOB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              {SERVICE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
             <div className="grid grid-cols-2 gap-3">
               <input

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
+import { INVOICE_STATUS_CONFIG, InvoiceStatus } from '../../../lib/status-config'
 
 interface Invoice {
   id: string
@@ -68,8 +69,8 @@ export default function PublicInvoicePage() {
   }
 
   const statusColor =
-    invoice.status === '🟢 Paid' ? 'bg-green-100 text-green-700' :
-    invoice.status === '🔴 Overdue' ? 'bg-red-100 text-red-700' :
+    invoice.status === 'paid' ? 'bg-green-100 text-green-700' :
+    invoice.status === 'overdue' ? 'bg-red-100 text-red-700' :
     'bg-yellow-100 text-yellow-700'
 
   const invoiceNum = `INV-${String(invoice.invoice_number).padStart(3, '0')}`
@@ -116,7 +117,7 @@ export default function PublicInvoicePage() {
           {/* Status badge */}
           <div className="flex justify-end mb-6">
             <span className={`text-sm font-bold py-1.5 px-4 rounded-full ${statusColor}`}>
-              {invoice.status}
+              {INVOICE_STATUS_CONFIG[invoice.status as InvoiceStatus]?.label ?? invoice.status}
             </span>
           </div>
 
@@ -134,7 +135,7 @@ export default function PublicInvoicePage() {
               {invoice.due_date && (
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Due Date</p>
-                  <p className={`font-bold ${invoice.status === '🔴 Overdue' ? 'text-red-600' : 'text-gray-700'}`}>
+                  <p className={`font-bold ${invoice.status === 'overdue' ? 'text-red-600' : 'text-gray-700'}`}>
                     {new Date(invoice.due_date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
                 </div>
@@ -163,7 +164,7 @@ export default function PublicInvoicePage() {
           </div>
 
           {/* Pay Now button */}
-          {invoice.status !== '🟢 Paid' && (
+          {invoice.status !== 'paid' && (
             <div className="mb-6 print:hidden">
               <button
                 onClick={async () => {

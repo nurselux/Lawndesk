@@ -44,7 +44,7 @@ export default function Sidebar() {
         .from('Invoices')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('status', '🔴 Overdue'),
+        .eq('status', 'overdue'),
       (supabase as any)
         .from('booking_requests')
         .select('*', { count: 'exact', head: true })

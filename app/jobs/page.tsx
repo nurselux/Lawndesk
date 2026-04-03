@@ -7,6 +7,7 @@ import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
+import { JobStatusBadge, JOB_STATUS_CONFIG, JobStatus, RECURRING_CONFIG, RecurringType } from '../../lib/status-config'
 
 interface Job {
   id: string
@@ -86,10 +87,10 @@ export default function JobsPage() {
   const [clientId, setClientId] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
-  const [status, setStatus] = useState('🔵 Scheduled')
+  const [status, setStatus] = useState('scheduled')
   const [notes, setNotes] = useState('')
   const [assignedTo, setAssignedTo] = useState('')
-  const [recurring, setRecurring] = useState('🔂 One-time')
+  const [recurring, setRecurring] = useState('one_time')
   const [customRecurring, setCustomRecurring] = useState('')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
@@ -102,10 +103,10 @@ export default function JobsPage() {
   const [editClientId, setEditClientId] = useState('')
   const [editDate, setEditDate] = useState('')
   const [editTime, setEditTime] = useState('')
-  const [editStatus, setEditStatus] = useState('🔵 Scheduled')
+  const [editStatus, setEditStatus] = useState('scheduled')
   const [editNotes, setEditNotes] = useState('')
   const [editAssignedTo, setEditAssignedTo] = useState('')
-  const [editRecurring, setEditRecurring] = useState('🔂 One-time')
+  const [editRecurring, setEditRecurring] = useState('one_time')
   const [editCustomRecurring, setEditCustomRecurring] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -176,11 +177,11 @@ export default function JobsPage() {
 
     while (current <= endDate) {
       dates.push(current.toISOString().split('T')[0])
-      if (recurringType === '📅 Weekly') {
+      if (recurringType === 'weekly') {
         current.setDate(current.getDate() + 7)
-      } else if (recurringType === '🗓️ Biweekly') {
+      } else if (recurringType === 'biweekly') {
         current.setDate(current.getDate() + 14)
-      } else if (recurringType === '📆 Monthly') {
+      } else if (recurringType === 'monthly') {
         current.setMonth(current.getMonth() + 1)
       } else {
         break
@@ -196,7 +197,7 @@ export default function JobsPage() {
       setTimeout(() => setErrorMessage(''), 3000)
       return
     }
-    if (recurring === '✏️ Custom' && !customRecurring) {
+    if (recurring === 'custom' && !customRecurring) {
       setErrorMessage('Please describe your custom schedule')
       setTimeout(() => setErrorMessage(''), 3000)
       return
@@ -204,7 +205,7 @@ export default function JobsPage() {
     setSaving(true)
 
     const selectedClient = clients.find(c => c.id === clientId)
-    const finalRecurring = recurring === '✏️ Custom' ? customRecurring : recurring
+    const finalRecurring = recurring === 'custom' ? customRecurring : recurring
     const dates = generateRecurringDates(date, recurring)
 
     const jobsToInsert = dates.map((d) => ({
@@ -228,15 +229,15 @@ export default function JobsPage() {
       setClientId('')
       setDate('')
       setTime('')
-      setStatus('🔵 Scheduled')
+      setStatus('scheduled')
       setNotes('')
       setAssignedTo('')
-      setRecurring('🔂 One-time')
+      setRecurring('one_time')
       setCustomRecurring('')
       setShowForm(false)
       const count = jobsToInsert.length
       setSuccessMessage(
-        recurring === '🔂 One-time'
+        recurring === 'one_time'
           ? '🎉 Job scheduled successfully!'
           : `🎉 ${count} recurring jobs scheduled for the next 3 months!`
       )
@@ -260,7 +261,7 @@ export default function JobsPage() {
     setEditStatus(job.status)
     setEditNotes(job.notes)
     setEditAssignedTo(job.assigned_to || '')
-    setEditRecurring(job.recurring || '🔂 One-time')
+    setEditRecurring(job.recurring || 'one_time')
     setEditCustomRecurring('')
     setShowForm(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -275,7 +276,7 @@ export default function JobsPage() {
     }
     setSaving(true)
     const selectedClient = clients.find(c => c.id === editClientId)
-    const finalRecurring = editRecurring === '✏️ Custom' ? editCustomRecurring : editRecurring
+    const finalRecurring = editRecurring === 'custom' ? editCustomRecurring : editRecurring
     const { error } = await (supabase.from('Jobs') as any)
       .update({
         title: finalTitle,
@@ -347,7 +348,7 @@ export default function JobsPage() {
     await supabase.from('Jobs').update({ status: newStatus }).eq('id', id)
     fetchJobs()
 
-    if (newStatus === '🟢 Completed') {
+    if (newStatus === 'completed') {
       const job = jobs.find(j => j.id === id)
       if (!job?.client_id) return
 
@@ -357,7 +358,7 @@ export default function JobsPage() {
           .select('share_token, amount, invoice_number')
           .eq('client_id', job.client_id)
           .eq('user_id', user?.id)
-          .in('status', ['🟡 Unpaid', '🔴 Overdue'])
+          .in('status', ['unpaid', 'overdue'])
           .order('created_at', { ascending: false })
           .limit(1),
       ])
@@ -375,7 +376,7 @@ export default function JobsPage() {
           client_email: clientData?.email || null,
           client_phone: clientData?.phone || null,
           amount: 0,
-          status: '🟡 Unpaid',
+          status: 'unpaid',
           due_date: dueDate.toISOString().split('T')[0],
           description: job.title,
           invoice_number: nextNum,
@@ -488,7 +489,7 @@ export default function JobsPage() {
         <div className="flex flex-col gap-1.5 items-end shrink-0">
           {(() => {
             const today = new Date().toISOString().split('T')[0]
-            const todayJobs = jobs.filter(j => j.date === today && j.status !== '🔴 Cancelled')
+            const todayJobs = jobs.filter(j => j.date === today && j.status !== 'cancelled')
             const addresses = [...new Set(todayJobs.map(j => clients.find(c => c.id === j.client_id)?.address).filter((a): a is string => !!a && a.trim().length > 0))]
             if (addresses.length < 2) return null
             const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(addresses[0])}&destination=${encodeURIComponent(addresses[addresses.length - 1])}${addresses.length > 2 ? `&waypoints=${addresses.slice(1, -1).map(a => encodeURIComponent(a)).join('|')}` : ''}`
@@ -541,11 +542,11 @@ export default function JobsPage() {
           onChange={(e) => setFilterStatus(e.target.value)}
           className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full sm:w-auto"
         >
-          <option>All</option>
-          <option>🔵 Scheduled</option>
-          <option>🟡 In Progress</option>
-          <option>🟢 Completed</option>
-          <option>🔴 Cancelled</option>
+          <option value="All">All</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -630,17 +631,17 @@ export default function JobsPage() {
               <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔂 One-time</option>
-              <option>📅 Weekly</option>
-              <option>🗓️ Biweekly</option>
-              <option>📆 Monthly</option>
-              <option>✏️ Custom</option>
+              <option value="one_time">One-time</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Biweekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom</option>
             </select>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔵 Scheduled</option>
-              <option>🟡 In Progress</option>
-              <option>🟢 Completed</option>
-              <option>🔴 Cancelled</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
             {workers.length > 0 && (
               <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -650,7 +651,7 @@ export default function JobsPage() {
                 ))}
               </select>
             )}
-            {recurring === '✏️ Custom' && (
+            {recurring === 'custom' && (
               <input
                 placeholder="Describe your schedule (e.g. Every 10 days)"
                 value={customRecurring}
@@ -665,12 +666,12 @@ export default function JobsPage() {
               className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
             />
           </div>
-          {recurring !== '🔂 One-time' && recurring !== '✏️ Custom' && (
+          {recurring !== 'one_time' && recurring !== 'custom' && (
             <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-700 font-bold text-sm">📅 This will automatically schedule jobs for the next 3 months!</p>
             </div>
           )}
-          {recurring === '✏️ Custom' && (
+          {recurring === 'custom' && (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-blue-700 font-bold text-sm">📝 Custom schedule will be saved as a note on the job.</p>
             </div>
@@ -721,17 +722,17 @@ export default function JobsPage() {
               <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <select value={editRecurring} onChange={(e) => setEditRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔂 One-time</option>
-              <option>📅 Weekly</option>
-              <option>🗓️ Biweekly</option>
-              <option>📆 Monthly</option>
-              <option>✏️ Custom</option>
+              <option value="one_time">One-time</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Biweekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom</option>
             </select>
             <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔵 Scheduled</option>
-              <option>🟡 In Progress</option>
-              <option>🟢 Completed</option>
-              <option>🔴 Cancelled</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
             {workers.length > 0 && (
               <select value={editAssignedTo} onChange={(e) => setEditAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -741,7 +742,7 @@ export default function JobsPage() {
                 ))}
               </select>
             )}
-            {editRecurring === '✏️ Custom' && (
+            {editRecurring === 'custom' && (
               <input
                 placeholder="Describe your schedule (e.g. Every 10 days)"
                 value={editCustomRecurring}
@@ -835,9 +836,9 @@ export default function JobsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {groupedJobs[dateKey].map((job) => (
             <div key={job.id} className={`bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4 ${
-              job.status === '🟢 Completed' ? 'border-green-500' :
-              job.status === '🟡 In Progress' ? 'border-yellow-500' :
-              job.status === '🔴 Cancelled' ? 'border-red-500' :
+              job.status === 'completed' ? 'border-green-500' :
+              job.status === 'in_progress' ? 'border-yellow-500' :
+              job.status === 'cancelled' ? 'border-red-500' :
               'border-blue-500'
             }`}>
               <div className="flex justify-between items-start mb-2">
@@ -867,7 +868,9 @@ export default function JobsPage() {
                 {job.recurring && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Sched:</span>
-                    <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${job.recurring === '🔂 One-time' ? 'bg-gray-100 text-gray-500' : 'bg-cyan-50 text-cyan-600'}`}>{job.recurring}</span>
+                    <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${job.recurring === 'one_time' ? 'bg-gray-100 text-gray-500' : 'bg-cyan-50 text-cyan-600'}`}>
+                      {(RECURRING_CONFIG as any)[job.recurring]?.label ?? job.recurring}
+                    </span>
                   </div>
                 )}
                 {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">📝 {job.notes}</p>}
@@ -902,19 +905,19 @@ export default function JobsPage() {
                 value={job.status}
                 onChange={(e) => handleStatusChange(job.id, e.target.value)}
                 className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer w-full ${
-                  job.status === '🟢 Completed' ? 'bg-green-100 text-green-700' :
-                  job.status === '🟡 In Progress' ? 'bg-yellow-100 text-yellow-700' :
-                  job.status === '🔴 Cancelled' ? 'bg-red-100 text-red-700' :
+                  job.status === 'completed' ? 'bg-green-100 text-green-700' :
+                  job.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
+                  job.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                   'bg-blue-100 text-blue-700'
                 }`}
               >
-                <option>🔵 Scheduled</option>
-                <option>🟡 In Progress</option>
-                <option>🟢 Completed</option>
-                <option>🔴 Cancelled</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
               <div className="flex gap-2 mt-2 flex-wrap">
-                {(job.status === '🔵 Scheduled' || job.status === '🟡 In Progress') && (clients.find(c => c.id === job.client_id)?.phone || clients.find(c => c.id === job.client_id)?.email) && (
+                {(job.status === 'scheduled' || job.status === 'in_progress') && (clients.find(c => c.id === job.client_id)?.phone || clients.find(c => c.id === job.client_id)?.email) && (
                   <button
                     onClick={() => handleNotifyClient(job)}
                     disabled={notifyingJob === job.id}
@@ -933,7 +936,7 @@ export default function JobsPage() {
                     setEditTime(job.time)
                     setEditStatus(job.status)
                     setEditNotes(job.notes)
-                    setEditRecurring(job.recurring || '🔂 One-time')
+                    setEditRecurring(job.recurring || 'one_time')
                     setShowPhotos(job.id)
                   }}
                   className="text-xs font-bold py-1.5 px-3 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
