@@ -253,12 +253,21 @@ export default function BookingPage() {
 
         {error && <p className="text-red-500 text-sm font-semibold text-center">{error}</p>}
 
+        {/* SMS consent — required for A2P 10DLC compliance */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-gray-600 leading-relaxed">
+          By submitting this form, I agree to receive automated SMS text messages from{' '}
+          <span className="font-semibold">LawnDesk</span> and the service provider regarding my
+          appointment, quote, and service updates. Message frequency varies. Msg &amp; data rates
+          may apply. Reply <span className="font-semibold">STOP</span> to opt out,{' '}
+          <span className="font-semibold">HELP</span> for help.
+        </div>
+
         <button
           onClick={handleSubmit}
           disabled={submitting}
           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg hover:scale-[1.02] transition-all shadow-md cursor-pointer disabled:opacity-50"
         >
-          {submitting ? '⏳ Sending...' : '🌿 Request Free Estimate'}
+          {submitting ? 'Sending...' : 'Request Free Estimate'}
         </button>
 
         <p className="text-center text-gray-400 text-xs pb-6">Powered by <span className="font-semibold text-green-600">LawnDesk</span></p>

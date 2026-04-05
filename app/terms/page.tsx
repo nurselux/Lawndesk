@@ -50,14 +50,20 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-xl font-bold text-gray-800 mb-3">8. SMS Messaging</h2>
-            <p>By providing your phone number and opting into SMS notifications, you agree to receive service-related text messages from LawnDesk. Message and data rates may apply based on your carrier plan.</p>
-            <p className="mb-2">You can opt-out of SMS messages at any time by:</p>
-            <ul className="list-disc list-inside ml-5 space-y-2">
-              <li>Replying <strong>STOP</strong> to any SMS message from LawnDesk</li>
-              <li>Disabling SMS notifications in your account settings</li>
-              <li>Contacting us at <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a></li>
+            <p className="mb-3">
+              <strong>Program name: LawnDesk SMS Notifications.</strong> By providing your phone
+              number and opting into SMS notifications, you agree to receive automated service-related
+              text messages from LawnDesk, including appointment reminders, job status updates,
+              invoice links, and quote notifications.
+            </p>
+            <p className="mb-3">Message frequency varies based on your service schedule. Msg &amp; data rates may apply based on your carrier plan.</p>
+            <p className="mb-2">To opt out of SMS messages at any time:</p>
+            <ul className="list-disc list-inside ml-5 space-y-2 mb-3">
+              <li>Reply <strong>STOP</strong> to any SMS message from LawnDesk</li>
+              <li>Disable SMS notifications in your account settings</li>
+              <li>Contact us at <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a></li>
             </ul>
-            <p className="text-gray-500 text-sm">For help with SMS issues, text <strong>HELP</strong> to our messaging service.</p>
+            <p className="text-gray-600">For help, reply <strong>HELP</strong> to any message or email <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a>.</p>
           </section>
 
           <section>

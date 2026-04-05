@@ -25,14 +25,18 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-bold text-gray-800 mb-3">3. SMS Communications</h2>
-            <p>If you opt-in to receive SMS notifications, your phone number is used solely for:</p>
+            <p className="mb-3">
+              <strong>Program name: LawnDesk SMS Notifications.</strong> If you opt-in to receive
+              SMS notifications, your phone number is used solely for service-related communications:
+            </p>
             <ul className="list-disc list-inside ml-5 space-y-2">
-              <li>Service reminders and scheduling notifications</li>
-              <li>Billing and subscription alerts</li>
-              <li>Job status updates</li>
-              <li>Booking request confirmations</li>
+              <li>Service appointment reminders and scheduling notifications</li>
+              <li>Job status updates (e.g., crew on the way, service complete)</li>
+              <li>Invoice and payment links</li>
+              <li>Quote approvals and booking confirmations</li>
             </ul>
-            <p className="text-gray-500 text-sm mt-3">Your phone number is never shared with third parties or used for marketing purposes.</p>
+            <p className="text-gray-700 mt-3 font-medium">Your phone number is never sold, shared with third parties, or used for marketing purposes unrelated to your service.</p>
+            <p className="text-gray-500 text-sm mt-2">To opt out, reply <strong>STOP</strong> to any message. For help, reply <strong>HELP</strong>. Msg &amp; data rates may apply.</p>
           </section>
 
           <section>

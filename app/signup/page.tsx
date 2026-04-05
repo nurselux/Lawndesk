@@ -100,7 +100,7 @@ function SignupContent() {
             />
           </div>
 
-          <label className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-100 select-none cursor-pointer">
+          <label className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200 select-none cursor-pointer">
             <input
               type="checkbox"
               checked={smsConsent}
@@ -109,11 +109,14 @@ function SignupContent() {
               required
             />
             <span className="text-sm text-gray-700 leading-relaxed flex-1">
-              <span className="font-semibold">I agree to receive SMS notifications</span> regarding my service, scheduling, and billing. Message and data rates may apply.{' '}
-              <Link href="/terms" className="text-green-600 hover:underline" target="_blank" rel="noopener">
-                Terms apply
-              </Link>
-              .
+              By checking this box, I agree to receive automated SMS text messages from{' '}
+              <span className="font-semibold">LawnDesk</span> about my service appointments,
+              scheduling reminders, invoices, and job status updates. Message frequency varies.
+              Msg &amp; data rates may apply. Reply <span className="font-semibold">STOP</span> to
+              cancel, <span className="font-semibold">HELP</span> for help.{' '}
+              <Link href="/privacy" className="text-green-600 hover:underline" target="_blank" rel="noopener">Privacy Policy</Link>
+              {' '}·{' '}
+              <Link href="/terms" className="text-green-600 hover:underline" target="_blank" rel="noopener">Terms</Link>
             </span>
           </label>
 
@@ -128,7 +131,7 @@ function SignupContent() {
             disabled={loading}
             className="w-full bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors duration-200 cursor-pointer text-lg"
           >
-            {loading ? '⏳ Creating account...' : 'Create Free Account'}
+            {loading ? 'Creating account...' : 'Create Free Account'}
           </button>
 
           <button
