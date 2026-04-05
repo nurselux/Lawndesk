@@ -50,7 +50,8 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-3">5. Third-Party Services</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">5. Third-Party Services & Data Sharing</h2>
+            <p className="mb-3">We do not sell or share mobile or personal data with third parties, affiliates, or partners for marketing or promotional purposes. We only share data with third parties when it is strictly necessary to deliver our service and only under binding agreements that ensure confidentiality. Under no circumstances will mobile data be shared or sold for advertising or promotional use.</p>
             <p>We use Stripe for payment processing. Stripe's privacy policy governs any payment information you provide. We do not store credit card details on our servers.</p>
           </section>
 
