@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { HardHat, Mail, CheckCircle2 } from 'lucide-react'
+import { JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
 
 interface Worker {
   id: string
@@ -118,7 +118,7 @@ export default function TeamPage() {
       .from('Jobs')
       .select('id, title, client_name, date, time, status, clocked_in_at, clocked_out_at, assigned_to')
       .eq('user_id', user?.id)
-      .not('status', 'eq', '🔴 Cancelled')
+      .not('status', 'eq', 'cancelled')
       .order('date', { ascending: true })
     if (data) setJobs(data as Job[])
   }
@@ -208,9 +208,9 @@ export default function TeamPage() {
         }
       )
       if (emailRes.ok) {
-        setSuccessMessage(`Invite email sent to ${data.email}!`)
+        setSuccessMessage(`✅ Invite email sent to ${data.email}!`)
       } else {
-        setSuccessMessage(`Invite created! Use the Copy Link button to share it manually.`)
+        setSuccessMessage(`✅ Invite created! Use the Copy Link button to share it manually.`)
       }
       setTimeout(() => setSuccessMessage(''), 6000)
     }
@@ -298,7 +298,7 @@ export default function TeamPage() {
   return (
     <div className="p-6 pb-6 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md"><HardHat className="w-6 h-6" aria-hidden="true" /></div>
+        <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">👷</div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800 leading-none">Team</h2>
           <p className="text-gray-500 text-sm">Invite workers and manage permissions</p>
@@ -311,7 +311,7 @@ export default function TeamPage() {
 
       {/* Invite form */}
       <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
-        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><Mail className="w-4 h-4" aria-hidden="true" />Invite a Worker</h3>
+        <h3 className="font-bold text-gray-800 mb-4">📨 Invite a Worker</h3>
         <div className="space-y-3">
           <input
             type="email"
@@ -496,9 +496,9 @@ export default function TeamPage() {
               const isExpanded = expandedWorker === worker.id
               const isAssigning = assigningJobTo === worker.id
               const workerJobs = jobs.filter(j => j.assigned_to === worker.id)
-              const upcomingJobs = workerJobs.filter(j => j.status !== '🟢 Completed')
+              const upcomingJobs = workerJobs.filter(j => j.status !== 'completed')
               const hours = totalHours(worker.id)
-              const unassignedJobs = jobs.filter(j => !j.assigned_to && j.status !== '🟢 Completed')
+              const unassignedJobs = jobs.filter(j => !j.assigned_to && j.status !== 'completed')
 
               return (
                 <div key={worker.id} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
@@ -607,7 +607,7 @@ export default function TeamPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs">{job.status.split(' ')[0]}</span>
+                                <span className="text-xs">{JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}</span>
                                 <button
                                   onClick={() => handleUnassignJob(job.id)}
                                   className="text-xs text-red-400 hover:text-red-600 font-semibold cursor-pointer"

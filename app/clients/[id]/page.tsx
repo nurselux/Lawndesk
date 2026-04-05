@@ -5,8 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../lib/useAuth'
-import { Mail, Phone, MapPin, FileText, CalendarDays, ClipboardList, Receipt, Pencil, MessageSquare, Share2, Check, CheckCircle2, XCircle } from 'lucide-react'
-import { JobStatusBadge, InvoiceStatusBadge, QuoteStatusBadge } from '../../../lib/statusIcons'
+import { JOB_STATUS_CONFIG, JobStatus, INVOICE_STATUS_CONFIG, InvoiceStatus } from '../../../lib/status-config'
 
 interface Client {
   id: string
@@ -150,8 +149,21 @@ export default function ClientDetailPage() {
     }
   }
 
-  const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)
-  const totalOwed = invoices.filter(i => i.status === '🟡 Unpaid' || i.status === '🔴 Overdue').reduce((s, i) => s + i.amount, 0)
+  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
+  const totalOwed = invoices.filter(i => i.status === 'unpaid' || i.status === 'overdue').reduce((s, i) => s + i.amount, 0)
+
+  const jobStatusColor = (status: string) => {
+    if (status === 'completed') return 'bg-green-100 text-green-700'
+    if (status === 'in_progress') return 'bg-yellow-100 text-yellow-700'
+    if (status === 'cancelled') return 'bg-red-100 text-red-700'
+    return 'bg-blue-100 text-blue-700'
+  }
+
+  const invoiceStatusColor = (status: string) => {
+    if (status === 'paid') return 'bg-green-100 text-green-700'
+    if (status === 'overdue') return 'bg-red-100 text-red-700'
+    return 'bg-yellow-100 text-yellow-700'
+  }
 
   if (loading || dataLoading) return (
     <div className="flex items-center justify-center min-h-dvh">
@@ -168,10 +180,10 @@ export default function ClientDetailPage() {
       </Link>
 
       {successMessage && (
-        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-xl mb-4 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />{successMessage}</div>
+        <div className="bg-green-100 text-green-700 font-bold p-4 rounded-xl mb-4">✅ {successMessage}</div>
       )}
       {errorMessage && (
-        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-xl mb-4 flex items-center gap-2"><XCircle className="w-4 h-4 shrink-0" aria-hidden="true" />{errorMessage}</div>
+        <div className="bg-red-100 text-red-700 font-bold p-4 rounded-xl mb-4">❌ {errorMessage}</div>
       )}
 
       {/* Client Header / Edit Form */}
@@ -201,17 +213,17 @@ export default function ClientDetailPage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-3">{client.name}</h2>
                 <div className="space-y-1">
-                  {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1"><Mail className="w-3.5 h-3.5" aria-hidden="true" />{client.email}</a>}
-                  {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 hover:text-green-600 transition-colors flex items-center gap-1"><Phone className="w-3.5 h-3.5" aria-hidden="true" />{client.phone}</a>}
-                  {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-orange-600 transition-colors flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" />{client.address}</a>}
-                  {client.notes && <p className="text-gray-400 text-sm mt-2 flex items-start gap-1"><FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{client.notes}</p>}
+                  {client.email && <a href={`mailto:${client.email}`} className="text-gray-500 hover:text-blue-600 transition-colors block">📧 {client.email}</a>}
+                  {client.phone && <a href={`tel:${client.phone}`} className="text-gray-500 hover:text-green-600 transition-colors block">📞 {client.phone}</a>}
+                  {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-orange-600 transition-colors block">📍 {client.address}</a>}
+                  {client.notes && <p className="text-gray-400 text-sm mt-2">📝 {client.notes}</p>}
                 </div>
               </div>
               <button
                 onClick={() => handleEditOpen(client)}
-                className="border-2 border-green-700 text-green-700 font-bold py-2 px-4 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer text-sm flex items-center gap-1"
+                className="border-2 border-green-700 text-green-700 font-bold py-2 px-4 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer text-sm"
               >
-                <Pencil className="w-3.5 h-3.5" aria-hidden="true" /> Edit
+                ✏️ Edit
               </button>
             </div>
 
@@ -228,16 +240,16 @@ export default function ClientDetailPage() {
                   {client?.phone && (
                     <a
                       href={`sms:${client.phone}?body=${encodeURIComponent(`Hi ${client.name}, view your quotes and invoices here: ${portalUrl}${client.email ? ` — sign in with ${client.email}` : ''}`)}`}
-                      className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors flex items-center gap-1"
+                      className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
                     >
-                      <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
+                      💬 Text
                     </a>
                   )}
                   <button
                     onClick={sharePortal}
-                    className="text-xs font-bold py-2 px-3 rounded-lg bg-green-700 text-white hover:bg-green-800 transition-colors cursor-pointer flex items-center gap-1"
+                    className="text-xs font-bold py-2 px-3 rounded-lg bg-green-700 text-white hover:bg-green-800 transition-colors cursor-pointer"
                   >
-                    {portalCopied ? <><Check className="w-3.5 h-3.5" aria-hidden="true" /> Copied!</> : <><Share2 className="w-3.5 h-3.5" aria-hidden="true" /> Share</>}
+                    {portalCopied ? '✓ Copied!' : '📲 Share'}
                   </button>
                 </div>
               </div>
@@ -271,7 +283,7 @@ export default function ClientDetailPage() {
           </div>
           {jobs.length === 0 ? (
             <div className="text-center py-8">
-              <CalendarDays className="w-10 h-10 mx-auto text-gray-200 mb-2" aria-hidden="true" />
+              <p className="text-3xl mb-2">📅</p>
               <p className="text-gray-400 text-sm">No jobs yet</p>
             </div>
           ) : (
@@ -282,7 +294,9 @@ export default function ClientDetailPage() {
                     <p className="font-semibold text-gray-800 text-sm">{job.title}</p>
                     <p className="text-xs text-gray-400">{job.date}{job.time ? ` · ${job.time}` : ''}</p>
                   </div>
-                  <JobStatusBadge status={job.status} />
+                  <span className={`text-xs font-bold py-1 px-2 rounded-full ${jobStatusColor(job.status)}`}>
+                    {JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}
+                  </span>
                 </div>
               ))}
             </div>
@@ -297,7 +311,7 @@ export default function ClientDetailPage() {
           </div>
           {quotes.length === 0 ? (
             <div className="text-center py-8">
-              <ClipboardList className="w-10 h-10 mx-auto text-gray-200 mb-2" aria-hidden="true" />
+              <p className="text-3xl mb-2">📋</p>
               <p className="text-gray-400 text-sm">No quotes yet</p>
             </div>
           ) : (
@@ -310,7 +324,15 @@ export default function ClientDetailPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-gray-800 text-sm">${q.amount.toFixed(2)}</span>
-                    <QuoteStatusBadge status={q.status} />
+                    <span className={`text-xs font-bold py-1 px-2 rounded-full ${
+                      q.status === 'approved' ? 'bg-green-100 text-green-700' :
+                      q.status === 'declined' ? 'bg-red-100 text-red-500' :
+                      q.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                      q.status === 'converted' ? 'bg-purple-100 text-purple-700' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>
+                      {q.status}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -326,7 +348,7 @@ export default function ClientDetailPage() {
           </div>
           {invoices.length === 0 ? (
             <div className="text-center py-8">
-              <Receipt className="w-10 h-10 mx-auto text-gray-200 mb-2" aria-hidden="true" />
+              <p className="text-3xl mb-2">📄</p>
               <p className="text-gray-400 text-sm">No invoices yet</p>
             </div>
           ) : (
@@ -338,7 +360,9 @@ export default function ClientDetailPage() {
                     {inv.description && <p className="text-xs text-gray-400 truncate max-w-[120px] sm:max-w-[160px]">{inv.description}</p>}
                     {inv.due_date && <p className="text-xs text-gray-400">Due {inv.due_date}</p>}
                   </div>
-                  <InvoiceStatusBadge status={inv.status} />
+                  <span className={`text-xs font-bold py-1 px-2 rounded-full ${invoiceStatusColor(inv.status)}`}>
+                    {INVOICE_STATUS_CONFIG[inv.status as InvoiceStatus]?.label ?? inv.status}
+                  </span>
                 </div>
               ))}
             </div>

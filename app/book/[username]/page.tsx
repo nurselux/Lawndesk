@@ -4,15 +4,27 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
-import { Leaf, CheckCircle2, Loader2 } from 'lucide-react'
-import { stripEmoji } from '../../../lib/statusIcons'
 
-const JOB_TYPES = [
-  '🌿 Lawn Mowing', '✂️ Hedge Trimming', '💨 Leaf Blowing', '🍂 Leaf Removal',
-  '🌳 Bush Trimming', '🪓 Tree Trimming', '🪴 Mulching', '🌱 Fertilizing',
-  '🌾 Weed Control', '🕳️ Aeration', '🌻 Overseeding', '🟩 Sod Installation',
-  '🌺 Garden Bed Maintenance', '💧 Irrigation System Check', '🚿 Pressure Washing',
-  '❄️ Snow Removal', '🍃 Gutter Cleaning', '🧹 General Cleanup', '✏️ Other',
+const SERVICE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'lawn_mowing',              label: 'Lawn Mowing' },
+  { value: 'hedge_trimming',           label: 'Hedge Trimming' },
+  { value: 'leaf_blowing',             label: 'Leaf Blowing' },
+  { value: 'leaf_removal',             label: 'Leaf Removal' },
+  { value: 'bush_trimming',            label: 'Bush Trimming' },
+  { value: 'tree_trimming',            label: 'Tree Trimming' },
+  { value: 'mulching',                 label: 'Mulching' },
+  { value: 'fertilizing',              label: 'Fertilizing' },
+  { value: 'weed_control',             label: 'Weed Control' },
+  { value: 'aeration',                 label: 'Aeration' },
+  { value: 'overseeding',              label: 'Overseeding' },
+  { value: 'sod_installation',         label: 'Sod Installation' },
+  { value: 'garden_bed_maintenance',   label: 'Garden Bed Maintenance' },
+  { value: 'irrigation_system_check',  label: 'Irrigation System Check' },
+  { value: 'pressure_washing',         label: 'Pressure Washing' },
+  { value: 'snow_removal',             label: 'Snow Removal' },
+  { value: 'gutter_cleaning',          label: 'Gutter Cleaning' },
+  { value: 'general_cleanup',          label: 'General Cleanup' },
+  { value: 'other',                    label: 'Other' },
 ]
 
 interface BusinessProfile {
@@ -58,8 +70,8 @@ export default function BookingPage() {
     const msg = p.get('message'); if (msg) setMessage(msg)
     const service = p.get('service')
     if (service) {
-      const match = JOB_TYPES.find(t => t.toLowerCase().includes(service.toLowerCase()))
-      if (match) setServiceType(match)
+      const match = SERVICE_OPTIONS.find(t => t.label.toLowerCase().includes(service.toLowerCase()) || t.value.toLowerCase().includes(service.toLowerCase()))
+      if (match) setServiceType(match.value)
     }
   }, [])
 
@@ -113,7 +125,7 @@ export default function BookingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: (business as any).phone,
-          message: `🌿 New booking request from ${clientName}! Service: ${serviceType}${preferredDate ? ` on ${preferredDate}` : ''}. Check your LawnDesk Requests.`,
+          message: `🌿 New booking request from ${clientName}! Service: ${SERVICE_OPTIONS.find(t => t.value === serviceType)?.label ?? serviceType}${preferredDate ? ` on ${preferredDate}` : ''}. Check your LawnDesk Requests.`,
         }),
       })
     }
@@ -135,7 +147,7 @@ export default function BookingPage() {
     <>
       <AdminViewBanner view="Client Booking" />
       <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-        <Leaf className="w-14 h-14 text-green-400 mx-auto mb-4" aria-hidden="true" />
+        <p className="text-5xl mb-4">🌿</p>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Booking page not found</h1>
         <p className="text-gray-500">This booking link is inactive or doesn't exist.</p>
       </div>
@@ -147,7 +159,7 @@ export default function BookingPage() {
       <AdminViewBanner view="Client Booking" />
       <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full">
-          <CheckCircle2 className="w-14 h-14 text-green-500 mx-auto mb-4" aria-hidden="true" />
+          <p className="text-5xl mb-4">✅</p>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Request Received!</h1>
           <p className="text-gray-500 mb-2">Thanks, <strong>{clientName}</strong>! Your request has been sent to <strong>{business?.business_name || 'the business'}</strong>.</p>
           <p className="text-gray-400 text-sm">We'll be in touch within 24 hours to schedule your free estimate.</p>
@@ -162,7 +174,7 @@ export default function BookingPage() {
       <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-50">
         {/* Header */}
       <div className="bg-green-700 text-white px-6 py-8 text-center">
-        <Leaf className="w-8 h-8 text-green-300 mx-auto mb-2" aria-hidden="true" />
+        <p className="text-3xl mb-2">🌿</p>
         <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
         <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
           {business?.booking_welcome_message || "Fill out the form and we'll get back to you within 24 hours with a free estimate."}
@@ -212,7 +224,7 @@ export default function BookingPage() {
               className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
             >
               <option value="">Select a Service *</option>
-              {JOB_TYPES.map(t => <option key={t} value={t}>{stripEmoji(t)}</option>)}
+              {SERVICE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
             <div className="grid grid-cols-2 gap-3">
               <input
@@ -246,7 +258,7 @@ export default function BookingPage() {
           disabled={submitting}
           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg hover:scale-[1.02] transition-all shadow-md cursor-pointer disabled:opacity-50"
         >
-          {submitting ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Sending...</> : <><Leaf className="w-5 h-5 inline mr-2" aria-hidden="true" />Request Free Estimate</>}
+          {submitting ? '⏳ Sending...' : '🌿 Request Free Estimate'}
         </button>
 
         <p className="text-center text-gray-400 text-xs pb-6">Powered by <span className="font-semibold text-green-600">LawnDesk</span></p>

@@ -75,7 +75,7 @@ export default function PortalDashboardPage() {
   }
 
   const totalOwed = invoices
-    .filter(i => i.status !== '🟢 Paid')
+    .filter(i => i.status !== 'paid')
     .reduce((s, i) => s + i.amount, 0)
 
   const pendingQuotes = quotes.filter(q => q.status === 'sent')
@@ -185,8 +185,8 @@ export default function PortalDashboardPage() {
           ) : (
             <div className="space-y-3">
               {invoices.map(inv => {
-                const isPaid = inv.status === '🟢 Paid'
-                const isOverdue = inv.status === '🔴 Overdue'
+                const isPaid = inv.status === 'paid'
+                const isOverdue = inv.status === 'overdue'
                 return (
                   <div key={inv.id} className={`bg-white rounded-2xl shadow-sm overflow-hidden border-l-4 ${
                     isPaid ? 'border-green-500' : isOverdue ? 'border-red-500' : 'border-amber-500'
