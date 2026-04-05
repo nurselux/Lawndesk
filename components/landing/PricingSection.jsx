@@ -63,10 +63,10 @@ export default function PricingSection() {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${
+              className={`relative rounded-3xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer ${
                 plan.highlight
-                  ? 'bg-gradient-to-br from-[#0d3320] to-emerald-900'
-                  : 'bg-gradient-to-br from-emerald-300 via-emerald-200 to-teal-300'
+                  ? 'bg-gradient-to-br from-[#0d3320] to-emerald-900 border-2 border-emerald-600/50 mt-4'
+                  : 'bg-white border-2 border-gray-200'
               }`}
             >
               {/* Badge */}
@@ -78,18 +78,18 @@ export default function PricingSection() {
                 </div>
               )}
 
-              <div className={`p-8 ${plan.highlight ? 'text-white' : ''}`}>
+              <div className={`p-8 ${plan.highlight ? 'pt-10 text-white' : ''}`}>
                 {/* Plan header */}
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={`text-4xl sm:text-5xl font-extrabold ${plan.highlight ? 'text-white' : 'text-gray-800'}`}>
+                    <div className={`text-5xl sm:text-6xl font-black ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
                       ${plan.highlight && aiAddOn ? proPrice : plan.price}
                     </div>
-                    <span className={`text-lg ${plan.highlight ? 'text-emerald-200' : 'text-gray-400'}`}>
+                    <span className={`text-lg ${plan.highlight ? 'text-emerald-300' : 'text-gray-400'}`}>
                       /mo
                     </span>
                   </div>
-                  <h3 className={`text-2xl font-bold mb-1 ${plan.highlight ? 'text-white' : 'text-gray-800'}`}>
+                  <h3 className={`text-2xl font-bold mb-1 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
                     {plan.name}
                   </h3>
                   <p className={`text-sm ${plan.highlight ? 'text-emerald-300' : 'text-gray-500'}`}>
@@ -110,7 +110,7 @@ export default function PricingSection() {
                 {/* CTA */}
                 <Link
                   href="/login?signup=true"
-                  className={`group inline-flex items-center gap-2.5 w-full justify-center font-bold py-4 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 ${plan.ctaClass}`}
+                  className={`group inline-flex items-center gap-2.5 w-full justify-center font-bold py-4 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${plan.ctaClass}`}
                 >
                   Try Free for 14 Days
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />

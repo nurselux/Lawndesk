@@ -52,7 +52,7 @@ export default function CTASection() {
         <div className="space-y-4">
           <Link
             href="/login?signup=true"
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400 to-amber-400 text-green-900 font-black py-5 px-10 rounded-2xl text-xl sm:text-2xl font-bold hover:from-yellow-300 hover:to-amber-300 transition-all duration-300 shadow-2xl hover:shadow-yellow-400/50 hover:scale-105"
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400 to-amber-400 text-green-900 font-black py-5 px-10 rounded-2xl text-xl sm:text-2xl hover:from-yellow-300 hover:to-amber-300 transition-all duration-300 shadow-2xl hover:shadow-yellow-400/50 hover:-translate-y-1 cursor-pointer"
           >
             Start Your Free Trial Now
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform duration-300" />

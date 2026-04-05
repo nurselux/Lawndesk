@@ -67,8 +67,11 @@ export default function TestimonialsSection() {
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.name}
-              className="group bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-emerald-200 flex flex-col"
+              className="group bg-white rounded-2xl p-6 sm:p-8 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-2 border-transparent hover:border-emerald-200 flex flex-col relative overflow-hidden"
             >
+              {/* Decorative quote mark */}
+              <div className="absolute top-4 right-6 text-7xl font-black text-emerald-100 select-none leading-none pointer-events-none" aria-hidden="true">"</div>
+
               {/* Stars */}
               <div className="flex gap-0.5 mb-4" role="img" aria-label="5 out of 5 stars">
                 {[...Array(5)].map((_, i) => (

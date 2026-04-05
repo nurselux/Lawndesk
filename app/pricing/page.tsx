@@ -1,75 +1,105 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import {
+  CheckCircle, ArrowRight, Sparkles, Zap, Leaf,
+  Users, Calendar, FileText, RefreshCw, Smartphone,
+  MessageSquare, LayoutDashboard, Shield, Star,
+  ChevronDown, ChevronUp,
+} from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
+const STARTER_PRICE_ID = 'price_1TDXflC4da9Jmue97LkfChat'
+const PRO_PRICE_ID = 'price_1TDXsmC4da9Jmue93UnMFCbZ'
+
+const STARTER_FEATURES = [
+  { icon: Users,          text: 'Unlimited clients' },
+  { icon: Calendar,       text: 'Unlimited job scheduling' },
+  { icon: FileText,       text: 'Invoicing & online payments' },
+  { icon: FileText,       text: 'Quote sending & client approvals' },
+  { icon: LayoutDashboard,text: 'Client portal' },
+  { icon: LayoutDashboard,text: 'Dashboard & reports' },
+  { icon: Smartphone,     text: 'Mobile-friendly — works on any phone' },
+  { icon: MessageSquare,  text: 'Email support' },
+]
+
+const PRO_FEATURES = [
+  { icon: CheckCircle,    text: 'Everything in Starter' },
+  { icon: Users,          text: 'Unlimited team members' },
+  { icon: Smartphone,     text: 'Worker app (On My Way alerts)' },
+  { icon: Calendar,       text: 'Online booking page (your URL)' },
+  { icon: RefreshCw,      text: 'Recurring job automation' },
+  { icon: MessageSquare,  text: 'SMS notifications to clients & crew' },
+  { icon: Shield,         text: "Today's route optimization" },
+  { icon: Star,           text: 'Automated Google review requests' },
+  { icon: Zap,            text: 'Priority support' },
+]
+
+const FAQS = [
+  {
+    q: 'Is there a free trial?',
+    a: 'Yes! Every new account gets a 14-day free trial with full access to all Pro features. No credit card required.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Absolutely. No contracts, no cancellation fees. Cancel your subscription at any time from your account settings.',
+  },
+  {
+    q: 'How do recurring jobs work?',
+    a: 'When scheduling a job, choose weekly, biweekly, or monthly. LawnDesk automatically creates all upcoming jobs for the next 3 months.',
+  },
+  {
+    q: 'What payment methods do you accept?',
+    a: 'We accept all major credit and debit cards through Stripe. Your payment information is encrypted and secure.',
+  },
+  {
+    q: 'Can I change plans later?',
+    a: 'Yes! Upgrade or downgrade at any time from your account settings. Changes take effect immediately.',
+  },
+  {
+    q: 'Do I need a credit card to start?',
+    a: 'No credit card required to start your 14-day free trial. Full Pro access from day one.',
+  },
+  {
+    q: 'Is my data secure?',
+    a: 'Absolutely. Industry-standard encryption and security practices. Your data is stored securely in Supabase PostgreSQL databases.',
+  },
+  {
+    q: 'What is the AI Receptionist add-on?',
+    a: 'The AI Receptionist answers calls and texts 24/7, qualifies leads, and books appointments — so you never miss a customer even while you\'re in the field.',
+  },
+]
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-b border-gray-200 last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between py-5 text-left gap-4 cursor-pointer group"
+        aria-expanded={open}
+      >
+        <span className="text-base sm:text-lg font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors duration-200">
+          {q}
+        </span>
+        {open
+          ? <ChevronUp className="w-5 h-5 text-emerald-600 flex-shrink-0" aria-hidden="true" />
+          : <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0 group-hover:text-emerald-600 transition-colors duration-200" aria-hidden="true" />
+        }
+      </button>
+      {open && (
+        <p className="pb-5 text-gray-600 leading-relaxed text-base">{a}</p>
+      )}
+    </div>
+  )
+}
+
 export default function PricingPage() {
+  const [aiAddOn, setAiAddOn] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isSubscribed, setIsSubscribed] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('stripe_customer_id, subscription_status')
-          .eq('id', session.user.id)
-          .single()
-        const active = !!data?.stripe_customer_id &&
-          ['trialing', 'active', 'past_due'].includes(data?.subscription_status ?? '')
-        setIsSubscribed(active)
-      }
-    }
-    checkUser()
-  }, [])
-
-  const plans = [
-    {
-      name: 'Starter',
-      price: '$19',
-      period: '/mo',
-      description: 'Everything you need to run your business',
-      features: [
-        'Unlimited clients',
-        'Unlimited job scheduling',
-        'Invoicing & online payments',
-        'Quote sending & client approvals',
-        'Client portal',
-        'Dashboard & reports',
-        'Mobile-friendly — works on any phone',
-        'Email support',
-      ],
-      priceId: 'price_1TDXflC4da9Jmue97LkfChat',
-      color: 'border-gray-200',
-      popular: false,
-    },
-    {
-      name: 'Pro',
-      price: '$39',
-      period: '/mo',
-      description: 'For growing crews & serious businesses',
-      features: [
-        'Everything in Starter',
-        'Unlimited team members',
-        'Worker mobile app (On My Way alerts)',
-        'Online booking page (your own URL)',
-        'Recurring job automation',
-        'SMS notifications to clients & crew',
-        'Today\'s route optimization',
-        'Automated Google review requests',
-        'Priority support',
-      ],
-      priceId: 'price_1TDXsmC4da9Jmue93UnMFCbZ',
-      color: 'border-green-500',
-      popular: true,
-    },
-  ]
 
   const handleSubscribe = async (priceId: string) => {
     setLoading(priceId)
@@ -91,126 +121,254 @@ export default function PricingPage() {
       if (data.url) window.location.href = data.url
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoading(null)
     }
-    setLoading(null)
   }
 
   return (
-    <main className="min-h-dvh bg-gradient-to-b from-gray-50 to-white">
-      <nav className="bg-green-700 text-white p-4 flex justify-between items-center">
-        <Link href={isLoggedIn ? '/dashboard' : '/'}>
-          <h1 className="text-2xl font-bold cursor-pointer hover:text-green-200 transition-all duration-200">🌿 LawnDesk</h1>
-        </Link>
-        <button
-          onClick={() => router.push('/login')}
-          className="text-sm bg-white text-green-700 font-bold py-2 px-4 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer"
-        >
-          Login
-        </button>
-      </nav>
-      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
-        <div className="text-center mb-12 pt-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3">Simple, Transparent Pricing</h2>
-          <p className="text-gray-500 text-lg mb-5">No hidden fees. No contracts. Cancel anytime.</p>
-          <div className="inline-flex flex-col sm:flex-row items-center gap-3">
-            <span className="bg-green-100 text-green-700 font-bold py-2 px-5 rounded-full text-sm">
-              🎉 14-Day Pro Trial — No Credit Card to Start
-            </span>
-            <span className="bg-yellow-100 text-yellow-800 font-bold py-2 px-5 rounded-full text-sm">
-              ⚡ Up to 70% cheaper than Jobber
-            </span>
+    <main className="min-h-dvh bg-gray-50">
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 bg-[#0d3320]/95 backdrop-blur-md shadow-lg border-b border-emerald-800/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center gap-2.5 group cursor-pointer">
+              <div className="bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg p-2 shadow-lg group-hover:scale-105 transition-transform duration-200">
+                <Leaf className="w-6 h-6 text-white" aria-hidden="true" />
+              </div>
+              <span className="text-white text-xl font-bold tracking-tight">LawnDesk</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/pricing" className="text-emerald-100 hover:text-white font-medium transition-colors duration-200">
+                Pricing
+              </Link>
+              <Link href="/login" className="text-emerald-100 hover:text-white font-medium transition-colors duration-200">
+                Sign In
+              </Link>
+              <Link
+                href="/login?signup=true"
+                className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-emerald-400 hover:to-green-500 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 cursor-pointer"
+              >
+                Start Free Trial
+              </Link>
+            </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+      </nav>
+
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-[#0a4d3e] via-[#0d3320] to-[#14532d] text-white py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-yellow-400/90 backdrop-blur-sm rounded-full px-5 py-2 mb-8 shadow-lg border border-yellow-300">
+            <Leaf className="w-4 h-4 text-yellow-900" aria-hidden="true" />
+            <span className="text-yellow-900 text-xs font-black tracking-wide uppercase">
+              14-Day Free Trial · No Credit Card Required
+            </span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mb-4">
+            Simple, Transparent{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200">
+              Pricing
+            </span>
+          </h1>
+          <p className="text-emerald-200 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto">
+            No hidden fees. No contracts. Cancel anytime. Join 500+ lawn care businesses already on LawnDesk.
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+
+        {/* Pricing cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
 
           {/* Starter */}
-          <div className="relative rounded-2xl p-px bg-gradient-to-br from-green-300 via-emerald-200 to-teal-300 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-white rounded-2xl p-8 text-left h-full flex flex-col">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-emerald-100 text-emerald-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center">🌱</div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800 leading-none">{plans[0].name}</h3>
-                  <p className="text-gray-400 text-sm">{plans[0].description}</p>
+          <div className="relative rounded-3xl overflow-hidden bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+            <div className="p-8 flex flex-col h-full">
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-2 bg-emerald-100 rounded-full px-4 py-1.5 mb-4">
+                  <span className="text-emerald-700 text-xs font-bold uppercase tracking-wide">Starter</span>
                 </div>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-6xl font-black text-gray-900">$19</span>
+                  <span className="text-gray-400 text-lg mb-2">/mo</span>
+                </div>
+                <p className="text-gray-500 text-base">Everything you need to run your business</p>
               </div>
-              <div className="flex items-end mb-1">
-                <span className="text-5xl font-bold text-green-700">{plans[0].price}</span>
-                <span className="text-gray-500 ml-1">{plans[0].period}</span>
-              </div>
-              <p className="text-gray-400 text-sm mb-6">Same features as Jobber Core — 60% cheaper</p>
-              <ul className="mb-8 flex-1">
-                {plans[0].features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 mb-3 text-gray-600">
-                    <span className="text-green-600 font-bold">✓</span>
-                    {feature}
+
+              <ul className="space-y-3.5 mb-8 flex-1">
+                {STARTER_FEATURES.map((f) => (
+                  <li key={f.text} className="flex items-center gap-3 text-gray-700">
+                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-sm font-medium">{f.text}</span>
                   </li>
                 ))}
               </ul>
-              {isSubscribed ? (
-                <button
-                  onClick={() => router.push('/settings')}
-                  className="w-full bg-gray-100 text-gray-600 font-bold py-3 rounded-xl cursor-pointer"
-                >
-                  Manage Subscription →
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleSubscribe(plans[0].priceId)}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-3 rounded-xl hover:opacity-90 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
-                >
-                  {loading === plans[0].priceId ? 'Loading...' : 'Get Started'}
-                </button>
-              )}
-              <p className="text-center text-gray-400 text-xs mt-3">Cancel anytime</p>
+
+              <button
+                onClick={() => handleSubscribe(STARTER_PRICE_ID)}
+                disabled={!!loading}
+                className="w-full bg-gray-900 text-white font-bold py-4 px-6 rounded-xl hover:bg-gray-800 transition-all duration-200 shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {loading === STARTER_PRICE_ID ? (
+                  <span className="animate-pulse">Loading…</span>
+                ) : (
+                  <>Try Free for 14 Days<ArrowRight className="w-5 h-5" aria-hidden="true" /></>
+                )}
+              </button>
+              <p className="text-center text-xs text-gray-400 mt-2">Cancel anytime</p>
             </div>
           </div>
 
           {/* Pro */}
-          <div className="relative rounded-2xl p-px bg-gradient-to-br from-green-500 via-green-600 to-teal-500 shadow-xl hover:shadow-2xl transition-shadow">
-            <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-8 text-left h-full flex flex-col">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-yellow-400 text-yellow-900 text-xs font-extrabold py-1 px-4 rounded-full shadow-md tracking-wide uppercase">Most Popular</span>
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-green-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center">🌿</div>
-                <div>
-                  <h3 className="text-xl font-bold text-white leading-none">{plans[1].name}</h3>
-                  <p className="text-green-300 text-sm">{plans[1].description}</p>
+          <div className="relative rounded-3xl bg-gradient-to-br from-[#0d3320] to-emerald-900 border-2 border-emerald-600/50 shadow-2xl shadow-emerald-900/30 hover:shadow-emerald-500/20 hover:-translate-y-1 transition-all duration-300 flex flex-col mt-4">
+            {/* Badge */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+              <span className="bg-yellow-400 text-yellow-900 text-xs font-extrabold py-2 px-5 rounded-full shadow-lg tracking-wide uppercase border-2 border-yellow-300">
+                Most Popular
+              </span>
+            </div>
+
+            <div className="p-8 pt-10 flex flex-col h-full">
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-2 bg-emerald-700/50 rounded-full px-4 py-1.5 mb-4">
+                  <span className="text-emerald-300 text-xs font-bold uppercase tracking-wide">Pro</span>
                 </div>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-6xl font-black text-white">
+                    ${aiAddOn ? 54 : 39}
+                  </span>
+                  <span className="text-emerald-300 text-lg mb-2">/mo</span>
+                </div>
+                <p className="text-emerald-300 text-base">For growing crews &amp; serious businesses</p>
               </div>
-              <div className="flex items-end mb-1">
-                <span className="text-5xl font-bold text-white">{plans[1].price}</span>
-                <span className="text-green-300 ml-1">{plans[1].period}</span>
-              </div>
-              <p className="text-green-300 text-sm font-bold mb-6">✨ 14-day free trial, then {plans[1].price}/mo</p>
-              <ul className="mb-8 flex-1">
-                {plans[1].features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 mb-3 text-green-100">
-                    <span className="text-green-300 font-bold">✓</span>
-                    {feature}
+
+              <ul className="space-y-3.5 mb-8 flex-1">
+                {PRO_FEATURES.map((f) => (
+                  <li key={f.text} className="flex items-center gap-3 text-white">
+                    <CheckCircle className="w-5 h-5 text-emerald-300 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-sm font-medium">{f.text}</span>
                   </li>
                 ))}
               </ul>
-              {isSubscribed ? (
-                <button
-                  onClick={() => router.push('/settings')}
-                  className="w-full bg-white/20 text-white font-bold py-3 rounded-xl cursor-pointer"
-                >
-                  Manage Subscription →
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleSubscribe(plans[1].priceId)}
-                  className="w-full bg-white text-green-800 font-bold py-3 rounded-xl hover:bg-green-50 hover:scale-[1.02] transition-all duration-200 cursor-pointer shadow-md"
-                >
-                  {loading === plans[1].priceId ? 'Loading...' : 'Start Free Trial'}
-                </button>
-              )}
-              <p className="text-center text-green-400 text-xs mt-3">Cancel anytime</p>
+
+              <button
+                onClick={() => handleSubscribe(PRO_PRICE_ID)}
+                disabled={!!loading}
+                className="w-full bg-gradient-to-r from-yellow-400 to-amber-400 text-green-900 font-black py-4 px-6 rounded-xl hover:from-yellow-300 hover:to-amber-300 transition-all duration-200 shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {loading === PRO_PRICE_ID ? (
+                  <span className="animate-pulse">Loading…</span>
+                ) : (
+                  <>Try Free for 14 Days<ArrowRight className="w-5 h-5" aria-hidden="true" /></>
+                )}
+              </button>
+              <p className="text-center text-xs text-emerald-400 mt-2">Cancel anytime</p>
             </div>
           </div>
-
         </div>
+
+        {/* AI Add-on */}
+        <div className="max-w-2xl mx-auto mb-16">
+          <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setAiAddOn(!aiAddOn)}
+                className={`flex-shrink-0 relative w-14 h-8 rounded-full transition-all duration-300 cursor-pointer ${
+                  aiAddOn ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-gray-700'
+                }`}
+                aria-label="Toggle AI Receptionist add-on"
+                role="switch"
+                aria-checked={aiAddOn}
+              >
+                <div
+                  className={`absolute top-1 w-6 h-6 rounded-full transition-all duration-300 ${
+                    aiAddOn ? 'left-7 bg-white' : 'left-1 bg-gray-400'
+                  } flex items-center justify-center`}
+                >
+                  <Sparkles className={`w-3 h-3 ${aiAddOn ? 'text-emerald-600' : 'text-gray-600'}`} aria-hidden="true" />
+                </div>
+              </button>
+
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="w-5 h-5 text-yellow-400" aria-hidden="true" />
+                  <h3 className="text-white font-bold text-lg">AI Receptionist Add-On</h3>
+                  <span className="bg-emerald-600 text-emerald-100 text-xs font-bold px-2 py-0.5 rounded-full">New</span>
+                </div>
+                <p className="text-gray-400 text-sm mb-3 leading-relaxed">
+                  AI answers calls &amp; texts 24/7, qualifies leads, and books appointments — so you never miss a customer while you're in the field.
+                </p>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-3xl font-extrabold transition-colors duration-300 ${aiAddOn ? 'text-emerald-400' : 'text-gray-500'}`}>
+                    +$15
+                  </span>
+                  <span className="text-gray-400">/mo · Pro plan required</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Social proof strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-16">
+          {[
+            { value: '500+', label: 'Businesses' },
+            { value: '98%', label: 'Satisfaction' },
+            { value: '60%', label: 'Cheaper than Jobber' },
+            { value: '14-day', label: 'Free Trial' },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-2xl p-5 text-center shadow-sm border border-gray-100">
+              <div className="text-3xl font-black text-emerald-700 mb-1">{s.value}</div>
+              <div className="text-gray-500 text-sm font-medium">{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* FAQ */}
+        <div className="max-w-3xl mx-auto" id="faq">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3">
+              Frequently Asked{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
+                Questions
+              </span>
+            </h2>
+            <p className="text-gray-500 text-base">Everything you need to know before you start.</p>
+          </div>
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 px-8 py-2">
+            {FAQS.map((item) => (
+              <FaqItem key={item.q} q={item.q} a={item.a} />
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-20 bg-gradient-to-br from-[#0d3320] to-emerald-900 rounded-3xl p-10 sm:p-14 text-center shadow-2xl overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-3xl" />
+          </div>
+          <div className="relative">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight">
+              Ready to Grow Your{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200">
+                Lawn Business?
+              </span>
+            </h2>
+            <p className="text-emerald-200 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
+              Start your 14-day free trial. Full Pro access. No credit card required.
+            </p>
+            <Link
+              href="/login?signup=true"
+              className="group inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400 to-amber-400 text-green-900 font-black py-4 px-10 rounded-2xl text-lg hover:from-yellow-300 hover:to-amber-300 transition-all duration-300 shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1 cursor-pointer"
+            >
+              Start Free Trial
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" aria-hidden="true" />
+            </Link>
+            <p className="text-emerald-400 text-sm mt-4">No commitment · Cancel anytime · Full Pro access</p>
+          </div>
+        </div>
+
       </div>
     </main>
   )

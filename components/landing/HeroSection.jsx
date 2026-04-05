@@ -17,8 +17,16 @@ export default function HeroSection() {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#0a4d3e] via-[#0d3320] to-[#14532d] text-white">
-      {/* Crosshatch texture overlay */}
-      <div className="absolute inset-0 opacity-[0.03] crosshatch-pattern" aria-hidden="true" />
+      {/* Dot grid overlay */}
+      <div className="absolute inset-0 opacity-[0.08]" aria-hidden="true"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)',
+          backgroundSize: '28px 28px'
+        }}
+      />
+      {/* Radial glow blobs */}
+      <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
+      <div className="absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-green-300/10 rounded-full blur-3xl pointer-events-none" aria-hidden="true" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pt-28 sm:pb-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -52,7 +60,7 @@ export default function HeroSection() {
             <div className="space-y-6">
               <Link
                 href="/login?signup=true"
-                className="group inline-flex items-center gap-2.5 bg-gradient-to-r from-yellow-400 to-amber-400 text-green-900 font-black py-4 px-8 rounded-2xl text-lg sm:text-xl font-bold hover:from-yellow-300 hover:to-amber-300 transition-all duration-300 shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1"
+                className="group inline-flex items-center gap-2.5 bg-gradient-to-r from-yellow-400 to-amber-400 text-green-900 font-black py-4 px-8 rounded-2xl text-lg sm:text-xl hover:from-yellow-300 hover:to-amber-300 transition-all duration-300 shadow-2xl hover:shadow-yellow-400/40 hover:-translate-y-1 cursor-pointer"
               >
                 Try Free for 14 Days
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -82,29 +90,31 @@ export default function HeroSection() {
           </div>
 
           {/* Right content - Hero image with gradient bleed */}
-          <div className="relative hidden lg:block">
-            {/* Gradient bleed from left */}
-            <div className="absolute -left-16 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0d3320] to-transparent opacity-60" />
+          <div className="hidden lg:flex flex-col gap-4">
+            <div className="relative">
+              {/* Gradient bleed from left */}
+              <div className="absolute -left-16 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0d3320] to-transparent opacity-60" />
 
-            <div className="relative z-10 animate-fade-in-right">
-              <img
-                src="/hero-mockup.svg"
-                alt="LawnDesk dashboard on laptop and phone"
-                className="w-full drop-shadow-2xl rounded-2xl"
-                style={{
-                  maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)'
-                }}
-              />
+              <div className="relative z-10 animate-fade-in-right">
+                <img
+                  src="/hero-mockup.svg"
+                  alt="LawnDesk dashboard on laptop and phone"
+                  className="w-full drop-shadow-2xl rounded-2xl"
+                  style={{
+                    maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)'
+                  }}
+                />
+              </div>
             </div>
 
-            {/* Floating badge */}
-            <div className="absolute -right-4 top-12 bg-white rounded-2xl shadow-2xl p-4 max-w-xs animate-float">
-              <div className="flex items-center gap-2 mb-2">
-                <Smartphone className="w-8 h-8 text-emerald-600" />
-                <span className="text-gray-900 font-bold">Mobile First</span>
+            {/* Floating badge — below image, not overlapping */}
+            <div className="self-end mr-4 bg-white rounded-2xl shadow-2xl p-4 max-w-xs animate-float">
+              <div className="flex items-center gap-2 mb-1">
+                <Smartphone className="w-6 h-6 text-emerald-600" aria-hidden="true" />
+                <span className="text-gray-900 font-bold text-sm">Mobile First</span>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
+              <p className="text-gray-600 text-xs leading-relaxed">
                 Works perfectly on any smartphone or tablet between jobs
               </p>
             </div>
@@ -112,13 +122,13 @@ export default function HeroSection() {
         </div>
 
         {/* Stats bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-16 pt-12 border-t border-emerald-700/30">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-100 mb-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px mt-16 pt-12 border-t border-emerald-700/30">
+          {stats.map((stat, i) => (
+            <div key={stat.label} className={`text-center px-4 py-2 ${i < stats.length - 1 ? 'sm:border-r border-emerald-700/30' : ''}`}>
+              <div className="text-3xl sm:text-5xl font-black text-white mb-1 tracking-tight">
                 {stat.value}
               </div>
-              <div className="text-emerald-400 text-sm font-medium uppercase tracking-wide">
+              <div className="text-emerald-400 text-xs sm:text-sm font-semibold uppercase tracking-widest">
                 {stat.label}
               </div>
             </div>

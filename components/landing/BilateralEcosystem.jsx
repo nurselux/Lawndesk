@@ -38,7 +38,7 @@ export default function BilateralEcosystem() {
   ]
 
   return (
-    <section className="bg-gray-50 py-20 px-4 sm:px-6 lg:px-8">
+    <section className="bg-white py-20 px-4 sm:px-6 lg:px-8 border-y border-gray-100">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -89,7 +89,7 @@ export default function BilateralEcosystem() {
                 {/* CTA */}
                 <Link
                   href={role.ctaLink}
-                  className={`group inline-flex items-center gap-2.5 w-full justify-center font-bold py-4 rounded-xl transition-all duration-300 shadow-lg hover:-translate-y-0.5 ${
+                  className={`group inline-flex items-center gap-2.5 w-full justify-center font-bold py-4 rounded-xl transition-all duration-300 shadow-lg hover:-translate-y-0.5 cursor-pointer ${
                     role.bgClass === 'bg-white'
                       ? 'bg-gradient-to-r from-emerald-600 to-green-700 text-white hover:from-emerald-500 hover:to-green-600'
                       : 'bg-white text-emerald-700 hover:bg-emerald-50'

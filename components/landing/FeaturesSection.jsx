@@ -84,7 +84,7 @@ export default function FeaturesSection() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-emerald-200"
+              className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-emerald-200 cursor-default"
             >
               {/* Icon badge */}
               <div className={`bg-gradient-to-br ${feature.bgTint} rounded-xl p-3 mb-4 w-fit`}>
