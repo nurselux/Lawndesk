@@ -5,8 +5,18 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search, CheckCircle2 } from 'lucide-react'
+import {
+  Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search,
+  CheckCircle2, Plus, Minus, Copy, ExternalLink, ArrowUpDown,
+  FileText, AlertTriangle, Clock, DollarSign, X
+} from 'lucide-react'
 import { InvoiceStatusBadge } from '../../lib/statusIcons'
+
+interface LineItem {
+  description: string
+  quantity: number
+  unit_price: number
+}
 
 interface Invoice {
   id: string
@@ -18,6 +28,9 @@ interface Invoice {
   status: string
   due_date: string
   description: string
+  notes: string | null
+  tax_rate: number | null
+  line_items: LineItem[]
   user_id: string
   invoice_number: number
   share_token: string
@@ -28,18 +41,36 @@ interface Client {
   name: string
   email: string | null
   phone: string | null
+  address: string | null
 }
 
 type SendState = { id: string; type: 'email' | 'sms' }
+type SortKey = 'number' | 'amount' | 'due_date' | 'status'
+
+const STATUSES = [
+  { value: '📝 Draft',    label: 'Draft' },
+  { value: '🟡 Unpaid',  label: 'Unpaid' },
+  { value: '🟢 Paid',    label: 'Paid' },
+  { value: '🔴 Overdue', label: 'Overdue' },
+]
+
+const emptyLine = (): LineItem => ({ description: '', quantity: 1, unit_price: 0 })
+
+function calcSubtotal(items: LineItem[]) {
+  return items.reduce((s, i) => s + i.quantity * i.unit_price, 0)
+}
 
 function InvoicesContent() {
   const { user } = useAuth()
   const { checking } = useSubscriptionGate()
   const searchParams = useSearchParams()
+
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [filterStatus, setFilterStatus] = useState(() => searchParams.get('filter') || 'All')
   const [search, setSearch] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('number')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [showForm, setShowForm] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
   const [saving, setSaving] = useState(false)
@@ -49,18 +80,32 @@ function InvoicesContent() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkSaving, setBulkSaving] = useState(false)
+  const [defaultDueDays, setDefaultDueDays] = useState(15)
 
   // Form state
   const [clientId, setClientId] = useState('')
-  const [amount, setAmount] = useState('')
+  const [lineItems, setLineItems] = useState<LineItem[]>([emptyLine()])
+  const [taxRate, setTaxRate] = useState('0')
   const [dueDate, setDueDate] = useState('')
-  const [description, setDescription] = useState('')
+  const [notes, setNotes] = useState('')
   const [formStatus, setFormStatus] = useState('🟡 Unpaid')
+
+  const subtotal = calcSubtotal(lineItems)
+  const taxAmount = subtotal * (parseFloat(taxRate) || 0) / 100
+  const total = subtotal + taxAmount
 
   useEffect(() => {
     if (user) {
       markOverdueInvoices().then(fetchInvoices)
       fetchClients()
+      supabase.from('profiles').select('invoice_due_days').eq('id', user.id).single()
+        .then(({ data }) => {
+          const days = (data as any)?.invoice_due_days ?? 15
+          setDefaultDueDays(days)
+          const d = new Date()
+          d.setDate(d.getDate() + days)
+          setDueDate(d.toISOString().split('T')[0])
+        })
     }
   }, [user])
 
@@ -74,14 +119,14 @@ function InvoicesContent() {
   const fetchInvoices = async () => {
     const { data } = await supabase
       .from('Invoices')
-      .select('id, client_name, client_id, client_email, client_phone, amount, status, due_date, description, user_id, invoice_number, share_token')
+      .select('id, client_name, client_id, client_email, client_phone, amount, status, due_date, description, notes, tax_rate, line_items, user_id, invoice_number, share_token')
       .eq('user_id', user?.id)
       .order('invoice_number', { ascending: false })
     if (data) setInvoices(data as Invoice[])
   }
 
   const fetchClients = async () => {
-    const { data } = await supabase.from('Clients').select('id, name, email, phone')
+    const { data } = await supabase.from('Clients').select('id, name, email, phone, address')
       .eq('user_id', user?.id).order('name')
     if (data) setClients(data as Client[])
   }
@@ -94,28 +139,52 @@ function InvoicesContent() {
 
   const getInvoiceLink = (token: string) => `${window.location.origin}/invoice/${token}`
 
+  const resetForm = () => {
+    setClientId('')
+    setLineItems([emptyLine()])
+    setTaxRate('0')
+    const d = new Date()
+    d.setDate(d.getDate() + defaultDueDays)
+    setDueDate(d.toISOString().split('T')[0])
+    setNotes('')
+    setFormStatus('🟡 Unpaid')
+    setShowForm(false)
+    setEditingInvoice(null)
+  }
+
   const handleClientSelect = (id: string) => {
     setClientId(id)
   }
 
+  // Line item helpers
+  const updateLine = (i: number, field: keyof LineItem, value: string | number) => {
+    setLineItems(prev => prev.map((l, idx) => idx === i ? { ...l, [field]: value } : l))
+  }
+  const addLine = () => setLineItems(prev => [...prev, emptyLine()])
+  const removeLine = (i: number) => setLineItems(prev => prev.filter((_, idx) => idx !== i))
+
   const handleCreate = async () => {
-    if (!clientId || !amount) {
-      setErrorMessage('Client and amount are required')
+    if (!clientId || total <= 0) {
+      setErrorMessage('Select a client and add at least one line item')
       setTimeout(() => setErrorMessage(''), 3000)
       return
     }
     setSaving(true)
     const client = clients.find(c => c.id === clientId)
     const nextNum = await getNextInvoiceNumber()
+    const validLines = lineItems.filter(l => l.description.trim())
     const { data: inv, error } = await supabase.from('Invoices').insert([{
       client_name: client?.name || '',
       client_id: clientId,
       client_email: client?.email || null,
       client_phone: client?.phone || null,
-      amount: parseFloat(amount),
+      amount: total,
       status: formStatus,
       due_date: dueDate || null,
-      description,
+      description: validLines.map(l => l.description).join(', '),
+      line_items: validLines,
+      notes: notes || null,
+      tax_rate: parseFloat(taxRate) || 0,
       invoice_number: nextNum,
       user_id: user?.id,
     }] as any).select().single()
@@ -125,10 +194,8 @@ function InvoicesContent() {
       await fetchInvoices()
       setSuccessMessage(`Invoice #${String(nextNum).padStart(3, '0')} created!`)
       setTimeout(() => setSuccessMessage(''), 4000)
-      // Offer to send immediately if client has email
-      if (client?.email) {
-        const link = getInvoiceLink((inv as any).share_token)
-        handleSendEmail(inv as any, client.email, link)
+      if (client?.email && formStatus !== '📝 Draft') {
+        handleSendEmail(inv as any, client.email, getInvoiceLink((inv as any).share_token))
       }
     } else if (error) {
       setErrorMessage(`Error: ${error.message}`)
@@ -139,22 +206,26 @@ function InvoicesContent() {
 
   const handleUpdate = async () => {
     if (!editingInvoice) return
-    if (!clientId || !amount) {
-      setErrorMessage('Client and amount are required')
+    if (!clientId || total <= 0) {
+      setErrorMessage('Select a client and add at least one line item')
       setTimeout(() => setErrorMessage(''), 3000)
       return
     }
     setSaving(true)
     const client = clients.find(c => c.id === clientId)
+    const validLines = lineItems.filter(l => l.description.trim())
     const { error } = await (supabase.from('Invoices') as any).update({
       client_name: client?.name || '',
       client_id: clientId,
       client_email: client?.email || null,
       client_phone: client?.phone || null,
-      amount: parseFloat(amount),
+      amount: total,
       status: formStatus,
       due_date: dueDate || null,
-      description,
+      description: validLines.map(l => l.description).join(', '),
+      line_items: validLines,
+      notes: notes || null,
+      tax_rate: parseFloat(taxRate) || 0,
     }).eq('id', editingInvoice.id)
 
     if (!error) {
@@ -170,25 +241,45 @@ function InvoicesContent() {
     setSaving(false)
   }
 
-  const resetForm = () => {
-    setClientId('')
-    setAmount('')
-    setDueDate('')
-    setDescription('')
-    setFormStatus('🟡 Unpaid')
-    setShowForm(false)
-    setEditingInvoice(null)
-  }
-
   const openEdit = (inv: Invoice) => {
     setEditingInvoice(inv)
     setClientId(inv.client_id || '')
-    setAmount(inv.amount.toString())
+    const lines = Array.isArray(inv.line_items) && inv.line_items.length > 0
+      ? inv.line_items
+      : [{ description: inv.description || '', quantity: 1, unit_price: inv.amount }]
+    setLineItems(lines)
+    setTaxRate(String(inv.tax_rate ?? 0))
     setDueDate(inv.due_date || '')
-    setDescription(inv.description || '')
+    setNotes(inv.notes || '')
     setFormStatus(inv.status)
     setShowForm(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const duplicateInvoice = async (inv: Invoice) => {
+    const nextNum = await getNextInvoiceNumber()
+    const d = new Date()
+    d.setDate(d.getDate() + defaultDueDays)
+    const { error } = await supabase.from('Invoices').insert([{
+      client_name: inv.client_name,
+      client_id: inv.client_id,
+      client_email: inv.client_email,
+      client_phone: inv.client_phone,
+      amount: inv.amount,
+      status: '📝 Draft',
+      due_date: d.toISOString().split('T')[0],
+      description: inv.description,
+      line_items: inv.line_items ?? [],
+      notes: inv.notes,
+      tax_rate: inv.tax_rate ?? 0,
+      invoice_number: nextNum,
+      user_id: user?.id,
+    }] as any)
+    if (!error) {
+      fetchInvoices()
+      setSuccessMessage(`Duplicated as INV-${String(nextNum).padStart(3, '0')} (Draft)`)
+      setTimeout(() => setSuccessMessage(''), 4000)
+    }
   }
 
   const markPaid = async (id: string) => {
@@ -238,7 +329,7 @@ function InvoicesContent() {
   const handleSendEmail = async (inv: Invoice, emailOverride?: string, linkOverride?: string) => {
     const email = emailOverride || inv.client_email
     if (!email) {
-      setErrorMessage('No email on file for this client. Edit the invoice or update the client.')
+      setErrorMessage('No email on file for this client.')
       setTimeout(() => setErrorMessage(''), 5000)
       return
     }
@@ -307,19 +398,37 @@ function InvoicesContent() {
     setSending(null)
   }
 
+  // Stats
   const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)
-  const totalOutstanding = invoices.filter(i => i.status !== '🟢 Paid').reduce((s, i) => s + i.amount, 0)
+  const totalOutstanding = invoices.filter(i => ['🟡 Unpaid', '🔴 Overdue'].includes(i.status)).reduce((s, i) => s + i.amount, 0)
+  const overdueCount = invoices.filter(i => i.status === '🔴 Overdue').length
 
-  const filtered = invoices.filter(inv => {
-    const q = search.toLowerCase()
-    const matchSearch = !q || inv.client_name.toLowerCase().includes(q) || inv.description?.toLowerCase().includes(q)
-    const matchStatus =
-      filterStatus === 'All' ||
-      (filterStatus === 'Unpaid' && inv.status === '🟡 Unpaid') ||
-      (filterStatus === 'Overdue' && inv.status === '🔴 Overdue') ||
-      (filterStatus === 'Paid' && inv.status === '🟢 Paid')
-    return matchSearch && matchStatus
-  })
+  // Sort + filter
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
+
+  const filtered = invoices
+    .filter(inv => {
+      const q = search.toLowerCase()
+      const matchSearch = !q || inv.client_name.toLowerCase().includes(q) || inv.description?.toLowerCase().includes(q)
+      const matchStatus =
+        filterStatus === 'All' ||
+        (filterStatus === 'Draft' && inv.status === '📝 Draft') ||
+        (filterStatus === 'Unpaid' && inv.status === '🟡 Unpaid') ||
+        (filterStatus === 'Overdue' && inv.status === '🔴 Overdue') ||
+        (filterStatus === 'Paid' && inv.status === '🟢 Paid')
+      return matchSearch && matchStatus
+    })
+    .sort((a, b) => {
+      let aVal: any, bVal: any
+      if (sortKey === 'number') { aVal = a.invoice_number; bVal = b.invoice_number }
+      else if (sortKey === 'amount') { aVal = a.amount; bVal = b.amount }
+      else if (sortKey === 'due_date') { aVal = a.due_date || ''; bVal = b.due_date || '' }
+      else if (sortKey === 'status') { aVal = a.status; bVal = b.status }
+      return sortDir === 'asc' ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1)
+    })
 
   const isEditing = !!editingInvoice
   const showAnyForm = showForm || isEditing
@@ -344,168 +453,288 @@ function InvoicesContent() {
     <div className="p-4 pb-8 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white w-14 h-14 rounded-xl flex items-center justify-center shadow-lg shadow-green-200" aria-hidden="true"><Receipt className="w-7 h-7" /></div>
+      <div className="flex justify-between items-center mb-5">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-emerald-600 to-green-700 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200" aria-hidden="true">
+            <Receipt className="w-6 h-6" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 leading-none">Invoices</h2>
-            <p className="text-slate-500 text-sm mt-1">
-              {invoices.length > 0
-                ? `${invoices.filter(i => i.status !== '🟢 Paid').length} outstanding`
-                : 'Track payments'}
+            <h2 className="text-2xl font-black text-gray-900 leading-none">Invoices</h2>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {overdueCount > 0
+                ? <span className="text-red-500 font-semibold">{overdueCount} overdue</span>
+                : invoices.filter(i => i.status !== '🟢 Paid').length > 0
+                ? `${invoices.filter(i => ['🟡 Unpaid','🔴 Overdue'].includes(i.status)).length} outstanding`
+                : 'All collected'}
             </p>
           </div>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
-          className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow"
+          className="bg-gradient-to-r from-emerald-600 to-green-700 text-white font-bold py-3 px-5 rounded-xl hover:from-emerald-500 hover:to-green-600 transition-all duration-200 cursor-pointer shadow-lg shadow-emerald-200 flex items-center gap-1.5"
         >
-          + New
+          <Plus className="w-4 h-4" aria-hidden="true" /> New
         </button>
       </div>
 
       {/* Stats */}
       {invoices.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl p-4 text-white text-center shadow-md shadow-green-200">
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl p-3 text-white text-center shadow-md shadow-emerald-100">
             <p className="text-emerald-100 text-xs font-semibold mb-0.5">Collected</p>
-            <p className="text-2xl font-bold">${totalRevenue.toFixed(0)}</p>
+            <p className="text-xl font-black">${totalRevenue.toLocaleString()}</p>
           </div>
-          <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-4 text-white text-center shadow-md shadow-amber-200">
+          <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-3 text-white text-center shadow-md shadow-amber-100">
             <p className="text-amber-100 text-xs font-semibold mb-0.5">Outstanding</p>
-            <p className="text-2xl font-bold">${totalOutstanding.toFixed(0)}</p>
+            <p className="text-xl font-black">${totalOutstanding.toLocaleString()}</p>
+          </div>
+          <div className={`rounded-2xl p-3 text-white text-center shadow-md ${overdueCount > 0 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-100' : 'bg-gradient-to-br from-gray-400 to-gray-500'}`}>
+            <p className="text-red-100 text-xs font-semibold mb-0.5">Overdue</p>
+            <p className="text-xl font-black">{overdueCount}</p>
           </div>
         </div>
       )}
 
       {/* Filter pills */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-        {['All', 'Unpaid', 'Overdue', 'Paid'].map(s => (
-          <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${
-              filterStatus === s
-                ? s === 'Overdue' ? 'bg-red-600 text-white'
-                  : s === 'Paid' ? 'bg-green-600 text-white'
-                  : s === 'Unpaid' ? 'bg-amber-500 text-white'
-                  : 'bg-purple-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-400'
-            }`}
-          >
-            {s === 'All' ? `All (${invoices.length})` :
-             s === 'Unpaid' ? `Unpaid (${invoices.filter(i => i.status === '🟡 Unpaid').length})` :
-             s === 'Overdue' ? `Overdue (${invoices.filter(i => i.status === '🔴 Overdue').length})` :
-             `Paid (${invoices.filter(i => i.status === '🟢 Paid').length})`}
-          </button>
-        ))}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar">
+        {[
+          { key: 'All', color: 'emerald' },
+          { key: 'Draft', color: 'gray' },
+          { key: 'Unpaid', color: 'amber' },
+          { key: 'Overdue', color: 'red' },
+          { key: 'Paid', color: 'green' },
+        ].map(({ key, color }) => {
+          const count = key === 'All' ? invoices.length
+            : key === 'Draft' ? invoices.filter(i => i.status === '📝 Draft').length
+            : key === 'Unpaid' ? invoices.filter(i => i.status === '🟡 Unpaid').length
+            : key === 'Overdue' ? invoices.filter(i => i.status === '🔴 Overdue').length
+            : invoices.filter(i => i.status === '🟢 Paid').length
+          const active = filterStatus === key
+          return (
+            <button
+              key={key}
+              onClick={() => setFilterStatus(key)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                active
+                  ? color === 'red' ? 'bg-red-600 text-white'
+                  : color === 'amber' ? 'bg-amber-500 text-white'
+                  : color === 'green' ? 'bg-green-600 text-white'
+                  : color === 'gray' ? 'bg-gray-600 text-white'
+                  : 'bg-emerald-600 text-white'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300'
+              }`}
+            >
+              {key} {count > 0 && `(${count})`}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        <input
-          placeholder="Search client or description…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-        />
+      {/* Search + Sort */}
+      <div className="flex gap-2 mb-4">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+          <input
+            placeholder="Search client or description…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl p-3 pl-9 text-gray-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none text-sm"
+          />
+        </div>
+        <div className="flex gap-1">
+          {([['number', '#'], ['amount', '$'], ['due_date', 'Due'], ['status', 'Status']] as [SortKey, string][]).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => toggleSort(key)}
+              className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                sortKey === key ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-300'
+              }`}
+            >
+              {label}
+              {sortKey === key && <ArrowUpDown className="w-3 h-3" aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Messages */}
       {successMessage && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
-          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" aria-hidden="true" />
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold p-3 rounded-xl mb-4 flex items-center gap-2 shadow-sm">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
           {successMessage}
         </div>
       )}
       {errorMessage && (
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
-          <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">!</span>
+        <div className="bg-red-50 border border-red-200 text-red-800 font-semibold p-3 rounded-xl mb-4 flex items-center gap-2 shadow-sm">
+          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" aria-hidden="true" />
           {errorMessage}
         </div>
       )}
 
       {/* Create / Edit Form */}
       {showAnyForm && (
-        <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-2xl p-6 mb-5 shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-4 text-base">
-            {isEditing ? <span className="flex items-center gap-2"><Pencil className="w-4 h-4" />Edit INV-{String(editingInvoice!.invoice_number).padStart(3, '0')}</span> : <span className="flex items-center gap-2"><Receipt className="w-4 h-4" />New Invoice</span>}
-          </h3>
-          <div className="space-y-3">
+        <div className="bg-white border-2 border-emerald-200 rounded-2xl p-5 mb-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-black text-gray-900 text-base flex items-center gap-2">
+              {isEditing
+                ? <><Pencil className="w-4 h-4 text-emerald-600" />Edit INV-{String(editingInvoice!.invoice_number).padStart(3, '0')}</>
+                : <><Receipt className="w-4 h-4 text-emerald-600" />New Invoice</>
+              }
+            </h3>
+            <button onClick={resetForm} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <X className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Client */}
             <select
               value={clientId}
               onChange={e => handleClientSelect(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white"
+              className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none"
             >
               <option value="">Select client *</option>
               {clients.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.name}{c.email ? ` · ${c.email}` : ''}
-                </option>
+                <option key={c.id} value={c.id}>{c.name}{c.email ? ` · ${c.email}` : ''}</option>
               ))}
             </select>
-            <div className="relative">
-              <span className="absolute left-3.5 top-3.5 text-gray-500 font-bold">$</span>
-              <input
-                type="number"
-                placeholder="0.00"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl p-3 pl-8 text-gray-800"
-                inputMode="decimal"
-              />
+
+            {/* Line items */}
+            <div>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-2">Line Items</label>
+              <div className="space-y-2">
+                {lineItems.map((line, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <input
+                      placeholder="Description"
+                      value={line.description}
+                      onChange={e => updateLine(i, 'description', e.target.value)}
+                      className="flex-1 border border-gray-200 rounded-xl p-3 text-gray-800 text-sm focus:border-emerald-400 outline-none"
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Qty"
+                      value={line.quantity}
+                      onChange={e => updateLine(i, 'quantity', parseFloat(e.target.value) || 1)}
+                      className="w-14 border border-gray-200 rounded-xl p-3 text-gray-800 text-sm text-center focus:border-emerald-400 outline-none"
+                      inputMode="decimal"
+                    />
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-3.5 text-gray-400 text-sm">$</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0"
+                        value={line.unit_price || ''}
+                        onChange={e => updateLine(i, 'unit_price', parseFloat(e.target.value) || 0)}
+                        className="w-24 border border-gray-200 rounded-xl p-3 pl-6 text-gray-800 text-sm focus:border-emerald-400 outline-none"
+                        inputMode="decimal"
+                      />
+                    </div>
+                    <span className="text-sm font-bold text-gray-600 w-16 text-right shrink-0">
+                      ${(line.quantity * line.unit_price).toFixed(2)}
+                    </span>
+                    {lineItems.length > 1 && (
+                      <button onClick={() => removeLine(i)} className="text-gray-300 hover:text-red-400 cursor-pointer transition-colors">
+                        <Minus className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={addLine}
+                className="mt-2 flex items-center gap-1.5 text-sm text-emerald-600 font-semibold hover:text-emerald-700 cursor-pointer transition-colors"
+              >
+                <Plus className="w-4 h-4" aria-hidden="true" /> Add line item
+              </button>
             </div>
-            <textarea
-              placeholder="Description (e.g. Lawn mowing — front + back)"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={2}
-              className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm resize-none"
-            />
+
+            {/* Tax + Totals */}
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Subtotal</span>
+                <span className="font-semibold text-gray-800">${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm text-gray-500">Tax</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={taxRate}
+                    onChange={e => setTaxRate(e.target.value)}
+                    className="w-16 border border-gray-200 rounded-lg p-1.5 text-sm text-center focus:border-emerald-400 outline-none"
+                    inputMode="decimal"
+                  />
+                  <span className="text-sm text-gray-400">%</span>
+                  <span className="text-sm font-semibold text-gray-700 ml-1">${taxAmount.toFixed(2)}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between border-t border-gray-200 pt-2">
+                <span className="font-bold text-gray-800">Total</span>
+                <span className="text-xl font-black text-emerald-700">${total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Due date + Status */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-gray-500 font-semibold block mb-1">Due date</label>
+                <label className="text-xs font-bold text-gray-500 block mb-1">Due Date</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={e => setDueDate(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 focus:border-emerald-400 outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-500 font-semibold block mb-1">Status</label>
+                <label className="text-xs font-bold text-gray-500 block mb-1">Status</label>
                 <select
                   value={formStatus}
                   onChange={e => setFormStatus(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white focus:border-emerald-400 outline-none"
                 >
-                  <option value="🟡 Unpaid">Unpaid</option>
-                  <option value="🟢 Paid">Paid</option>
-                  <option value="🔴 Overdue">Overdue</option>
+                  {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
             </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-xs font-bold text-gray-500 block mb-1">Notes / Terms (optional)</label>
+              <textarea
+                placeholder="e.g. Payment due within 15 days. Thank you for your business!"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                rows={2}
+                className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm resize-none focus:border-emerald-400 outline-none"
+              />
+            </div>
           </div>
+
           <div className="flex gap-3 mt-5">
             <button
               onClick={isEditing ? handleUpdate : handleCreate}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl hover:from-green-700 hover:to-emerald-700 hover:shadow-lg transition-all duration-200 cursor-pointer shadow disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-emerald-600 to-green-700 text-white font-bold py-3.5 rounded-xl hover:from-emerald-500 hover:to-green-600 transition-all cursor-pointer shadow disabled:opacity-50"
             >
               {saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Create Invoice'}
             </button>
             <button
               onClick={resetForm}
-              disabled={saving}
-              className="border-2 border-slate-200 text-slate-600 font-bold py-3 px-8 rounded-xl cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="border-2 border-gray-200 text-gray-500 font-bold py-3.5 px-5 rounded-xl cursor-pointer hover:bg-gray-50 transition-all"
             >
               Cancel
             </button>
           </div>
-          {!isEditing && clients.find(c => c.id === clientId)?.email && (
-            <p className="text-xs text-green-600 mt-2 font-semibold flex items-center gap-1">
-              <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Invoice will be emailed to {clients.find(c => c.id === clientId)?.email} automatically.
+
+          {!isEditing && clients.find(c => c.id === clientId)?.email && formStatus !== '📝 Draft' && (
+            <p className="text-xs text-emerald-600 mt-2 font-semibold flex items-center gap-1">
+              <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Will auto-email to {clients.find(c => c.id === clientId)?.email}
             </p>
           )}
         </div>
@@ -513,20 +742,17 @@ function InvoicesContent() {
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="bg-purple-600 text-white rounded-2xl px-4 py-3 mb-4 flex items-center justify-between shadow-lg">
+        <div className="bg-emerald-700 text-white rounded-2xl px-4 py-3 mb-4 flex items-center justify-between shadow-lg">
           <span className="font-bold text-sm">{selectedIds.size} selected</span>
           <div className="flex gap-2">
             <button
               onClick={bulkMarkPaid}
               disabled={bulkSaving}
-              className="bg-white text-purple-700 font-bold text-xs py-2 px-4 rounded-lg hover:bg-purple-50 transition cursor-pointer disabled:opacity-50"
+              className="bg-white text-emerald-700 font-bold text-xs py-2 px-4 rounded-lg hover:bg-emerald-50 transition cursor-pointer disabled:opacity-50"
             >
               {bulkSaving ? 'Saving…' : 'Mark All Paid'}
             </button>
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="text-purple-200 hover:text-white text-xs font-semibold cursor-pointer"
-            >
+            <button onClick={() => setSelectedIds(new Set())} className="text-emerald-200 hover:text-white text-xs font-semibold cursor-pointer">
               Clear
             </button>
           </div>
@@ -536,90 +762,90 @@ function InvoicesContent() {
       {/* Invoice List */}
       {invoices.length === 0 ? (
         <div className="text-center py-16">
-          <div className="bg-green-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-3">
-            <Receipt className="w-10 h-10 text-green-400" aria-hidden="true" />
+          <div className="bg-emerald-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-3">
+            <Receipt className="w-10 h-10 text-emerald-400" aria-hidden="true" />
           </div>
-          <p className="text-slate-900 font-bold mb-1">No invoices yet</p>
-          <p className="text-slate-500 text-sm mb-6">Create your first invoice to start getting paid.</p>
+          <p className="text-gray-900 font-bold mb-1">No invoices yet</p>
+          <p className="text-gray-500 text-sm mb-6">Create your first invoice to start getting paid.</p>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl cursor-pointer shadow hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+            className="bg-gradient-to-r from-emerald-600 to-green-700 text-white font-bold py-3 px-8 rounded-xl cursor-pointer shadow"
           >
             + Create Invoice
           </button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12">
-          <div className="bg-green-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-3">
-            <Search className="w-10 h-10 text-green-400" aria-hidden="true" />
-          </div>
-          <p className="text-slate-900 font-bold mb-1">No invoices match</p>
-          <p className="text-slate-500 text-sm">Try a different search or filter.</p>
+          <Search className="w-10 h-10 text-gray-300 mx-auto mb-3" aria-hidden="true" />
+          <p className="text-gray-900 font-bold mb-1">No invoices match</p>
+          <p className="text-gray-500 text-sm">Try a different search or filter.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map(inv => {
             const isPaid = inv.status === '🟢 Paid'
             const isOverdue = inv.status === '🔴 Overdue'
+            const isDraft = inv.status === '📝 Draft'
             const isSendingEmail = sending?.id === inv.id && sending.type === 'email'
+            const isSendingSMS = sending?.id === inv.id && sending.type === 'sms'
+            const borderColor = isPaid ? 'border-emerald-500' : isOverdue ? 'border-red-500' : isDraft ? 'border-gray-300' : 'border-amber-400'
             return (
               <div
                 key={inv.id}
-                className={`bg-white rounded-2xl shadow-sm border-l-4 overflow-hidden ${
-                  isPaid ? 'border-green-500' : isOverdue ? 'border-red-500' : 'border-amber-500'
-                } ${selectedIds.has(inv.id) ? 'ring-2 ring-purple-400' : ''}`}
+                className={`bg-white rounded-2xl shadow-sm border-l-4 overflow-hidden ${borderColor} ${selectedIds.has(inv.id) ? 'ring-2 ring-emerald-400' : ''}`}
               >
-                {/* Main row */}
                 <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-start gap-2 min-w-0">
-                      {!isPaid && (
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      {!isPaid && !isDraft && (
                         <input
                           type="checkbox"
                           checked={selectedIds.has(inv.id)}
                           onChange={() => toggleSelect(inv.id)}
-                          className="mt-1 accent-purple-600 cursor-pointer shrink-0"
+                          className="mt-1 accent-emerald-600 cursor-pointer shrink-0 w-4 h-4"
                         />
                       )}
                       <div className="min-w-0">
-                      <p className="text-xs text-gray-400 font-mono leading-none mb-0.5">
-                        INV-{String(inv.invoice_number).padStart(3, '0')}
-                      </p>
-                      <p className="font-bold text-gray-800 text-base leading-tight">{inv.client_name}</p>
-                      {inv.description && (
-                        <p className="text-gray-400 text-xs truncate mt-0.5">{inv.description}</p>
-                      )}
-                    </div>
+                        <p className="text-xs text-gray-400 font-mono leading-none mb-0.5">
+                          INV-{String(inv.invoice_number).padStart(3, '0')}
+                        </p>
+                        <p className="font-bold text-gray-900 text-base leading-tight">{inv.client_name}</p>
+                        {inv.description && (
+                          <p className="text-gray-400 text-xs truncate mt-0.5 max-w-[200px]">{inv.description}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`text-2xl font-bold leading-none ${
-                        isPaid ? 'text-green-700' : isOverdue ? 'text-red-600' : 'text-amber-600'
-                      }`}>${inv.amount.toFixed(2)}</p>
+                      <p className={`text-2xl font-black leading-none ${isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : isDraft ? 'text-gray-400' : 'text-amber-600'}`}>
+                        ${inv.amount.toFixed(2)}
+                      </p>
                       {inv.due_date && (
-                        <p className="text-xs text-gray-400 mt-0.5">Due {inv.due_date}</p>
+                        <p className={`text-xs mt-0.5 font-medium flex items-center justify-end gap-1 ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
+                          {isOverdue && <AlertTriangle className="w-3 h-3" aria-hidden="true" />}
+                          {isOverdue ? 'Overdue ' : 'Due '}{inv.due_date}
+                        </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Status + quick mark paid */}
+                  {/* Status + Mark Paid */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <select
                       value={inv.status}
                       onChange={e => handleStatusChange(inv.id, e.target.value)}
                       className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer ${
-                        isPaid ? 'bg-green-100 text-green-700' :
+                        isPaid ? 'bg-emerald-100 text-emerald-700' :
                         isOverdue ? 'bg-red-100 text-red-700' :
+                        isDraft ? 'bg-gray-100 text-gray-600' :
                         'bg-amber-100 text-amber-700'
                       }`}
                     >
-                      <option value="🟡 Unpaid">Unpaid</option>
-                      <option value="🟢 Paid">Paid</option>
-                      <option value="🔴 Overdue">Overdue</option>
+                      {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
-                    {!isPaid && (
+                    {!isPaid && !isDraft && (
                       <button
                         onClick={() => markPaid(inv.id)}
-                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer flex items-center gap-1"
+                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors cursor-pointer flex items-center gap-1"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Mark Paid
                       </button>
@@ -628,43 +854,50 @@ function InvoicesContent() {
                 </div>
 
                 {/* Action bar */}
-                <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 flex items-center gap-2 flex-wrap">
-                  {/* Send email */}
+                <div className="border-t border-gray-100 bg-gray-50 px-3 py-2.5 flex items-center gap-1.5 flex-wrap">
                   <button
                     onClick={() => handleSendEmail(inv)}
                     disabled={isSendingEmail}
                     className={`flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                      inv.client_email
-                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        : 'bg-gray-100 text-gray-400'
+                      inv.client_email ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
-                    title={inv.client_email || 'No email on file'}
                   >
                     <Mail className="w-3.5 h-3.5" aria-hidden="true" /> {isSendingEmail ? 'Sending…' : 'Email'}
                   </button>
 
-                  {/* Send SMS */}
                   <button
                     onClick={() => handleSendSMS(inv)}
+                    disabled={isSendingSMS}
                     className={`flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                      inv.client_phone
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-gray-100 text-gray-400'
+                      inv.client_phone ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
-                    title={inv.client_phone || 'No phone on file'}
                   >
-                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
+                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> {isSendingSMS ? 'Sending…' : 'Text'}
                   </button>
 
-                  {/* Copy link */}
                   <button
                     onClick={() => copyLink(inv)}
-                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
                   >
-                    <Link2 className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === inv.id ? 'Copied!' : 'Copy Link'}
+                    <Copy className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === inv.id ? 'Copied!' : 'Link'}
                   </button>
 
-                  {/* Edit */}
+                  <a
+                    href={getInvoiceLink(inv.share_token)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" /> View
+                  </a>
+
+                  <button
+                    onClick={() => duplicateInvoice(inv)}
+                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5" aria-hidden="true" /> Dupe
+                  </button>
+
                   <button
                     onClick={() => openEdit(inv)}
                     aria-label="Edit invoice"
@@ -673,7 +906,6 @@ function InvoicesContent() {
                     <Pencil className="w-4 h-4" aria-hidden="true" />
                   </button>
 
-                  {/* Delete */}
                   <button
                     onClick={() => handleDelete(inv.id)}
                     aria-label="Delete invoice"

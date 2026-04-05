@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
-import { Leaf, Map, Pencil, Trash2, MessageSquare, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera, RefreshCw, Minus } from 'lucide-react'
+import { Leaf, Map, Pencil, Trash2, MessageSquare, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera, RefreshCw, Minus, Scissors, Wind, TreePine, Axe, Layers, Sprout, Ban, Circle, Wheat, Grid3x3, Flower2, Droplets, Zap, Snowflake, Pipette, type LucideIcon } from 'lucide-react'
 import { JobStatusBadge, jobStatusConfig, stripEmoji } from '../../lib/statusIcons'
 
 interface Job {
@@ -52,6 +52,105 @@ interface Client {
 interface Worker {
   id: string
   name: string | null
+}
+
+const JOB_TYPE_ICONS: Record<string, LucideIcon> = {
+  '✏️ Custom':                 Pencil,
+  '🌿 Lawn Mowing':            Scissors,
+  '✂️ Hedge Trimming':         Scissors,
+  '💨 Leaf Blowing':           Wind,
+  '🍂 Leaf Removal':           Wind,
+  '🌳 Bush Trimming':          TreePine,
+  '🪓 Tree Trimming':          TreePine,
+  '🪵 Stump Removal':          Axe,
+  '🪴 Mulching':               Layers,
+  '🌱 Fertilizing':            Sprout,
+  '🌾 Weed Control':           Ban,
+  '🕳️ Aeration':              Circle,
+  '🌻 Overseeding':            Wheat,
+  '🟩 Sod Installation':       Grid3x3,
+  '🌺 Garden Bed Maintenance': Flower2,
+  '💧 Irrigation System Check':Droplets,
+  '🚿 Pressure Washing':       Zap,
+  '❄️ Snow Removal':           Snowflake,
+  '🍃 Gutter Cleaning':        Pipette,
+  '🧹 General Cleanup':        Trash2,
+}
+
+const JOB_TYPE_COLORS: Record<string, string> = {
+  '✏️ Custom':                 'text-gray-500',
+  '🌿 Lawn Mowing':            'text-emerald-500',
+  '✂️ Hedge Trimming':         'text-green-600',
+  '💨 Leaf Blowing':           'text-sky-400',
+  '🍂 Leaf Removal':           'text-orange-400',
+  '🌳 Bush Trimming':          'text-green-700',
+  '🪓 Tree Trimming':          'text-lime-600',
+  '🪵 Stump Removal':          'text-amber-700',
+  '🪴 Mulching':               'text-yellow-600',
+  '🌱 Fertilizing':            'text-teal-500',
+  '🌾 Weed Control':           'text-red-400',
+  '🕳️ Aeration':              'text-stone-500',
+  '🌻 Overseeding':            'text-yellow-500',
+  '🟩 Sod Installation':       'text-emerald-600',
+  '🌺 Garden Bed Maintenance': 'text-pink-500',
+  '💧 Irrigation System Check':'text-blue-500',
+  '🚿 Pressure Washing':       'text-cyan-500',
+  '❄️ Snow Removal':           'text-blue-300',
+  '🍃 Gutter Cleaning':        'text-slate-500',
+  '🧹 General Cleanup':        'text-violet-500',
+}
+
+function JobTypeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const Icon = value ? JOB_TYPE_ICONS[value] : null
+  const label = value ? stripEmoji(value) : 'Select Job Type *'
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center gap-2.5 border rounded-lg p-3 text-left cursor-pointer transition-colors duration-150 ${
+          open ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-gray-300'
+        } ${value ? 'text-gray-800' : 'text-gray-400'}`}
+      >
+        {Icon && <Icon className={`w-4 h-4 shrink-0 ${JOB_TYPE_COLORS[value] ?? 'text-emerald-600'}`} aria-hidden="true" />}
+        <span className="flex-1 text-sm">{label}</span>
+        <svg className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto max-h-72">
+          {JOB_TYPES.map((type) => {
+            const ItemIcon = JOB_TYPE_ICONS[type]
+            const selected = value === type
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => { onChange(type); setOpen(false) }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-emerald-50 transition-colors duration-100 cursor-pointer ${selected ? 'bg-emerald-50 text-emerald-700 font-semibold' : 'text-gray-700'}`}
+              >
+                {ItemIcon && <ItemIcon className={`w-4 h-4 shrink-0 ${JOB_TYPE_COLORS[type] ?? 'text-emerald-600'}`} aria-hidden="true" />}
+                <span>{stripEmoji(type)}</span>
+                {selected && <svg className="ml-auto w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 }
 
 const JOB_TYPES = [
@@ -594,16 +693,7 @@ export default function JobsPage() {
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Leaf className="w-5 h-5 text-blue-500" aria-hidden="true" />New Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <select
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="border border-gray-300 rounded-lg p-3 text-gray-800"
-              >
-                <option value="">Select Job Type *</option>
-                {JOB_TYPES.map((type) => (
-                  <option key={type} value={type}>{stripEmoji(type)}</option>
-                ))}
-              </select>
+              <JobTypeSelect value={title} onChange={setTitle} />
               {title === '✏️ Custom' && (
                 <input
                   placeholder="Enter custom job title *"
@@ -693,12 +783,7 @@ export default function JobsPage() {
           <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Pencil className="w-5 h-5 text-blue-500" aria-hidden="true" />Edit Job</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <select value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-                <option value="">Select Job Type *</option>
-                {JOB_TYPES.map((type) => (
-                  <option key={type} value={type}>{stripEmoji(type)}</option>
-                ))}
-              </select>
+              <JobTypeSelect value={editTitle} onChange={setEditTitle} />
               {editTitle === '✏️ Custom' && (
                 <input
                   placeholder="Enter custom job title *"

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList } from 'lucide-react'
+import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList, FileText } from 'lucide-react'
 
 interface Profile {
   subscription_status: string | null
@@ -85,13 +85,16 @@ export default function SettingsPage() {
   const [deleteDeleting, setDeleteDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [deleteExpanded, setDeleteExpanded] = useState(false)
+  const [invoiceDueDays, setInvoiceDueDays] = useState(15)
+  const [invoiceDueSaving, setInvoiceDueSaving] = useState(false)
+  const [invoiceDueMessage, setInvoiceDueMessage] = useState('')
 
   useEffect(() => {
     if (user) {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -111,6 +114,7 @@ export default function SettingsPage() {
             setAiGreeting(data.booking_welcome_message || '')
             setDisplayName(data.name || '')
             setPhone(data.phone || '')
+            setInvoiceDueDays((data as any).invoice_due_days ?? 15)
           }
         })
     }
@@ -295,6 +299,14 @@ export default function SettingsPage() {
     }
   }
 
+  const handleSaveInvoiceDue = async () => {
+    setInvoiceDueSaving(true)
+    await supabase.from('profiles').update({ invoice_due_days: invoiceDueDays } as any).eq('id', user!.id)
+    setInvoiceDueMessage('Saved!')
+    setTimeout(() => setInvoiceDueMessage(''), 3000)
+    setInvoiceDueSaving(false)
+  }
+
   const handleManageBilling = async () => {
     setPortalError('')
     setPortalLoading(true)
@@ -396,6 +408,36 @@ export default function SettingsPage() {
           </div>
           {emailError && <p className="text-red-500 text-sm mt-2">{emailError}</p>}
           {emailMessage && <p className="text-green-600 text-sm font-semibold mt-2">{emailMessage}</p>}
+        </div>
+      </div>
+
+      {/* Invoicing */}
+      <div className="bg-white rounded-xl p-6 shadow mb-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+          Invoicing
+        </h3>
+        <p className="text-gray-500 text-sm mb-4">Set your default payment terms. New invoices will automatically use this due date.</p>
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-semibold text-gray-700">Default due date</label>
+          <select
+            value={invoiceDueDays}
+            onChange={(e) => setInvoiceDueDays(Number(e.target.value))}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-gray-800 text-sm cursor-pointer"
+          >
+            <option value={7}>Net 7 — due in 7 days</option>
+            <option value={15}>Net 15 — due in 15 days</option>
+            <option value={30}>Net 30 — due in 30 days</option>
+            <option value={60}>Net 60 — due in 60 days</option>
+          </select>
+          <button
+            onClick={handleSaveInvoiceDue}
+            disabled={invoiceDueSaving}
+            className="bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-emerald-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
+          >
+            {invoiceDueSaving ? 'Saving...' : 'Save'}
+          </button>
+          {invoiceDueMessage && <span className="text-emerald-600 text-sm font-semibold">{invoiceDueMessage}</span>}
         </div>
       </div>
 
