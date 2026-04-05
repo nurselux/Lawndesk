@@ -7,6 +7,12 @@ import { supabase } from '../../../lib/supabase'
 import { Leaf, Search, Printer, CreditCard, Loader2, CheckCircle2 } from 'lucide-react'
 import { InvoiceStatusBadge } from '../../../lib/statusIcons'
 
+interface LineItem {
+  description: string
+  quantity: number
+  unit_price: number
+}
+
 interface Invoice {
   id: string
   invoice_number: number
@@ -15,6 +21,9 @@ interface Invoice {
   status: string
   due_date: string
   description: string
+  notes: string | null
+  tax_rate: number | null
+  line_items: LineItem[] | null
   created_at: string
 }
 
@@ -36,7 +45,7 @@ export default function PublicInvoicePage() {
     const fetchInvoice = async () => {
       const { data, error } = await supabase
         .from('Invoices')
-        .select('id, invoice_number, client_name, amount, status, due_date, description, created_at')
+        .select('id, invoice_number, client_name, amount, status, due_date, description, notes, tax_rate, line_items, created_at')
         .eq('share_token', token)
         .single()
 
@@ -72,6 +81,16 @@ export default function PublicInvoicePage() {
   const invoiceNum = `INV-${String(invoice.invoice_number).padStart(3, '0')}`
   const createdDate = new Date(invoice.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
+  // Compute line items or fall back to single-item display
+  const lineItems: LineItem[] = invoice.line_items && invoice.line_items.length > 0
+    ? invoice.line_items
+    : [{ description: invoice.description || 'Lawn services', quantity: 1, unit_price: invoice.amount }]
+
+  const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.unit_price, 0)
+  const taxRate = invoice.tax_rate ?? 0
+  const taxAmount = subtotal * (taxRate / 100)
+  const total = subtotal + taxAmount
+
   return (
     <main className="min-h-dvh bg-gray-100 flex flex-col items-center justify-start p-6 print:bg-white print:p-0">
 
@@ -82,9 +101,11 @@ export default function PublicInvoicePage() {
         </div>
       )}
 
-      {/* Print button — hidden when printing */}
+      {/* Top bar */}
       <div className="w-full max-w-xl mb-4 flex justify-between items-center print:hidden">
-        <Link href="/" className="text-green-700 font-bold hover:underline text-sm flex items-center gap-1"><Leaf className="w-4 h-4" aria-hidden="true" />LawnDesk</Link>
+        <Link href="/" className="text-green-700 font-bold hover:underline text-sm flex items-center gap-1">
+          <Leaf className="w-4 h-4" aria-hidden="true" />LawnDesk
+        </Link>
         <button
           onClick={() => window.print()}
           className="bg-white border border-gray-300 text-gray-600 font-bold py-2 px-5 rounded-lg hover:bg-gray-50 transition cursor-pointer text-sm shadow flex items-center gap-1"
@@ -99,7 +120,9 @@ export default function PublicInvoicePage() {
         {/* Header */}
         <div className="bg-green-700 px-8 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Leaf className="w-6 h-6" aria-hidden="true" />LawnDesk</h1>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Leaf className="w-6 h-6" aria-hidden="true" />LawnDesk
+            </h1>
             <p className="text-green-200 text-sm">Professional Lawn Services</p>
           </div>
           <div className="text-right">
@@ -137,28 +160,56 @@ export default function PublicInvoicePage() {
             </div>
           </div>
 
-          {/* Line item */}
+          {/* Line items table */}
           <div className="border border-gray-100 rounded-xl overflow-hidden mb-6">
-            <div className="bg-gray-50 px-4 py-2 grid grid-cols-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              <span className="col-span-2">Description</span>
-              <span className="text-right">Amount</span>
+            <div className="bg-gray-50 px-4 py-2 grid grid-cols-12 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              <span className="col-span-6">Description</span>
+              <span className="col-span-2 text-center">Qty</span>
+              <span className="col-span-2 text-right">Unit Price</span>
+              <span className="col-span-2 text-right">Amount</span>
             </div>
-            <div className="px-4 py-4 grid grid-cols-3 items-center border-t border-gray-100">
-              <p className="col-span-2 text-gray-700">{invoice.description || 'Lawn services'}</p>
-              <p className="text-right font-bold text-gray-800">${invoice.amount.toFixed(2)}</p>
+            {lineItems.map((item, i) => (
+              <div key={i} className="px-4 py-3 grid grid-cols-12 items-center border-t border-gray-100">
+                <p className="col-span-6 text-gray-700 text-sm">{item.description || 'Lawn services'}</p>
+                <p className="col-span-2 text-center text-gray-600 text-sm">{item.quantity}</p>
+                <p className="col-span-2 text-right text-gray-600 text-sm">${Number(item.unit_price).toFixed(2)}</p>
+                <p className="col-span-2 text-right font-semibold text-gray-800 text-sm">
+                  ${(item.quantity * item.unit_price).toFixed(2)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Totals block */}
+          <div className="flex justify-end mb-6">
+            <div className="w-64 space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Subtotal</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              {taxRate > 0 && (
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Tax ({taxRate}%)</span>
+                  <span>${taxAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-gray-200">
+                <span className="font-bold text-gray-800">Total Due</span>
+                <span className="text-2xl font-bold text-green-700">${total.toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
-          {/* Total */}
-          <div className="flex justify-end mb-8">
-            <div className="bg-green-50 border border-green-200 rounded-xl px-6 py-4 text-right min-w-[180px]">
-              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1">Total Due</p>
-              <p className="text-3xl font-bold text-green-700">${invoice.amount.toFixed(2)}</p>
+          {/* Notes */}
+          {invoice.notes && (
+            <div className="bg-gray-50 rounded-xl px-5 py-4 mb-6 text-sm text-gray-600 border border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Notes</p>
+              <p className="whitespace-pre-wrap">{invoice.notes}</p>
             </div>
-          </div>
+          )}
 
           {/* Pay Now button */}
-          {invoice.status !== '🟢 Paid' && (
+          {invoice.status !== '🟢 Paid' && invoice.status !== '📝 Draft' && (
             <div className="mb-6 print:hidden">
               <button
                 onClick={async () => {
@@ -179,7 +230,10 @@ export default function PublicInvoicePage() {
                 disabled={payLoading}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-4 rounded-xl hover:opacity-90 transition cursor-pointer text-lg shadow-md disabled:opacity-50"
               >
-                {payLoading ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Redirecting...</> : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${invoice.amount.toFixed(2)} Now</>}
+                {payLoading
+                  ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Redirecting...</>
+                  : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${total.toFixed(2)} Now</>
+                }
               </button>
               <p className="text-center text-gray-400 text-xs mt-2">Secure payment powered by Stripe</p>
             </div>
