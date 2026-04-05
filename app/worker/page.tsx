@@ -8,6 +8,8 @@ import { useProfile } from '../../lib/useProfile'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import AdminViewBanner from '../../components/AdminViewBanner'
+import { Leaf, User, Clock, FileText, MapPin, Phone, Camera, WifiOff, CheckCircle2, Loader2, Navigation, Car } from 'lucide-react'
+import { stripEmoji } from '../../lib/statusIcons'
 
 interface Job {
   id: string
@@ -277,13 +279,13 @@ export default function WorkerPage() {
       .update({ name: settingsName || null, phone: settingsPhone || null })
       .eq('id', user!.id)
     setSettingsSaving(false)
-    setSettingsMessage(error ? '❌ Failed to save. Try again.' : '✅ Profile saved!')
+    setSettingsMessage(error ? 'Failed to save. Try again.' : 'Profile saved!')
     setTimeout(() => setSettingsMessage(''), 3000)
   }
 
   const handleChangePassword = async () => {
     if (!settingsNewPassword || settingsNewPassword.length < 6) {
-      setSettingsMessage('❌ Password must be at least 6 characters.')
+      setSettingsMessage('Password must be at least 6 characters.')
       setTimeout(() => setSettingsMessage(''), 3000)
       return
     }
@@ -292,9 +294,9 @@ export default function WorkerPage() {
     const { error } = await supabase.auth.updateUser({ password: settingsNewPassword })
     setSettingsSaving(false)
     if (error) {
-      setSettingsMessage('❌ Failed to update password.')
+      setSettingsMessage('Failed to update password.')
     } else {
-      setSettingsMessage('✅ Password updated!')
+      setSettingsMessage('Password updated!')
       setSettingsNewPassword('')
     }
     setTimeout(() => setSettingsMessage(''), 3000)
@@ -400,8 +402,8 @@ export default function WorkerPage() {
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0">
               <h3 className="font-bold text-gray-800 text-base leading-tight">{job.title}</h3>
-              <p className="text-gray-500 text-sm">👤 {job.client_name}</p>
-              {job.time && <p className="text-purple-600 text-xs font-semibold mt-0.5">🕐 {job.time}</p>}
+              <p className="text-gray-500 text-sm flex items-center gap-1"><User className="w-3.5 h-3.5" aria-hidden="true" /> {job.client_name}</p>
+              {job.time && <p className="text-purple-600 text-xs font-semibold mt-0.5 flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" /> {job.time}</p>}
             </div>
             <select
               value={job.status}
@@ -414,22 +416,22 @@ export default function WorkerPage() {
                 'bg-blue-100 text-blue-700'
               }`}
             >
-              <option>🔵 Scheduled</option>
-              <option>🟡 In Progress</option>
-              <option>🟢 Completed</option>
-              <option>🔴 Cancelled</option>
+              <option value="🔵 Scheduled">Scheduled</option>
+              <option value="🟡 In Progress">In Progress</option>
+              <option value="🟢 Completed">Completed</option>
+              <option value="🔴 Cancelled">Cancelled</option>
             </select>
           </div>
 
           {client?.notes && (
             <div className="bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 mb-2">
-              <p className="text-amber-800 text-xs font-bold mb-0.5">🏠 Property Notes</p>
+              <p className="text-amber-800 text-xs font-bold mb-0.5 flex items-center gap-1"><MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Property Notes</p>
               <p className="text-amber-700 text-xs">{client.notes}</p>
             </div>
           )}
           {job.notes && (
-            <p className="text-gray-400 text-xs bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3">
-              📝 {job.notes}
+            <p className="text-gray-400 text-xs bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-1.5">
+              <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{job.notes}
             </p>
           )}
 
@@ -454,7 +456,7 @@ export default function WorkerPage() {
               {isClockedIn && (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2">
-                    <p className="text-yellow-700 text-xs font-semibold">⏱ In since {formatClockTime(job.clocked_in_at)}</p>
+                    <p className="text-yellow-700 text-xs font-semibold flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" /> In since {formatClockTime(job.clocked_in_at)}</p>
                     <p className="text-yellow-600 text-xs">Time on job: {calcDuration(job.clocked_in_at, null)}</p>
                   </div>
                   <button
@@ -468,8 +470,8 @@ export default function WorkerPage() {
               )}
               {isClockedOut && (
                 <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                  <p className="text-green-700 text-xs font-semibold">
-                    ✅ {formatClockTime(job.clocked_in_at)} → {formatClockTime(job.clocked_out_at)}
+                  <p className="text-green-700 text-xs font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {formatClockTime(job.clocked_in_at)} → {formatClockTime(job.clocked_out_at)}
                     <span className="ml-2 font-normal text-green-600">({calcDuration(job.clocked_in_at, job.clocked_out_at)})</span>
                   </p>
                 </div>
@@ -483,7 +485,7 @@ export default function WorkerPage() {
               value={notes}
               onChange={e => setWorkerNotes(prev => ({ ...prev, [job.id]: e.target.value }))}
               onBlur={() => handleSaveWorkerNotes(job.id)}
-              placeholder="📋 Add field notes..."
+              placeholder="Add field notes..."
               rows={2}
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50"
             />
@@ -500,7 +502,7 @@ export default function WorkerPage() {
                   : 'bg-gradient-to-r from-orange-400 to-amber-400 text-white shadow hover:scale-[1.02] active:scale-100'
               }`}
             >
-              {onMyWaySending === job.id ? '⏳ Sending...' : onMyWaySent.has(job.id) ? '✅ Client notified!' : '🚗 On My Way'}
+              {onMyWaySending === job.id ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" aria-hidden="true" />Sending...</> : onMyWaySent.has(job.id) ? <><CheckCircle2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Client notified!</> : <><Car className="w-4 h-4 inline mr-1" aria-hidden="true" />On My Way</>}
             </button>
           )}
 
@@ -510,24 +512,24 @@ export default function WorkerPage() {
                 href={`https://maps.apple.com/?daddr=${encodeURIComponent(client.address)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-center text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+                className="flex-1 text-center text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors flex items-center justify-center gap-1"
               >
-                📍 Navigate
+                <Navigation className="w-3.5 h-3.5" aria-hidden="true" /> Navigate
               </a>
             )}
             {client?.phone && (
               <a
                 href={`tel:${client.phone}`}
-                className="flex-1 text-center text-xs font-bold py-2 px-3 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors"
+                className="flex-1 text-center text-xs font-bold py-2 px-3 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors flex items-center justify-center gap-1"
               >
-                📞 Call
+                <Phone className="w-3.5 h-3.5" aria-hidden="true" /> Call
               </a>
             )}
             <button
               onClick={() => setExpandedJob(isExpanded ? null : job.id)}
               className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
             >
-              {isExpanded ? '▲ Hide' : '📸 Photos'}
+              {isExpanded ? '▲ Hide' : <><Camera className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Photos</>}
             </button>
           </div>
         </div>
@@ -617,7 +619,7 @@ export default function WorkerPage() {
           <div>
             <p className="font-bold text-base leading-tight">{settingsName || 'Team Member'}</p>
             <span className="inline-flex items-center gap-1 mt-1 bg-green-600 text-green-100 text-xs font-semibold px-2 py-0.5 rounded-full">
-              🌿 Team Member
+              <Leaf className="w-3 h-3" aria-hidden="true" /> Team Member
             </span>
           </div>
         </div>
@@ -713,8 +715,8 @@ export default function WorkerPage() {
 
         {/* Offline banner */}
         {!isOnline && (
-          <div className="bg-red-500 text-white text-sm font-semibold text-center py-2 px-4 sticky top-0 z-20">
-            📵 You're offline — changes won't save until reconnected
+          <div className="bg-red-500 text-white text-sm font-semibold text-center py-2 px-4 sticky top-0 z-20 flex items-center justify-center gap-2">
+            <WifiOff className="w-4 h-4" aria-hidden="true" /> You're offline — changes won't save until reconnected
           </div>
         )}
 
@@ -722,7 +724,7 @@ export default function WorkerPage() {
         <div className={`bg-green-700 text-white px-5 py-4 flex items-center justify-between sticky z-10 ${isOnline ? 'top-0' : 'top-[36px]'}`}>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold leading-none">🌿 LawnDesk</h1>
+              <h1 className="text-lg font-bold leading-none flex items-center gap-1.5"><Leaf className="w-4 h-4" aria-hidden="true" />LawnDesk</h1>
               <span className="bg-green-600 text-green-100 text-xs font-semibold px-2 py-0.5 rounded-full">Team Member</span>
             </div>
             <p className="text-green-200 text-sm font-semibold mt-0.5">
@@ -850,13 +852,13 @@ export default function WorkerPage() {
                         {jobs.filter(j => j.status === '🟢 Completed').length} completed · {jobs.filter(j => j.status === '🔵 Scheduled').length} remaining
                       </p>
                     </div>
-                    <span className="text-2xl">🌿</span>
+                    <Leaf className="w-5 h-5 text-green-600" aria-hidden="true" />
                   </div>
                 )}
 
                 {view === 'day' && jobs.length === 0 && (
                   <div className="text-center py-20">
-                    <p className="text-5xl mb-4">📅</p>
+                    <div className="flex justify-center mb-4"><Leaf className="w-16 h-16 text-green-300" aria-hidden="true" /></div>
                     <p className="text-gray-700 font-bold text-lg">No jobs scheduled</p>
                     <p className="text-gray-400 text-sm mt-1">Nothing on the schedule for this day.</p>
                     <button onClick={goToToday} className="mt-6 text-green-700 font-semibold text-sm hover:underline cursor-pointer">
@@ -869,7 +871,7 @@ export default function WorkerPage() {
 
                 {view === 'week' && weekJobsByDate.length === 0 && (
                   <div className="text-center py-20">
-                    <p className="text-5xl mb-4">📅</p>
+                    <div className="flex justify-center mb-4"><Leaf className="w-16 h-16 text-green-300" aria-hidden="true" /></div>
                     <p className="text-gray-700 font-bold text-lg">No jobs this week</p>
                     <button onClick={goToToday} className="mt-6 text-green-700 font-semibold text-sm hover:underline cursor-pointer">
                       Go to Today

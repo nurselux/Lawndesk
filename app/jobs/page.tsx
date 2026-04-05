@@ -7,7 +7,8 @@ import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
-import { Leaf, Map, Pencil, Trash2, MessageSquare, Bell, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera } from 'lucide-react'
+import { Leaf, Map, Pencil, Trash2, MessageSquare, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera, RefreshCw, Minus } from 'lucide-react'
+import { JobStatusBadge, jobStatusConfig, stripEmoji } from '../../lib/statusIcons'
 
 interface Job {
   id: string
@@ -213,7 +214,7 @@ export default function JobsPage() {
       client_name: selectedClient?.name || '',
       client_id: clientId,
       date: d,
-      time,
+      time: time || null,
       status,
       notes,
       recurring: finalRecurring,
@@ -238,13 +239,13 @@ export default function JobsPage() {
       const count = jobsToInsert.length
       setSuccessMessage(
         recurring === '🔂 One-time'
-          ? '🎉 Job scheduled successfully!'
-          : `🎉 ${count} recurring jobs scheduled for the next 3 months!`
+          ? 'Job scheduled successfully!'
+          : `${count} recurring jobs scheduled for the next 3 months!`
       )
       setTimeout(() => setSuccessMessage(''), 5000)
       fetchJobs()
     } else {
-      setErrorMessage(`❌ Failed to save: ${error.message}`)
+      setErrorMessage(`Failed to save: ${error.message}`)
       setTimeout(() => setErrorMessage(''), 3000)
     }
     setSaving(false)
@@ -283,7 +284,7 @@ export default function JobsPage() {
         client_name: selectedClient?.name || '',
         client_id: editClientId,
         date: editDate,
-        time: editTime,
+        time: editTime || null,
         status: editStatus,
         notes: editNotes,
         recurring: finalRecurring,
@@ -383,7 +384,7 @@ export default function JobsPage() {
           user_id: user?.id,
         }] as any).select().single()
         invoice = newInv
-        setSuccessMessage(`✅ Job complete! Invoice #${String(nextNum).padStart(3, '0')} created — set the amount in Invoices.`)
+        setSuccessMessage(`Job complete! Invoice #${String(nextNum).padStart(3, '0')} created — set the amount in Invoices.`)
         setTimeout(() => setSuccessMessage(''), 6000)
       }
 
@@ -398,7 +399,7 @@ export default function JobsPage() {
         if (!invoicesData?.[0]) {
           // message already set above
         } else {
-          setSuccessMessage(`✅ Job complete! Invoice text sent to ${clientData.name}.`)
+          setSuccessMessage(`Job complete! Invoice text sent to ${clientData.name}.`)
           setTimeout(() => setSuccessMessage(''), 5000)
         }
       }
@@ -532,7 +533,7 @@ export default function JobsPage() {
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input
-          placeholder="🔍 Search by title, client, notes..."
+          placeholder="Search by title, client, notes..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border border-gray-300 rounded-lg p-3 text-gray-800 flex-1"
@@ -542,11 +543,11 @@ export default function JobsPage() {
           onChange={(e) => setFilterStatus(e.target.value)}
           className="border border-gray-300 rounded-lg p-3 text-gray-800 w-full sm:w-auto"
         >
-          <option>All</option>
-          <option>🔵 Scheduled</option>
-          <option>🟡 In Progress</option>
-          <option>🟢 Completed</option>
-          <option>🔴 Cancelled</option>
+          <option value="All">All</option>
+          <option value="🔵 Scheduled">Scheduled</option>
+          <option value="🟡 In Progress">In Progress</option>
+          <option value="🟢 Completed">Completed</option>
+          <option value="🔴 Cancelled">Cancelled</option>
         </select>
       </div>
 
@@ -560,7 +561,7 @@ export default function JobsPage() {
       {smsPrompt && (
         <div className="fixed md:relative bottom-24 md:bottom-auto left-4 right-4 md:left-auto md:right-auto z-40 md:z-auto md:mb-6 bg-white border-2 border-green-400 rounded-2xl p-5 shadow-2xl md:shadow-lg">
           <div className="flex items-center gap-3 mb-3">
-            <div className="bg-green-100 text-green-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center">📱</div>
+            <div className="bg-green-100 text-green-700 text-2xl w-12 h-12 rounded-xl flex items-center justify-center"><MessageSquare className="w-5 h-5" aria-hidden="true" /></div>
             <div>
               <p className="font-bold text-gray-800">Job complete! Text {smsPrompt.clientName}?</p>
               <p className="text-gray-400 text-sm">INV-{String(smsPrompt.invoiceNumber).padStart(3, '0')} · ${Number(smsPrompt.amount).toFixed(2)}</p>
@@ -576,7 +577,7 @@ export default function JobsPage() {
               onClick={() => setSmsPrompt(null)}
               className="flex-1 block bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 transition-colors text-center"
             >
-              <span aria-hidden="true">📲 </span>Open SMS App
+              Open SMS App
             </a>
             <button
               onClick={() => setSmsPrompt(null)}
@@ -600,7 +601,7 @@ export default function JobsPage() {
               >
                 <option value="">Select Job Type *</option>
                 {JOB_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type} value={type}>{stripEmoji(type)}</option>
                 ))}
               </select>
               {title === '✏️ Custom' && (
@@ -631,17 +632,17 @@ export default function JobsPage() {
               <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔂 One-time</option>
-              <option>📅 Weekly</option>
-              <option>🗓️ Biweekly</option>
-              <option>📆 Monthly</option>
-              <option>✏️ Custom</option>
+              <option value="🔂 One-time">One-time</option>
+              <option value="📅 Weekly">Weekly</option>
+              <option value="🗓️ Biweekly">Biweekly</option>
+              <option value="📆 Monthly">Monthly</option>
+              <option value="✏️ Custom">Custom</option>
             </select>
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔵 Scheduled</option>
-              <option>🟡 In Progress</option>
-              <option>🟢 Completed</option>
-              <option>🔴 Cancelled</option>
+              <option value="🔵 Scheduled">Scheduled</option>
+              <option value="🟡 In Progress">In Progress</option>
+              <option value="🟢 Completed">Completed</option>
+              <option value="🔴 Cancelled">Cancelled</option>
             </select>
             {workers.length > 0 && (
               <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -668,12 +669,12 @@ export default function JobsPage() {
           </div>
           {recurring !== '🔂 One-time' && recurring !== '✏️ Custom' && (
             <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-bold text-sm">📅 This will automatically schedule jobs for the next 3 months!</p>
+              <p className="text-green-700 font-bold text-sm flex items-center gap-1.5"><RefreshCw className="w-4 h-4" aria-hidden="true" />This will automatically schedule jobs for the next 3 months!</p>
             </div>
           )}
           {recurring === '✏️ Custom' && (
             <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-700 font-bold text-sm">📝 Custom schedule will be saved as a note on the job.</p>
+              <p className="text-blue-700 font-bold text-sm flex items-center gap-1.5"><FileText className="w-4 h-4" aria-hidden="true" />Custom schedule will be saved as a note on the job.</p>
             </div>
           )}
           <div className="flex gap-3 mt-4">
@@ -695,7 +696,7 @@ export default function JobsPage() {
               <select value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
                 <option value="">Select Job Type *</option>
                 {JOB_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type} value={type}>{stripEmoji(type)}</option>
                 ))}
               </select>
               {editTitle === '✏️ Custom' && (
@@ -722,17 +723,17 @@ export default function JobsPage() {
               <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
             <select value={editRecurring} onChange={(e) => setEditRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔂 One-time</option>
-              <option>📅 Weekly</option>
-              <option>🗓️ Biweekly</option>
-              <option>📆 Monthly</option>
-              <option>✏️ Custom</option>
+              <option value="🔂 One-time">One-time</option>
+              <option value="📅 Weekly">Weekly</option>
+              <option value="🗓️ Biweekly">Biweekly</option>
+              <option value="📆 Monthly">Monthly</option>
+              <option value="✏️ Custom">Custom</option>
             </select>
             <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option>🔵 Scheduled</option>
-              <option>🟡 In Progress</option>
-              <option>🟢 Completed</option>
-              <option>🔴 Cancelled</option>
+              <option value="🔵 Scheduled">Scheduled</option>
+              <option value="🟡 In Progress">In Progress</option>
+              <option value="🟢 Completed">Completed</option>
+              <option value="🔴 Cancelled">Cancelled</option>
             </select>
             {workers.length > 0 && (
               <select value={editAssignedTo} onChange={(e) => setEditAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
@@ -761,7 +762,7 @@ export default function JobsPage() {
           {/* Photo Upload Section */}
           {editingJob && (
             <div className="mt-6 border-t border-blue-200 pt-6">
-              <h4 className="font-bold text-gray-800 mb-4">📸 Job Photos</h4>
+              <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><Camera className="w-4 h-4" aria-hidden="true" />Job Photos</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <JobPhotoUpload
                   jobId={editingJob.id}
@@ -868,7 +869,10 @@ export default function JobsPage() {
                 {job.recurring && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-gray-400 font-semibold uppercase tracking-wide w-12 shrink-0">Sched:</span>
-                    <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${job.recurring === '🔂 One-time' ? 'bg-gray-100 text-gray-500' : 'bg-cyan-50 text-cyan-600'}`}>{job.recurring}</span>
+                    <span className={`font-semibold px-2 py-0.5 rounded-full text-xs flex items-center gap-1 ${job.recurring === '🔂 One-time' ? 'bg-gray-100 text-gray-500' : 'bg-cyan-50 text-cyan-600'}`}>
+                      {job.recurring === '🔂 One-time' ? <Minus className="w-3 h-3" aria-hidden="true" /> : <RefreshCw className="w-3 h-3" aria-hidden="true" />}
+                      {stripEmoji(job.recurring)}
+                    </span>
                   </div>
                 )}
                 {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 flex items-start gap-1.5"><FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{job.notes}</p>}
@@ -893,7 +897,7 @@ export default function JobsPage() {
                         className="w-12 h-12 object-cover rounded-lg border border-gray-200"
                       />
                       <span className="absolute -top-1 -right-1 text-xs leading-none">
-                        {photo.photo_type === 'before' ? <Camera className="w-3 h-3" aria-hidden="true" /> : <span className="text-xs">✨</span>}
+                        {photo.photo_type === 'before' ? <Camera className="w-3 h-3" aria-hidden="true" /> : <Camera className="w-3 h-3" aria-hidden="true" />}
                       </span>
                     </div>
                   ))}
@@ -909,10 +913,10 @@ export default function JobsPage() {
                   'bg-blue-100 text-blue-700'
                 }`}
               >
-                <option>🔵 Scheduled</option>
-                <option>🟡 In Progress</option>
-                <option>🟢 Completed</option>
-                <option>🔴 Cancelled</option>
+                <option value="🔵 Scheduled">Scheduled</option>
+                <option value="🟡 In Progress">In Progress</option>
+                <option value="🟢 Completed">Completed</option>
+                <option value="🔴 Cancelled">Cancelled</option>
               </select>
               <div className="flex gap-2 mt-2 flex-wrap">
                 {(job.status === '🔵 Scheduled' || job.status === '🟡 In Progress') && (clients.find(c => c.id === job.client_id)?.phone || clients.find(c => c.id === job.client_id)?.email) && (
@@ -921,7 +925,7 @@ export default function JobsPage() {
                     disabled={notifyingJob === job.id}
                     className="text-xs font-bold py-1.5 px-3 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    {notifyingJob === job.id ? 'Notifying...' : notifiedJob === job.id ? '✓ Sent!' : <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />} Notify
+                    {notifyingJob === job.id ? 'Notifying...' : notifiedJob === job.id ? 'Sent!' : <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />} Notify
                   </button>
                 )}
                 <button

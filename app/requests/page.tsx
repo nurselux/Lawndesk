@@ -383,7 +383,7 @@ export default function RequestsPage() {
                           disabled={actionLoading === req.id || savedClientIds.has(req.id)}
                           className="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-2 rounded-xl text-sm cursor-pointer disabled:opacity-50"
                         >
-                          {savedClientIds.has(req.id) ? '✓ Saved to Clients' : <span className="flex items-center justify-center gap-1"><UserPlus className="w-4 h-4" aria-hidden="true" />Save as Client</span>}
+                          {savedClientIds.has(req.id) ? <span className="flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4" aria-hidden="true" />Saved to Clients</span> : <span className="flex items-center justify-center gap-1"><UserPlus className="w-4 h-4" aria-hidden="true" />Save as Client</span>}
                         </button>
                         <button
                           onClick={() => updateStatus(req.id, 'declined')}

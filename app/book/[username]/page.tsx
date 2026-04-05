@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
+import { Leaf, CheckCircle2, Loader2 } from 'lucide-react'
+import { stripEmoji } from '../../../lib/statusIcons'
 
 const JOB_TYPES = [
   '🌿 Lawn Mowing', '✂️ Hedge Trimming', '💨 Leaf Blowing', '🍂 Leaf Removal',
@@ -133,7 +135,7 @@ export default function BookingPage() {
     <>
       <AdminViewBanner view="Client Booking" />
       <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-5xl mb-4">🌿</p>
+        <Leaf className="w-14 h-14 text-green-400 mx-auto mb-4" aria-hidden="true" />
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Booking page not found</h1>
         <p className="text-gray-500">This booking link is inactive or doesn't exist.</p>
       </div>
@@ -145,7 +147,7 @@ export default function BookingPage() {
       <AdminViewBanner view="Client Booking" />
       <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
         <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full">
-          <p className="text-5xl mb-4">✅</p>
+          <CheckCircle2 className="w-14 h-14 text-green-500 mx-auto mb-4" aria-hidden="true" />
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Request Received!</h1>
           <p className="text-gray-500 mb-2">Thanks, <strong>{clientName}</strong>! Your request has been sent to <strong>{business?.business_name || 'the business'}</strong>.</p>
           <p className="text-gray-400 text-sm">We'll be in touch within 24 hours to schedule your free estimate.</p>
@@ -160,7 +162,7 @@ export default function BookingPage() {
       <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-50">
         {/* Header */}
       <div className="bg-green-700 text-white px-6 py-8 text-center">
-        <p className="text-3xl mb-2">🌿</p>
+        <Leaf className="w-8 h-8 text-green-300 mx-auto mb-2" aria-hidden="true" />
         <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
         <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
           {business?.booking_welcome_message || "Fill out the form and we'll get back to you within 24 hours with a free estimate."}
@@ -210,7 +212,7 @@ export default function BookingPage() {
               className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
             >
               <option value="">Select a Service *</option>
-              {JOB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              {JOB_TYPES.map(t => <option key={t} value={t}>{stripEmoji(t)}</option>)}
             </select>
             <div className="grid grid-cols-2 gap-3">
               <input
@@ -244,7 +246,7 @@ export default function BookingPage() {
           disabled={submitting}
           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg hover:scale-[1.02] transition-all shadow-md cursor-pointer disabled:opacity-50"
         >
-          {submitting ? '⏳ Sending...' : '🌿 Request Free Estimate'}
+          {submitting ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Sending...</> : <><Leaf className="w-5 h-5 inline mr-2" aria-hidden="true" />Request Free Estimate</>}
         </button>
 
         <p className="text-center text-gray-400 text-xs pb-6">Powered by <span className="font-semibold text-green-600">LawnDesk</span></p>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Home, BarChart2 } from 'lucide-react'
 
 export default function NotFound() {
   return (
@@ -19,13 +20,13 @@ export default function NotFound() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/">
-            <button className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-200">
-              🏠 Back to Home
+            <button className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-200 flex items-center gap-2">
+              <Home className="w-4 h-4" aria-hidden="true" /> Back to Home
             </button>
           </Link>
           <Link href="/dashboard">
-            <button className="border-2 border-green-700 text-green-700 font-bold py-3 px-8 rounded-lg hover:bg-green-50 transition-colors duration-200">
-              📊 Go to Dashboard
+            <button className="border-2 border-green-700 text-green-700 font-bold py-3 px-8 rounded-lg hover:bg-green-50 transition-colors duration-200 flex items-center gap-2">
+              <BarChart2 className="w-4 h-4" aria-hidden="true" /> Go to Dashboard
             </button>
           </Link>
         </div>

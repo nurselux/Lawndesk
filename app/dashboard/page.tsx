@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
-import { BarChart2, Users, CalendarDays, AlertCircle, TrendingUp } from 'lucide-react'
+import { BarChart2, Users, CalendarDays, AlertCircle, TrendingUp, Leaf, Star, AlertTriangle } from 'lucide-react'
+import { JobStatusBadge } from '../../lib/statusIcons'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
@@ -183,13 +184,6 @@ function DashboardContent() {
     </div>
   )
 
-  const statusColor = (status: string) => {
-    if (status === '🟢 Completed') return 'bg-emerald-100 text-emerald-700'
-    if (status === '🟡 In Progress') return 'bg-amber-100 text-amber-700'
-    if (status === '🔴 Cancelled') return 'bg-red-100 text-red-700'
-    return 'bg-green-100 text-green-700'
-  }
-
   const revenueTrend = lastMonthRevenue > 0
     ? Math.round(((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
     : null
@@ -247,7 +241,7 @@ function DashboardContent() {
       <div className="p-6 pb-6 min-h-dvh bg-slate-50">
       {stripeSuccess && (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center gap-3 shadow-sm">
-          <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">🎉</span>
+          <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true"><Star className="w-4 h-4" /></span>
           <span className="flex-1">You're all set! Your 14-day free trial has started. No charge until your trial ends.</span>
         </div>
       )}
@@ -255,7 +249,7 @@ function DashboardContent() {
       {subscriptionStatus === 'trialing' && !stripeSuccess && (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
           <span className="flex items-center gap-2">
-            <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">🎁</span>
+            <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true"><Leaf className="w-4 h-4" /></span>
             {trialEndsAt
               ? (() => {
                   const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
@@ -272,7 +266,7 @@ function DashboardContent() {
       {subscriptionStatus === 'past_due' && (
         <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
           <span className="flex items-center gap-2">
-            <span className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">⚠️</span>
+            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" aria-hidden="true" />
             Your payment failed. Please update your billing info to keep access.
           </span>
           <Link href="/pricing" className="text-xs font-bold bg-red-600 text-white px-5 py-2.5 rounded-xl hover:bg-red-700 transition-all duration-200 shadow-md hover:shadow-lg">
@@ -284,7 +278,7 @@ function DashboardContent() {
       {subscriptionStatus === 'cancelled' && (
         <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 text-slate-800 font-semibold p-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
           <span className="flex items-center gap-2">
-            <span className="bg-amber-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold" aria-hidden="true">⚠️</span>
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" aria-hidden="true" />
             Your subscription has been cancelled. Reactivate to keep using LawnDesk.
           </span>
           <Link href="/pricing" className="text-xs font-bold bg-amber-600 text-white px-5 py-2.5 rounded-xl hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg">
@@ -315,7 +309,7 @@ function DashboardContent() {
           <div className="flex justify-between items-start mb-2">
             <div>
               <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                <span className="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg">🌿</span>
+                <span className="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg"><Leaf className="w-5 h-5" aria-hidden="true" /></span>
                 Welcome to LawnDesk!
               </h3>
               <p className="text-slate-600 mt-2">Let's get your business set up. Follow these steps to get started:</p>
@@ -415,9 +409,7 @@ function DashboardContent() {
                       {job.time && <span className="text-xs bg-blue-50 text-blue-600 font-medium px-2.5 py-1 rounded-full">{job.time}</span>}
                     </div>
                   </div>
-                  <span className={`text-xs font-bold py-2 px-3 rounded-full ${statusColor(job.status)}`}>
-                    {job.status}
-                  </span>
+                  <JobStatusBadge status={job.status} />
                 </div>
               ))}
             </div>

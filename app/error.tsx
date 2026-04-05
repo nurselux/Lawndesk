@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { RefreshCw, Home, AlertTriangle } from 'lucide-react'
 
 export default function Error({
   error,
@@ -18,7 +19,7 @@ export default function Error({
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
       <div className="text-center">
         <div className="mb-8">
-          <h1 className="text-9xl font-bold text-red-600 mb-2">⚠️</h1>
+          <div className="flex justify-center mb-4"><AlertTriangle className="w-24 h-24 text-red-600" aria-hidden="true" /></div>
           <p className="text-2xl font-bold text-gray-800">Something went wrong</p>
         </div>
 
@@ -36,13 +37,13 @@ export default function Error({
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={() => reset()}
-            className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-200"
+            className="bg-green-700 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-800 transition-colors duration-200 flex items-center gap-2"
           >
-            🔄 Try Again
+            <RefreshCw className="w-4 h-4" aria-hidden="true" /> Try Again
           </button>
           <Link href="/">
-            <button className="border-2 border-green-700 text-green-700 font-bold py-3 px-8 rounded-lg hover:bg-green-50 transition-colors duration-200">
-              🏠 Back to Home
+            <button className="border-2 border-green-700 text-green-700 font-bold py-3 px-8 rounded-lg hover:bg-green-50 transition-colors duration-200 flex items-center gap-2">
+              <Home className="w-4 h-4" aria-hidden="true" /> Back to Home
             </button>
           </Link>
         </div>

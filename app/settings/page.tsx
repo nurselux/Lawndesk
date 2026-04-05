@@ -550,7 +550,7 @@ export default function SettingsPage() {
               onClick={() => { navigator.clipboard.writeText(`https://lawndesk.pro/book/${bookingUsername}`); setBookingCopied(true); setTimeout(() => setBookingCopied(false), 2000) }}
               className="border-2 border-green-700 text-green-700 font-bold py-3 px-6 rounded-lg hover:bg-green-50 transition cursor-pointer"
             >
-              {bookingCopied ? '✅ Copied!' : 'Copy Link'}
+              {bookingCopied ? 'Copied!' : 'Copy Link'}
             </button>
           )}
         </div>
@@ -586,7 +586,7 @@ export default function SettingsPage() {
                   onClick={() => { navigator.clipboard.writeText(twilioNumber); setAiCopied(true); setTimeout(() => setAiCopied(false), 2000) }}
                   className="text-xs px-3 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition"
                 >
-                  {aiCopied ? '✅ Copied' : 'Copy'}
+                  {aiCopied ? 'Copied' : 'Copy'}
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-1">Give this number to clients — put it on your website, truck, or business card.</p>
@@ -652,7 +652,7 @@ export default function SettingsPage() {
                   disabled={aiProvisioning}
                   className="flex-1 bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-green-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
                 >
-                  {aiProvisioning ? '⏳ Getting your number…' : '📞 Get My Number'}
+                  {aiProvisioning ? 'Getting your number…' : 'Get My Number'}
                 </button>
               </div>
               <p className="text-xs text-gray-400">Enter an area code to get a local number for your city, or leave blank for any available number.</p>
@@ -664,7 +664,7 @@ export default function SettingsPage() {
 
       {/* Google Review Link */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-1">⭐ Google Review Link</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2"><Star className="w-5 h-5 text-amber-400" aria-hidden="true" />Google Review Link</h3>
         <p className="text-gray-500 text-sm mb-4">When a job is marked complete, your client automatically receives a text asking for a Google review. Paste your Google Business review link below.</p>
         <input
           type="url"
@@ -679,7 +679,7 @@ export default function SettingsPage() {
           disabled={reviewSaving}
           className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
         >
-          {reviewSaving ? '⏳ Saving...' : '💾 Save'}
+          {reviewSaving ? 'Saving...' : 'Save'}
         </button>
       </div>
 
@@ -688,15 +688,15 @@ export default function SettingsPage() {
         <h3 className="text-lg font-bold text-gray-800 mb-2">Need Help?</h3>
         <p className="text-gray-500 mb-4">Our support team is here to help you get the most out of LawnDesk.</p>
         <a href="mailto:support@lawndesk.pro">
-          <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
-            📧 Contact Support
+          <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-2">
+            <Mail className="w-4 h-4" aria-hidden="true" /> Contact Support
           </button>
         </a>
       </div>
 
       {/* Danger Zone */}
       <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-red-700 mb-2">⚠️ Danger Zone</h3>
+        <h3 className="text-lg font-bold text-red-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-5 h-5" aria-hidden="true" />Danger Zone</h3>
         <p className="text-gray-600 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
 
         <button

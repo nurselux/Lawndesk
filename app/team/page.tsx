@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { HardHat, Mail, CheckCircle2 } from 'lucide-react'
 
 interface Worker {
   id: string
@@ -207,9 +208,9 @@ export default function TeamPage() {
         }
       )
       if (emailRes.ok) {
-        setSuccessMessage(`✅ Invite email sent to ${data.email}!`)
+        setSuccessMessage(`Invite email sent to ${data.email}!`)
       } else {
-        setSuccessMessage(`✅ Invite created! Use the Copy Link button to share it manually.`)
+        setSuccessMessage(`Invite created! Use the Copy Link button to share it manually.`)
       }
       setTimeout(() => setSuccessMessage(''), 6000)
     }
@@ -297,7 +298,7 @@ export default function TeamPage() {
   return (
     <div className="p-6 pb-6 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">👷</div>
+        <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md"><HardHat className="w-6 h-6" aria-hidden="true" /></div>
         <div>
           <h2 className="text-2xl font-bold text-gray-800 leading-none">Team</h2>
           <p className="text-gray-500 text-sm">Invite workers and manage permissions</p>
@@ -310,7 +311,7 @@ export default function TeamPage() {
 
       {/* Invite form */}
       <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
-        <h3 className="font-bold text-gray-800 mb-4">📨 Invite a Worker</h3>
+        <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><Mail className="w-4 h-4" aria-hidden="true" />Invite a Worker</h3>
         <div className="space-y-3">
           <input
             type="email"

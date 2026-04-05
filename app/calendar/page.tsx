@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import Link from 'next/link'
+import { CalendarDays, Map, User, Clock, MapPin, RefreshCw, Ruler } from 'lucide-react'
+import { stripEmoji } from '../../lib/statusIcons'
 
 interface Job {
   id: string
@@ -158,7 +160,7 @@ export default function CalendarPage() {
 
   if (checking) return (
     <div className="flex items-center justify-center min-h-dvh">
-      <p className="text-green-700 text-xl font-bold">Loading...</p>
+      <p className="text-green-700 text-xl font-bold flex items-center gap-2"><CalendarDays className="w-6 h-6 animate-pulse" aria-hidden="true" />Loading...</p>
     </div>
   )
 
@@ -167,7 +169,7 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📅</div>
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md"><CalendarDays className="w-6 h-6" aria-hidden="true" /></div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Calendar</h2>
             <p className="text-gray-500 text-sm">Monthly job overview</p>
@@ -175,8 +177,8 @@ export default function CalendarPage() {
         </div>
         {routeUrl && (
           <a href={routeUrl} target="_blank" rel="noopener noreferrer">
-            <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow text-sm">
-              🗺️ Today's Route
+            <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow text-sm flex items-center gap-1.5">
+              <Map className="w-4 h-4" aria-hidden="true" />Today's Route
             </button>
           </a>
         )}
@@ -246,8 +248,8 @@ export default function CalendarPage() {
                     }`}
                     title={`Estimate: ${visit.client_name} — ${visit.service_type}`}
                   >
-                    <span className="hidden md:inline">📐 {visit.client_name}</span>
-                    <span className="md:hidden">📐</span>
+                    <span className="hidden md:inline">{visit.client_name}</span>
+                    <span className="md:hidden">•</span>
                   </div>
                 ))}
                 {(() => {
@@ -285,8 +287,8 @@ export default function CalendarPage() {
                 <div className="flex flex-col items-end gap-1">
                   {url && (
                     <a href={url} target="_blank" rel="noopener noreferrer">
-                      <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">
-                        🗺️ Route ({allAddrs.length} stops)
+                      <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer flex items-center gap-1">
+                        <Map className="w-3.5 h-3.5" aria-hidden="true" /> Route ({allAddrs.length} stops)
                       </button>
                     </a>
                   )}
@@ -311,24 +313,24 @@ export default function CalendarPage() {
                 <div key={job.id} className={`flex items-start gap-3 p-3 rounded-xl border ${STATUS_COLOR[job.status] || STATUS_COLOR['🔵 Scheduled']}`}>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate">{job.title}</p>
-                    <p className="text-xs opacity-75">👤 {job.client_name}{job.time ? ` · 🕐 ${job.time}` : ''}</p>
+                    <p className="text-xs opacity-75 flex items-center gap-1"><User className="w-3 h-3" aria-hidden="true" />{job.client_name}{job.time ? <><Clock className="w-3 h-3 ml-1" aria-hidden="true" />{job.time}</> : ''}</p>
                     {job.recurring && job.recurring !== '🔂 One-time' && (
-                      <p className="text-xs opacity-60">🔄 {job.recurring}</p>
+                      <p className="text-xs opacity-60 flex items-center gap-1"><RefreshCw className="w-3 h-3" aria-hidden="true" />{stripEmoji(job.recurring)}</p>
                     )}
                   </div>
-                  <span className="text-xs font-bold opacity-75 shrink-0">{job.status.split(' ')[0]}</span>
+                  <span className="text-xs font-bold opacity-75 shrink-0">{stripEmoji(job.status)}</span>
                 </div>
               ))}
               {selectedVisits.map((visit) => (
                 <div key={visit.id} className="flex items-start gap-3 p-3 rounded-xl border bg-purple-50 border-purple-200 text-purple-800">
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm truncate">📐 Estimate Visit — {visit.service_type}</p>
-                    <p className="text-xs opacity-75">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
-                    {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
+                    <p className="font-bold text-sm truncate flex items-center gap-1"><Ruler className="w-3.5 h-3.5" aria-hidden="true" />Estimate Visit — {visit.service_type}</p>
+                    <p className="text-xs opacity-75 flex items-center gap-1"><User className="w-3 h-3" aria-hidden="true" />{visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? <><Clock className="w-3 h-3 ml-1" aria-hidden="true" />{visit.scheduled_time || visit.preferred_time}</> : ''}</p>
+                    {visit.address && <p className="text-xs opacity-60 flex items-center gap-1"><MapPin className="w-3 h-3" aria-hidden="true" />{visit.address}</p>}
                   </div>
                   <Link href={`/quotes?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
                     <button className="text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded-lg cursor-pointer shrink-0 transition">
-                      {visit.quote_id ? '📋 View Quote' : '+ Quote'}
+                      {visit.quote_id ? 'View Quote' : '+ Quote'}
                     </button>
                   </Link>
                 </div>

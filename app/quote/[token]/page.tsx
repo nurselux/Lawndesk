@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { Leaf, Search, CheckCircle2, XCircle, AlertTriangle, RefreshCw } from 'lucide-react'
 
 interface LineItem {
   description: string
@@ -72,7 +73,7 @@ export default function PublicQuotePage() {
   if (!quote) return (
     <div className="flex items-center justify-center min-h-dvh bg-gray-50">
       <div className="text-center">
-        <p className="text-5xl mb-4">🔍</p>
+        <Search className="w-14 h-14 text-gray-300 mx-auto mb-4" aria-hidden="true" />
         <p className="text-gray-700 font-bold text-xl">Quote not found</p>
         <p className="text-gray-400 mt-2">This link may have expired or been removed.</p>
       </div>
@@ -86,13 +87,13 @@ export default function PublicQuotePage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-green-800 text-white px-5 py-2 rounded-full text-lg font-bold mb-4">
-            🌿 LawnDesk
+            <Leaf className="w-5 h-5" aria-hidden="true" /> LawnDesk
           </div>
           <h1 className="text-3xl font-bold text-gray-800">{quote.title}</h1>
           <p className="text-gray-500 mt-1">Prepared for {quote.client_name}</p>
           {quote.expires_at && (
             <p className={`text-sm mt-2 font-semibold ${isExpired ? 'text-red-500' : 'text-gray-400'}`}>
-              {isExpired ? '⚠️ This quote has expired' : `Valid until ${new Date(quote.expires_at).toLocaleDateString()}`}
+              {isExpired ? <><AlertTriangle className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />This quote has expired</> : `Valid until ${new Date(quote.expires_at).toLocaleDateString()}`}
             </p>
           )}
         </div>
@@ -143,7 +144,7 @@ export default function PublicQuotePage() {
         {/* Status / Action */}
         {actionDone === 'approved' || quote.status === 'approved' ? (
           <div className="bg-green-100 border border-green-300 text-green-800 font-bold text-center py-5 rounded-2xl text-lg">
-            ✅ You approved this quote! We&apos;ll be in touch soon to schedule.
+            <CheckCircle2 className="w-5 h-5 inline mr-2" aria-hidden="true" />You approved this quote! We&apos;ll be in touch soon to schedule.
           </div>
         ) : actionDone === 'declined' || quote.status === 'declined' ? (
           <div className="bg-gray-100 border border-gray-200 text-gray-600 font-bold text-center py-5 rounded-2xl text-lg">
@@ -151,11 +152,11 @@ export default function PublicQuotePage() {
           </div>
         ) : quote.status === 'converted' ? (
           <div className="bg-purple-100 border border-purple-200 text-purple-700 font-bold text-center py-5 rounded-2xl text-lg">
-            🔁 This quote has been converted to a job. We&apos;re already working on it!
+            <RefreshCw className="w-5 h-5 inline mr-2" aria-hidden="true" />This quote has been converted to a job. We&apos;re already working on it!
           </div>
         ) : isExpired ? (
           <div className="bg-red-50 border border-red-200 text-red-600 font-bold text-center py-5 rounded-2xl">
-            ⚠️ This quote has expired. Please contact us for an updated estimate.
+            <AlertTriangle className="w-5 h-5 inline mr-2" aria-hidden="true" />This quote has expired. Please contact us for an updated estimate.
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-md p-6 text-center">
@@ -166,14 +167,14 @@ export default function PublicQuotePage() {
                 disabled={working}
                 className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
               >
-                {working ? '…' : '✅ Approve Quote'}
+                {working ? '…' : <><CheckCircle2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Approve Quote</>}
               </button>
               <button
                 onClick={() => handleAction('declined')}
                 disabled={working}
                 className="border-2 border-red-300 text-red-500 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
               >
-                ❌ Decline
+                <XCircle className="w-4 h-4 inline mr-1" aria-hidden="true" />Decline
               </button>
             </div>
           </div>

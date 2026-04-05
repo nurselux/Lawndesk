@@ -128,6 +128,7 @@ function LoginContent() {
               placeholder="Password (min. 6 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSignUp()}
               className="w-full border border-gray-300 rounded-lg p-3 mb-5 text-gray-800"
             />
             <label className="flex items-start gap-3 mb-5 cursor-pointer select-none">
@@ -175,6 +176,7 @@ function LoginContent() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="w-full border border-gray-300 rounded-lg p-3 mb-4 text-gray-800"
         />
         <input
@@ -182,6 +184,7 @@ function LoginContent() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           className="w-full border border-gray-300 rounded-lg p-3 mb-6 text-gray-800"
         />
         <button

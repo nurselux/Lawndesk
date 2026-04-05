@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search } from 'lucide-react'
+import { Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search, CheckCircle2 } from 'lucide-react'
+import { InvoiceStatusBadge } from '../../lib/statusIcons'
 
 interface Invoice {
   id: string
@@ -204,7 +205,7 @@ function InvoicesContent() {
     await supabase.from('Invoices').update({ status: '🟢 Paid' }).in('id', ids)
     setInvoices(prev => prev.map(inv => selectedIds.has(inv.id) ? { ...inv, status: '🟢 Paid' } : inv))
     setSelectedIds(new Set())
-    setSuccessMessage(`✅ ${ids.length} invoice${ids.length !== 1 ? 's' : ''} marked as paid!`)
+    setSuccessMessage(`${ids.length} invoice${ids.length !== 1 ? 's' : ''} marked as paid!`)
     setTimeout(() => setSuccessMessage(''), 4000)
     setBulkSaving(false)
   }
@@ -262,7 +263,7 @@ function InvoicesContent() {
         }
       )
       if (res.ok) {
-        setSuccessMessage(`📧 Invoice emailed to ${email}!`)
+        setSuccessMessage(`Invoice emailed to ${email}!`)
       } else {
         setErrorMessage('Email failed — use Copy Link to share manually.')
       }
@@ -294,7 +295,7 @@ function InvoicesContent() {
         }
       )
       if (res.ok) {
-        setSuccessMessage(`💬 Invoice texted to ${phone}!`)
+        setSuccessMessage(`Invoice texted to ${phone}!`)
       } else {
         setErrorMessage('Text failed — use Copy Link to share manually.')
       }
@@ -414,7 +415,7 @@ function InvoicesContent() {
       {/* Messages */}
       {successMessage && (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-slate-800 font-semibold p-4 rounded-xl mb-4 flex items-center gap-3 shadow-sm">
-          <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</span>
+          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" aria-hidden="true" />
           {successMessage}
         </div>
       )}
@@ -479,9 +480,9 @@ function InvoicesContent() {
                   onChange={e => setFormStatus(e.target.value)}
                   className="w-full border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
                 >
-                  <option>🟡 Unpaid</option>
-                  <option>🟢 Paid</option>
-                  <option>🔴 Overdue</option>
+                  <option value="🟡 Unpaid">Unpaid</option>
+                  <option value="🟢 Paid">Paid</option>
+                  <option value="🔴 Overdue">Overdue</option>
                 </select>
               </div>
             </div>
@@ -503,8 +504,8 @@ function InvoicesContent() {
             </button>
           </div>
           {!isEditing && clients.find(c => c.id === clientId)?.email && (
-            <p className="text-xs text-green-600 mt-2 font-semibold">
-              ✉️ Invoice will be emailed to {clients.find(c => c.id === clientId)?.email} automatically.
+            <p className="text-xs text-green-600 mt-2 font-semibold flex items-center gap-1">
+              <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Invoice will be emailed to {clients.find(c => c.id === clientId)?.email} automatically.
             </p>
           )}
         </div>
@@ -520,7 +521,7 @@ function InvoicesContent() {
               disabled={bulkSaving}
               className="bg-white text-purple-700 font-bold text-xs py-2 px-4 rounded-lg hover:bg-purple-50 transition cursor-pointer disabled:opacity-50"
             >
-              {bulkSaving ? '⏳ Saving…' : '✓ Mark All Paid'}
+              {bulkSaving ? 'Saving…' : 'Mark All Paid'}
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
@@ -611,16 +612,16 @@ function InvoicesContent() {
                         'bg-amber-100 text-amber-700'
                       }`}
                     >
-                      <option>🟡 Unpaid</option>
-                      <option>🟢 Paid</option>
-                      <option>🔴 Overdue</option>
+                      <option value="🟡 Unpaid">Unpaid</option>
+                      <option value="🟢 Paid">Paid</option>
+                      <option value="🔴 Overdue">Overdue</option>
                     </select>
                     {!isPaid && (
                       <button
                         onClick={() => markPaid(inv.id)}
-                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer"
+                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer flex items-center gap-1"
                       >
-                        ✓ Mark Paid
+                        <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Mark Paid
                       </button>
                     )}
                   </div>

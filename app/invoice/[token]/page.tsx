@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
+import { Leaf, Search, Printer, CreditCard, Loader2, CheckCircle2 } from 'lucide-react'
+import { InvoiceStatusBadge } from '../../../lib/statusIcons'
 
 interface Invoice {
   id: string
@@ -51,7 +53,7 @@ export default function PublicInvoicePage() {
     return (
       <main className="min-h-dvh bg-gray-100 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-10 text-center shadow-xl max-w-sm w-full">
-          <p className="text-5xl mb-4">🔍</p>
+          <Search className="w-14 h-14 text-gray-300 mx-auto mb-4" aria-hidden="true" />
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Invoice Not Found</h1>
           <p className="text-gray-500 text-sm">This link may be invalid or the invoice has been deleted.</p>
         </div>
@@ -67,11 +69,6 @@ export default function PublicInvoicePage() {
     )
   }
 
-  const statusColor =
-    invoice.status === '🟢 Paid' ? 'bg-green-100 text-green-700' :
-    invoice.status === '🔴 Overdue' ? 'bg-red-100 text-red-700' :
-    'bg-yellow-100 text-yellow-700'
-
   const invoiceNum = `INV-${String(invoice.invoice_number).padStart(3, '0')}`
   const createdDate = new Date(invoice.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
@@ -81,18 +78,18 @@ export default function PublicInvoicePage() {
       {/* Success banner */}
       {justPaid && (
         <div className="w-full max-w-xl mb-4 bg-green-100 border border-green-300 text-green-800 font-bold p-4 rounded-xl print:hidden">
-          🎉 Payment received! Thank you — your invoice has been marked as paid.
+          <CheckCircle2 className="w-5 h-5 shrink-0 inline mr-2" aria-hidden="true" />Payment received! Thank you — your invoice has been marked as paid.
         </div>
       )}
 
       {/* Print button — hidden when printing */}
       <div className="w-full max-w-xl mb-4 flex justify-between items-center print:hidden">
-        <Link href="/" className="text-green-700 font-bold hover:underline text-sm">🌿 LawnDesk</Link>
+        <Link href="/" className="text-green-700 font-bold hover:underline text-sm flex items-center gap-1"><Leaf className="w-4 h-4" aria-hidden="true" />LawnDesk</Link>
         <button
           onClick={() => window.print()}
-          className="bg-white border border-gray-300 text-gray-600 font-bold py-2 px-5 rounded-lg hover:bg-gray-50 transition cursor-pointer text-sm shadow"
+          className="bg-white border border-gray-300 text-gray-600 font-bold py-2 px-5 rounded-lg hover:bg-gray-50 transition cursor-pointer text-sm shadow flex items-center gap-1"
         >
-          🖨️ Print / Save PDF
+          <Printer className="w-4 h-4" aria-hidden="true" /> Print / Save PDF
         </button>
       </div>
 
@@ -102,7 +99,7 @@ export default function PublicInvoicePage() {
         {/* Header */}
         <div className="bg-green-700 px-8 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-white">🌿 LawnDesk</h1>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2"><Leaf className="w-6 h-6" aria-hidden="true" />LawnDesk</h1>
             <p className="text-green-200 text-sm">Professional Lawn Services</p>
           </div>
           <div className="text-right">
@@ -115,9 +112,7 @@ export default function PublicInvoicePage() {
 
           {/* Status badge */}
           <div className="flex justify-end mb-6">
-            <span className={`text-sm font-bold py-1.5 px-4 rounded-full ${statusColor}`}>
-              {invoice.status}
-            </span>
+            <InvoiceStatusBadge status={invoice.status} />
           </div>
 
           {/* Bill to / dates */}
@@ -184,7 +179,7 @@ export default function PublicInvoicePage() {
                 disabled={payLoading}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-4 rounded-xl hover:opacity-90 transition cursor-pointer text-lg shadow-md disabled:opacity-50"
               >
-                {payLoading ? '⏳ Redirecting...' : `💳 Pay $${invoice.amount.toFixed(2)} Now`}
+                {payLoading ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Redirecting...</> : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${invoice.amount.toFixed(2)} Now</>}
               </button>
               <p className="text-center text-gray-400 text-xs mt-2">Secure payment powered by Stripe</p>
             </div>

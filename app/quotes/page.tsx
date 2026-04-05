@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, Check, CheckCircle } from 'lucide-react'
+import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle } from 'lucide-react'
+import { QuoteStatusBadge } from '../../lib/statusIcons'
 
 interface LineItem {
   description: string
@@ -34,22 +35,6 @@ interface Client {
   name: string
   email: string | null
   phone: string | null
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-600',
-  sent: 'bg-blue-100 text-blue-700',
-  approved: 'bg-green-100 text-green-700',
-  declined: 'bg-red-100 text-red-400',
-  converted: 'bg-purple-100 text-purple-700',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  draft: '📝 Draft',
-  sent: '📤 Sent',
-  approved: '✅ Approved',
-  declined: '❌ Declined',
-  converted: '🔁 Converted',
 }
 
 const emptyItem = (): LineItem => ({ description: '', quantity: 1, unit_price: 0 })
@@ -228,7 +213,7 @@ export default function QuotesPage() {
           await supabase.from('Quotes').update({ status: 'sent' }).eq('id', quote.id)
           fetchQuotes()
         }
-        setSuccessMessage(`📧 Quote emailed to ${quote.client_email}!`)
+        setSuccessMessage(`Quote emailed to ${quote.client_email}!`)
       } else {
         setErrorMessage('Email failed — use Copy Link to share manually.')
       }
@@ -259,7 +244,7 @@ export default function QuotesPage() {
         }
       )
       if (res.ok) {
-        setSuccessMessage(`💬 Quote texted to ${quote.client_phone}!`)
+        setSuccessMessage(`Quote texted to ${quote.client_phone}!`)
       } else {
         setErrorMessage('Text failed — use Copy Link to share manually.')
       }
@@ -409,8 +394,8 @@ export default function QuotesPage() {
 
       <div className="px-4">
 
-      {successMessage && <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4 text-sm">✅ {successMessage}</div>}
-      {errorMessage && <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4 text-sm">❌ {errorMessage}</div>}
+      {successMessage && <div className="bg-green-100 text-green-700 font-bold p-3 rounded-xl mb-4 text-sm flex items-center gap-2"><CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />{successMessage}</div>}
+      {errorMessage && <div className="bg-red-100 text-red-700 font-bold p-3 rounded-xl mb-4 text-sm flex items-center gap-2"><XCircle className="w-4 h-4 shrink-0" aria-hidden="true" />{errorMessage}</div>}
 
       {/* Create form */}
       {showForm && (
@@ -612,9 +597,7 @@ export default function QuotesPage() {
                 <div className="flex justify-between items-start gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`text-xs font-bold py-1 px-2 rounded-full ${STATUS_COLORS[quote.status] ?? 'bg-gray-100 text-gray-500'}`}>
-                        {STATUS_LABELS[quote.status] ?? quote.status}
-                      </span>
+                      <QuoteStatusBadge status={quote.status} />
                       {quote.expires_at && (
                         <span className="text-xs text-gray-400">Expires {new Date(quote.expires_at).toLocaleDateString()}</span>
                       )}
@@ -701,7 +684,7 @@ export default function QuotesPage() {
                     onClick={() => updateStatus(quote.id, 'approved')}
                     className="text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors cursor-pointer"
                   >
-                    <CheckCircle className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Mark Approved
+                    <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Mark Approved
                   </button>
                 )}
 
