@@ -1,18 +1,23 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useAuth } from '../lib/useAuth'
-import { useProfile } from '../lib/useProfile'
+import { supabase } from '../lib/supabase'
 
 interface Props {
   view: string
 }
 
 export default function AdminViewBanner({ view }: Props) {
-  const { user } = useAuth()
-  const { profile } = useProfile(user?.id)
+  const [email, setEmail] = useState<string | null>(null)
 
-  if (!user || user.email !== 'admin.lawndesk@gmail.com') return null
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setEmail(session?.user?.email ?? null)
+    })
+  }, [])
+
+  if (email !== 'admin.lawndesk@gmail.com') return null
 
   return (
     <div className="sticky top-0 z-50 bg-indigo-700 text-white px-4 py-2 flex items-center justify-between text-sm">
