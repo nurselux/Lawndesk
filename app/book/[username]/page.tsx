@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
-import { CheckCircle, ChevronLeft, Leaf } from 'lucide-react'
+import { CheckCircle, ChevronLeft, Leaf, Scissors, Layers, Wind, Droplets, HelpCircle, Home, TreePine, Maximize2, Map, Zap, CalendarDays, Calendar, Tag } from 'lucide-react'
 
 interface BusinessProfile {
   id: string
@@ -17,25 +17,25 @@ interface BusinessProfile {
 }
 
 const QUIZ_SERVICE_OPTIONS = [
-  { value: 'lawn_mowing',           label: 'Lawn Mowing' },
-  { value: 'mulch_bed_work',        label: 'Mulch & Bed Work' },
-  { value: 'general_cleanup',       label: 'Cleanup' },
-  { value: 'irrigation_system_check', label: 'Irrigation' },
-  { value: 'other',                 label: 'Something Else' },
+  { value: 'lawn_mowing',             label: 'Lawn Mowing',     Icon: Scissors },
+  { value: 'mulch_bed_work',          label: 'Mulch & Bed Work', Icon: Layers },
+  { value: 'general_cleanup',         label: 'Cleanup',          Icon: Wind },
+  { value: 'irrigation_system_check', label: 'Irrigation',       Icon: Droplets },
+  { value: 'other',                   label: 'Something Else',   Icon: HelpCircle },
 ]
 
 const PROPERTY_SIZE_OPTIONS = [
-  { value: 'Under ¼ acre',  label: 'Under ¼ acre' },
-  { value: '¼–½ acre',      label: '¼–½ acre' },
-  { value: '½–1 acre',      label: '½–1 acre' },
-  { value: '1 acre+',       label: '1 acre+' },
+  { value: 'Under ¼ acre', label: 'Under ¼ acre', Icon: Home },
+  { value: '¼–½ acre',     label: '¼–½ acre',     Icon: TreePine },
+  { value: '½–1 acre',     label: '½–1 acre',     Icon: Maximize2 },
+  { value: '1 acre+',      label: '1 acre+',      Icon: Map },
 ]
 
 const TIMING_OPTIONS = [
-  { value: 'As soon as possible', label: 'As soon as possible' },
-  { value: 'This week',           label: 'This week' },
-  { value: 'This month',          label: 'This month' },
-  { value: 'Just getting a price', label: 'Just getting a price' },
+  { value: 'As soon as possible',  label: 'As soon as possible',  Icon: Zap },
+  { value: 'This week',            label: 'This week',            Icon: CalendarDays },
+  { value: 'This month',           label: 'This month',           Icon: Calendar },
+  { value: 'Just getting a price', label: 'Just getting a price', Icon: Tag },
 ]
 
 export default function BookingPage() {
@@ -264,17 +264,18 @@ export default function BookingPage() {
                     <h2 className="text-lg font-bold text-gray-800 mb-1">What service are you looking for?</h2>
                     <p className="text-gray-400 text-sm mb-5">Step 1 of 4</p>
                     <div className="space-y-3">
-                      {QUIZ_SERVICE_OPTIONS.map(opt => (
+                      {QUIZ_SERVICE_OPTIONS.map(({ value, label, Icon }) => (
                         <button
-                          key={opt.value}
-                          onClick={() => selectAndAdvance(setServiceType, opt.value, 2)}
-                          className={`w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 text-sm font-medium min-h-[52px] cursor-pointer ${
-                            serviceType === opt.value
+                          key={value}
+                          onClick={() => selectAndAdvance(setServiceType, value, 2)}
+                          className={`w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 text-sm font-medium min-h-[52px] cursor-pointer flex items-center gap-3 ${
+                            serviceType === value
                               ? 'border-green-500 bg-green-50 text-green-800'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50/50'
                           }`}
                         >
-                          {opt.label}
+                          <Icon className={`w-5 h-5 shrink-0 ${serviceType === value ? 'text-green-600' : 'text-gray-400'}`} />
+                          {label}
                         </button>
                       ))}
                     </div>
@@ -287,17 +288,18 @@ export default function BookingPage() {
                     <h2 className="text-lg font-bold text-gray-800 mb-1">How big is your property?</h2>
                     <p className="text-gray-400 text-sm mb-5">Step 2 of 4</p>
                     <div className="space-y-3">
-                      {PROPERTY_SIZE_OPTIONS.map(opt => (
+                      {PROPERTY_SIZE_OPTIONS.map(({ value, label, Icon }) => (
                         <button
-                          key={opt.value}
-                          onClick={() => selectAndAdvance(setPropertySize, opt.value, 3)}
-                          className={`w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 text-sm font-medium min-h-[52px] cursor-pointer ${
-                            propertySize === opt.value
+                          key={value}
+                          onClick={() => selectAndAdvance(setPropertySize, value, 3)}
+                          className={`w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 text-sm font-medium min-h-[52px] cursor-pointer flex items-center gap-3 ${
+                            propertySize === value
                               ? 'border-green-500 bg-green-50 text-green-800'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50/50'
                           }`}
                         >
-                          {opt.label}
+                          <Icon className={`w-5 h-5 shrink-0 ${propertySize === value ? 'text-green-600' : 'text-gray-400'}`} />
+                          {label}
                         </button>
                       ))}
                     </div>
@@ -310,17 +312,18 @@ export default function BookingPage() {
                     <h2 className="text-lg font-bold text-gray-800 mb-1">When do you need this done?</h2>
                     <p className="text-gray-400 text-sm mb-5">Step 3 of 4</p>
                     <div className="space-y-3">
-                      {TIMING_OPTIONS.map(opt => (
+                      {TIMING_OPTIONS.map(({ value, label, Icon }) => (
                         <button
-                          key={opt.value}
-                          onClick={() => selectAndAdvance(setTiming, opt.value, 4)}
-                          className={`w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 text-sm font-medium min-h-[52px] cursor-pointer ${
-                            timing === opt.value
+                          key={value}
+                          onClick={() => selectAndAdvance(setTiming, value, 4)}
+                          className={`w-full text-left px-4 py-4 rounded-xl border transition-all duration-150 text-sm font-medium min-h-[52px] cursor-pointer flex items-center gap-3 ${
+                            timing === value
                               ? 'border-green-500 bg-green-50 text-green-800'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50/50'
                           }`}
                         >
-                          {opt.label}
+                          <Icon className={`w-5 h-5 shrink-0 ${timing === value ? 'text-green-600' : 'text-gray-400'}`} />
+                          {label}
                         </button>
                       ))}
                     </div>
