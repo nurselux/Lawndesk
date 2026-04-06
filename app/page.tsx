@@ -3,6 +3,7 @@ import Header from '../components/landing/Header'
 import HeroSection from '../components/landing/HeroSection'
 import FeaturesSection from '../components/landing/FeaturesSection'
 import BilateralEcosystem from '../components/landing/BilateralEcosystem'
+import AIReceptionistSection from '../components/landing/AIReceptionistSection'
 import PricingSection from '../components/landing/PricingSection'
 import TestimonialsSection from '../components/landing/TestimonialsSection'
 import CTASection from '../components/landing/CTASection'
@@ -18,6 +19,7 @@ export default function Home() {
       <HeroSection />
       <FeaturesSection />
       <BilateralEcosystem />
+      <AIReceptionistSection />
       <PricingSection />
       <TestimonialsSection />
       <CTASection />

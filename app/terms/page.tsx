@@ -10,7 +10,7 @@ export default function TermsPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Terms of Service</h1>
-        <p className="text-gray-400 mb-10">Last updated: March 2026</p>
+        <p className="text-gray-400 mb-10">Last updated: April 2026</p>
 
         <div className="space-y-8 text-gray-600 leading-relaxed">
           <section>
@@ -67,7 +67,12 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-3">9. Contact</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">9. AI Receptionist &amp; Platform SMS</h2>
+            <p>LawnDesk enables business subscribers (&quot;Operators&quot;) to send automated SMS messages to their end clients through the LawnDesk platform, including appointment reminders, follow-up notifications, and service confirmations triggered by AI-assisted call handling. Operators are solely responsible for obtaining proper prior express consent from their end clients before sending any SMS messages through LawnDesk. LawnDesk acts as a platform provider and technology intermediary — it is not the sender of record for Operator-initiated messages. By using LawnDesk&apos;s messaging and AI receptionist features, Operators agree to comply with all applicable laws and regulations governing automated communications, including the Telephone Consumer Protection Act (TCPA).</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">10. Contact</h2>
             <p>Questions about these terms? Reach us at <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a>.</p>
           </section>
         </div>

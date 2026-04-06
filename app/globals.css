@@ -52,6 +52,21 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes quizStepIn {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizStepBack {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.quiz-step-enter {
+  animation: quizStepIn 0.22s ease-out forwards;
+}
+.quiz-step-back {
+  animation: quizStepBack 0.22s ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .spring-in, .slide-in-row, .fade-up {
     animation: none !important;
@@ -59,6 +74,9 @@ body {
     transform: none !important;
   }
   .animate-fade-in-right, .animate-float, .animate-pulse-glow, .animate-pulse-glow-delayed, .animate-pulse-glow-delayed-more {
+    animation: none !important;
+  }
+  .quiz-step-enter, .quiz-step-back {
     animation: none !important;
   }
 }
