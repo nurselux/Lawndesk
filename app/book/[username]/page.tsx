@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
-import { CheckCircle, ChevronLeft } from 'lucide-react'
+import { CheckCircle, ChevronLeft, Leaf } from 'lucide-react'
 
 interface BusinessProfile {
   id: string
@@ -178,7 +178,7 @@ export default function BookingPage() {
     <>
       <AdminViewBanner view="Client Booking" />
       <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-5xl mb-4">🌿</p>
+        <Leaf className="w-14 h-14 text-green-400 mb-4" />
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Booking page not found</h1>
         <p className="text-gray-500">This booking link is inactive or doesn't exist.</p>
       </div>
@@ -196,7 +196,7 @@ export default function BookingPage() {
 
         {/* Header */}
         <div className="bg-green-700 text-white px-6 py-8 text-center">
-          <p className="text-3xl mb-2">🌿</p>
+          <Leaf className="w-10 h-10 text-green-300 mb-2 mx-auto" />
           <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
           <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
             {business?.booking_welcome_message || "Answer a few quick questions and we'll get back to you within 24 hours with a free estimate."}

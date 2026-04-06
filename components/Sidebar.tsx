@@ -123,8 +123,9 @@ export default function Sidebar() {
       <aside className="hidden md:flex flex-col w-64 min-h-dvh bg-green-800 text-white fixed left-0 top-0">
         <div className="p-6 border-b border-green-700">
           <Link href={isLoggedIn ? '/dashboard' : '/'}>
-            <h1 className="text-2xl font-bold cursor-pointer hover:text-green-200 transition-colors duration-200">
-              <span aria-hidden="true">🌿 </span>LawnDesk
+            <h1 className="text-2xl font-bold cursor-pointer hover:text-green-200 transition-colors duration-200 flex items-center gap-2">
+              <Leaf className="w-6 h-6 shrink-0" aria-hidden="true" />
+              LawnDesk
             </h1>
           </Link>
           <p className="text-green-300 text-xs mt-1">Less paperwork, more yardwork</p>
@@ -169,8 +170,9 @@ export default function Sidebar() {
       {/* ── Mobile Top Bar ── */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-green-800 text-white flex items-center justify-between px-4 h-14 shadow-lg">
         <Link href="/dashboard">
-          <span className="text-lg font-bold">
-            <span aria-hidden="true">🌿 </span>LawnDesk
+          <span className="text-lg font-bold flex items-center gap-2">
+            <Leaf className="w-5 h-5 shrink-0" aria-hidden="true" />
+            LawnDesk
           </span>
         </Link>
         <button
@@ -196,7 +198,7 @@ export default function Sidebar() {
       }`}>
         <div className="flex items-center justify-between px-5 py-5 border-b border-green-700">
           <div>
-            <h1 className="text-xl font-bold"><span aria-hidden="true">🌿 </span>LawnDesk</h1>
+            <h1 className="text-xl font-bold flex items-center gap-2"><Leaf className="w-5 h-5 shrink-0" aria-hidden="true" />LawnDesk</h1>
             {userEmail && <p className="text-green-300 text-xs mt-0.5 truncate">{userEmail}</p>}
           </div>
           <button
