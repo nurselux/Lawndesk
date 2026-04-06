@@ -11,12 +11,13 @@ function SignupContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [smsConsent, setSmsConsent] = useState(false)
 
   const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !phone) {
       setMessage('Please fill in all fields')
       return
     }
@@ -50,10 +51,10 @@ function SignupContent() {
       }
       router.push(`/account-exists?email=${encodeURIComponent(email)}`)
     } else {
-      // Save SMS consent to profile
+      // Save phone and SMS consent to profile
       await supabase
         .from('profiles')
-        .update({ sms_consent: true, sms_consent_at: new Date().toISOString() })
+        .update({ phone, sms_consent: true, sms_consent_at: new Date().toISOString() })
         .eq('id', data.user.id)
       router.push(`/signup-success?email=${encodeURIComponent(email)}`)
     }
@@ -96,6 +97,17 @@ function SignupContent() {
               placeholder="Re-enter password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Phone Number</label>
+            <input
+              type="tel"
+              placeholder="(555) 123-4567"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-3 text-gray-800"
             />
           </div>
