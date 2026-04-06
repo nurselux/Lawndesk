@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import Link from 'next/link'
 import { RECURRING_CONFIG, JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
+import { CalendarDays } from 'lucide-react'
 
 interface Job {
   id: string
@@ -168,7 +169,7 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-md">📅</div>
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md"><CalendarDays className="w-6 h-6" /></div>
           <div>
             <h2 className="text-2xl font-bold text-gray-800 leading-none">Calendar</h2>
             <p className="text-gray-500 text-sm">Monthly job overview</p>
