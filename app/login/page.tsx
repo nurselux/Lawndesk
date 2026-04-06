@@ -10,6 +10,7 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState(searchParams.get('email') || '')
   const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true')
   const [smsConsent, setSmsConsent] = useState(false)
@@ -63,6 +64,10 @@ function LoginContent() {
       setMessage('Password must be at least 6 characters')
       return
     }
+    if (!phone) {
+      setMessage('Please enter your phone number')
+      return
+    }
     if (!smsConsent) {
       setMessage('Please agree to receive SMS notifications')
       return
@@ -85,10 +90,10 @@ function LoginContent() {
       }
       router.push(`/account-exists?email=${encodeURIComponent(email)}`)
     } else {
-      // Save SMS consent to profile
+      // Save phone, SMS consent to profile
       await supabase
         .from('profiles')
-        .update({ sms_consent: true, sms_consent_at: new Date().toISOString() })
+        .update({ phone, sms_consent: true, sms_consent_at: new Date().toISOString() })
         .eq('id', data.user.id)
       router.push(`/signup-success?email=${encodeURIComponent(email)}`)
     }
@@ -128,6 +133,14 @@ function LoginContent() {
               placeholder="Password (min. 6 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSignUp()}
+              className="w-full border border-gray-300 rounded-lg p-3 mb-3 text-gray-800"
+            />
+            <input
+              type="tel"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSignUp()}
               className="w-full border border-gray-300 rounded-lg p-3 mb-5 text-gray-800"
             />
