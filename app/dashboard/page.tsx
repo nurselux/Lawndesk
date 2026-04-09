@@ -261,8 +261,7 @@ function DashboardContent() {
                   const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
                   return days > 0 ? `${days} day${days === 1 ? '' : 's'} remaining.` : 'trial ending soon.'
                 })()
-              : 'enjoy full access!'}{' '}
-            Your card won&apos;t be charged until the trial ends.
+              : 'enjoy full access!'}
           </span>
           <Link href="/settings" className="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap ml-4">
             Manage Billing

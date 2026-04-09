@@ -12,7 +12,10 @@ export function useAuth(redirectTo: string = '/login') {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      if (!session || !session.user.email_confirmed_at) {
+        if (session && !session.user.email_confirmed_at) {
+          await supabase.auth.signOut()
+        }
         router.push(redirectTo)
       } else {
         setUser(session.user)
@@ -22,7 +25,7 @@ export function useAuth(redirectTo: string = '/login') {
     checkSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      if (!session) {
+      if (!session || !session.user?.email_confirmed_at) {
         router.push(redirectTo)
       } else {
         setUser(session.user)

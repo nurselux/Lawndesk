@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList, FileText } from 'lucide-react'
+import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList, FileText, Clock, Repeat, MapPin, ImagePlus, Ban } from 'lucide-react'
 
 interface Profile {
   subscription_status: string | null
@@ -88,13 +88,24 @@ export default function SettingsPage() {
   const [invoiceDueDays, setInvoiceDueDays] = useState(15)
   const [invoiceDueSaving, setInvoiceDueSaving] = useState(false)
   const [invoiceDueMessage, setInvoiceDueMessage] = useState('')
+  // Advanced booking settings
+  const [bookingMinLeadHours, setBookingMinLeadHours] = useState(24)
+  const [bookingAskFence, setBookingAskFence] = useState(false)
+  const [bookingAskPets, setBookingAskPets] = useState(false)
+  const [bookingAllowFrequency, setBookingAllowFrequency] = useState(false)
+  const [bookingArrivalWindows, setBookingArrivalWindows] = useState<string[]>([])
+  const [bookingServiceZip, setBookingServiceZip] = useState('')
+  const [bookingServiceRadius, setBookingServiceRadius] = useState<number | ''>('')
+  const [bookingCancellationPolicy, setBookingCancellationPolicy] = useState('')
+  const [bookingPhotoUrl, setBookingPhotoUrl] = useState('')
+  const [bookingPhotoUploading, setBookingPhotoUploading] = useState(false)
 
   useEffect(() => {
     if (user) {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days, booking_min_lead_hours, booking_ask_fence, booking_ask_pets, booking_allow_frequency, booking_arrival_windows, booking_service_zip, booking_service_radius, booking_cancellation_policy, booking_photo_url')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -115,6 +126,15 @@ export default function SettingsPage() {
             setDisplayName(data.name || '')
             setPhone(data.phone || '')
             setInvoiceDueDays((data as any).invoice_due_days ?? 15)
+            setBookingMinLeadHours((data as any).booking_min_lead_hours ?? 24)
+            setBookingAskFence((data as any).booking_ask_fence ?? false)
+            setBookingAskPets((data as any).booking_ask_pets ?? false)
+            setBookingAllowFrequency((data as any).booking_allow_frequency ?? false)
+            setBookingArrivalWindows((data as any).booking_arrival_windows ?? [])
+            setBookingServiceZip((data as any).booking_service_zip ?? '')
+            setBookingServiceRadius((data as any).booking_service_radius ?? '')
+            setBookingCancellationPolicy((data as any).booking_cancellation_policy ?? '')
+            setBookingPhotoUrl((data as any).booking_photo_url ?? '')
           }
         })
     }
@@ -180,6 +200,18 @@ export default function SettingsPage() {
     setEmailSaving(false)
   }
 
+  const handleBookingPhotoUpload = async (file: File) => {
+    setBookingPhotoUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${user?.id}/booking-cover.${ext}`
+    const { error: upErr } = await supabase.storage.from('booking-photos').upload(path, file, { upsert: true })
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from('booking-photos').getPublicUrl(path)
+      setBookingPhotoUrl(urlData.publicUrl)
+    }
+    setBookingPhotoUploading(false)
+  }
+
   const handleSaveBooking = async () => {
     setBookingError('')
     const slug = bookingUsername.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
@@ -193,6 +225,15 @@ export default function SettingsPage() {
       booking_notify_sms: bookingNotifySms,
       booking_notify_email: bookingNotifyEmail,
       booking_welcome_message: bookingWelcome || null,
+      booking_min_lead_hours: bookingMinLeadHours,
+      booking_ask_fence: bookingAskFence,
+      booking_ask_pets: bookingAskPets,
+      booking_allow_frequency: bookingAllowFrequency,
+      booking_arrival_windows: bookingArrivalWindows,
+      booking_service_zip: bookingServiceZip.trim() || null,
+      booking_service_radius: bookingServiceRadius || null,
+      booking_cancellation_policy: bookingCancellationPolicy.trim() || null,
+      booking_photo_url: bookingPhotoUrl || null,
     }).eq('id', user?.id)
     if (error) {
       setBookingError(error.message.includes('unique') ? 'That username is already taken. Try another.' : error.message)
@@ -559,6 +600,162 @@ export default function SettingsPage() {
               className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
             />
           </div>
+          {/* ── Booking Photo ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+              <ImagePlus className="w-3.5 h-3.5" aria-hidden="true" />Cover Photo <span className="text-gray-400 font-normal normal-case">(optional)</span>
+            </label>
+            <div className="flex items-center gap-3">
+              {bookingPhotoUrl && (
+                <img src={bookingPhotoUrl} alt="Booking cover" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+              )}
+              <label className="cursor-pointer">
+                <span className="inline-block border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition">
+                  {bookingPhotoUploading ? 'Uploading…' : bookingPhotoUrl ? 'Change Photo' : 'Upload Photo'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleBookingPhotoUpload(f) }}
+                />
+              </label>
+              {bookingPhotoUrl && (
+                <button onClick={() => setBookingPhotoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Shown at the top of your booking page. JPG or PNG, under 5 MB.</p>
+          </div>
+
+          {/* ── Schedule ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />Minimum Booking Lead Time
+            </label>
+            <select
+              value={bookingMinLeadHours}
+              onChange={e => setBookingMinLeadHours(Number(e.target.value))}
+              className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 text-sm cursor-pointer"
+            >
+              <option value={4}>4 hours in advance</option>
+              <option value={12}>12 hours in advance</option>
+              <option value={24}>24 hours in advance</option>
+              <option value={48}>48 hours in advance</option>
+              <option value={72}>72 hours in advance</option>
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Clients won't be able to request a date sooner than this.</p>
+          </div>
+
+          {/* ── Arrival Windows ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />Arrival Windows
+            </label>
+            <p className="text-xs text-gray-500 mb-3">Check which 4-hour windows you're available. Clients choose from these on the booking form.</p>
+            <div className="space-y-2">
+              {['Morning (8am–12pm)', 'Midday (10am–2pm)', 'Afternoon (12pm–4pm)', 'Late (2pm–6pm)'].map(w => (
+                <label key={w} className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bookingArrivalWindows.includes(w)}
+                    onChange={e => setBookingArrivalWindows(e.target.checked
+                      ? [...bookingArrivalWindows, w]
+                      : bookingArrivalWindows.filter(x => x !== w)
+                    )}
+                    className="w-4 h-4 rounded accent-green-700 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-700">{w}</span>
+                </label>
+              ))}
+            </div>
+            {bookingArrivalWindows.length === 0 && (
+              <p className="text-xs text-gray-400 mt-2">No windows selected — arrival time won't be asked.</p>
+            )}
+          </div>
+
+          {/* ── Service Frequency ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1.5">
+                  <Repeat className="w-3.5 h-3.5" aria-hidden="true" />Service Frequency
+                </label>
+                <p className="text-xs text-gray-500 mt-1">Let clients choose one-time, weekly, or biweekly service when booking.</p>
+              </div>
+              <div onClick={() => setBookingAllowFrequency(!bookingAllowFrequency)}
+                className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ml-4 ${bookingAllowFrequency ? 'bg-green-500' : 'bg-gray-300'}`}>
+                <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingAllowFrequency ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Property Details ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Property Details to Ask</label>
+            <p className="text-xs text-gray-500 mb-3">These questions appear on the booking form for clients to answer.</p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={bookingAskFence} onChange={e => setBookingAskFence(e.target.checked)}
+                  className="w-4 h-4 rounded accent-green-700 cursor-pointer" />
+                <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  Ask: <span className="font-medium">"Is there a fence on the property?"</span>
+                </span>
+              </label>
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={bookingAskPets} onChange={e => setBookingAskPets(e.target.checked)}
+                  className="w-4 h-4 rounded accent-green-700 cursor-pointer" />
+                <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  Ask: <span className="font-medium">"Are there pets or animals on the property?"</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* ── Service Area ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" aria-hidden="true" />Service Area <span className="text-gray-400 font-normal normal-case">(optional)</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-3">Clients outside your area will be directed to request a custom quote instead.</p>
+            <div className="flex gap-2 flex-wrap">
+              <input
+                type="text"
+                placeholder="Base ZIP code"
+                value={bookingServiceZip}
+                onChange={e => setBookingServiceZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                maxLength={5}
+                className="border border-gray-300 rounded-lg p-2.5 text-sm w-32 text-gray-800"
+              />
+              <select
+                value={bookingServiceRadius}
+                onChange={e => setBookingServiceRadius(e.target.value ? Number(e.target.value) : '')}
+                className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 text-sm cursor-pointer"
+              >
+                <option value="">No radius limit</option>
+                <option value={5}>Within 5 miles</option>
+                <option value={10}>Within 10 miles</option>
+                <option value={15}>Within 15 miles</option>
+                <option value={25}>Within 25 miles</option>
+                <option value={50}>Within 50 miles</option>
+              </select>
+            </div>
+          </div>
+
+          {/* ── Cancellation Policy ── */}
+          <div className="border-t border-gray-100 pt-4">
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5">
+              <Ban className="w-3.5 h-3.5" aria-hidden="true" />Cancellation Policy <span className="text-gray-400 font-normal normal-case">(optional)</span>
+            </label>
+            <textarea
+              placeholder="e.g. Cancellations must be made at least 24 hours before your scheduled appointment. Late cancellations may be subject to a fee."
+              value={bookingCancellationPolicy}
+              onChange={e => setBookingCancellationPolicy(e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+            />
+            <p className="text-xs text-gray-400 mt-1">Shown on the booking page before clients submit their request.</p>
+          </div>
+
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Notify me when a request comes in</label>
             <div className="flex gap-3">

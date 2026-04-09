@@ -40,6 +40,12 @@ function LoginContent() {
             : error.message
         )
       } else {
+        if (!data.user.email_confirmed_at) {
+          await supabase.auth.signOut()
+          setMessage('Please confirm your email before logging in. Check your inbox for the confirmation link.')
+          setLoading(false)
+          return
+        }
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')

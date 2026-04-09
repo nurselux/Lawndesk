@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   CheckCircle, ArrowRight, Sparkles, Zap, Leaf,
@@ -96,10 +96,21 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   )
 }
 
-export default function PricingPage() {
+const REASON_BANNERS: Record<string, { title: string; body: string; color: string }> = {
+  expired:        { title: 'Your subscription has expired.', body: 'Reactivate your plan below to get back to your dashboard and all your data.', color: 'bg-red-50 border-red-300 text-red-800' },
+  cancelled:      { title: 'Your subscription was cancelled.', body: 'Choose a plan below to reactivate your account. All your data is still here.', color: 'bg-red-50 border-red-300 text-red-800' },
+  past_due:       { title: 'Your last payment failed.', body: 'Subscribe again below to restore access. Your data is safe.', color: 'bg-amber-50 border-amber-300 text-amber-800' },
+  trial_ended:    { title: 'Your free trial has ended.', body: 'You had full Pro access during your trial. Pick a plan below to keep going.', color: 'bg-blue-50 border-blue-300 text-blue-800' },
+  no_subscription:{ title: 'Choose a plan to get started.', body: 'Select a plan below to unlock your dashboard.', color: 'bg-green-50 border-green-300 text-green-800' },
+}
+
+function PricingContent() {
   const [aiAddOn, setAiAddOn] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const reason = searchParams.get('reason')
+  const banner = reason ? REASON_BANNERS[reason] ?? null : null
 
   const handleSubscribe = async (priceId: string) => {
     setLoading(priceId)
@@ -128,6 +139,18 @@ export default function PricingPage() {
 
   return (
     <main className="min-h-dvh bg-gray-50">
+      {/* Subscription-wall banner */}
+      {banner && (
+        <div className={`border-b-2 ${banner.color} px-4 py-4`}>
+          <div className="max-w-3xl mx-auto flex items-start gap-3">
+            <div className="text-2xl">🔒</div>
+            <div>
+              <p className="font-bold text-base">{banner.title}</p>
+              <p className="text-sm mt-0.5 opacity-80">{banner.body}</p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[#0d3320]/95 backdrop-blur-md shadow-lg border-b border-emerald-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -371,5 +394,13 @@ export default function PricingPage() {
 
       </div>
     </main>
+  )
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense>
+      <PricingContent />
+    </Suspense>
   )
 }

@@ -54,7 +54,13 @@ export function useSubscriptionGate() {
           new Date(data.trial_ends_at) > new Date()
 
         if (!hasPaidSub && !inTrial) {
-          router.replace('/pricing')
+          const reason =
+            data.subscription_status === 'trialing' ? 'trial_ended' :
+            data.subscription_status === 'cancelled' ? 'cancelled' :
+            data.subscription_status === 'past_due'  ? 'past_due'  :
+            data.stripe_customer_id                  ? 'expired'   :
+            'no_subscription'
+          router.replace(`/pricing?reason=${reason}`)
           return
         }
 

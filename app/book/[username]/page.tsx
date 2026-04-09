@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
-import { CheckCircle, ChevronLeft, Leaf, Scissors, Layers, Wind, Droplets, HelpCircle, Home, TreePine, Maximize2, Map, Zap, CalendarDays, Calendar, Tag } from 'lucide-react'
+import { CheckCircle, ChevronLeft, Leaf, Scissors, Layers, Wind, Droplets, HelpCircle, Home, TreePine, Maximize2, Map, Zap, CalendarDays, Calendar, Tag, Clock, MapPin, Ban, ExternalLink } from 'lucide-react'
 
 interface BusinessProfile {
   id: string
@@ -14,6 +14,15 @@ interface BusinessProfile {
   booking_notify_sms: boolean | null
   booking_notify_email: boolean | null
   phone: string | null
+  booking_photo_url: string | null
+  booking_min_lead_hours: number | null
+  booking_ask_fence: boolean | null
+  booking_ask_pets: boolean | null
+  booking_allow_frequency: boolean | null
+  booking_arrival_windows: string[] | null
+  booking_service_zip: string | null
+  booking_service_radius: number | null
+  booking_cancellation_policy: string | null
 }
 
 const QUIZ_SERVICE_OPTIONS = [
@@ -38,6 +47,12 @@ const TIMING_OPTIONS = [
   { value: 'Just getting a price', label: 'Just getting a price', Icon: Tag },
 ]
 
+const FREQUENCY_OPTIONS = [
+  { value: 'One-time',  label: 'One-time visit' },
+  { value: 'Weekly',    label: 'Weekly' },
+  { value: 'Biweekly',  label: 'Every 2 weeks' },
+]
+
 export default function BookingPage() {
   const { username } = useParams<{ username: string }>()
   const [business, setBusiness] = useState<BusinessProfile | null>(null)
@@ -53,6 +68,7 @@ export default function BookingPage() {
   const [serviceType, setServiceType] = useState('')
   const [propertySize, setPropertySize] = useState('')
   const [timing, setTiming] = useState('')
+  const [frequency, setFrequency] = useState('')
 
   // Step 4 contact fields
   const [firstName, setFirstName] = useState('')
@@ -61,11 +77,17 @@ export default function BookingPage() {
   const [clientEmail, setClientEmail] = useState('')
   const [address, setAddress] = useState('')
   const [preferredDate, setPreferredDate] = useState('')
+  const [arrivalWindow, setArrivalWindow] = useState('')
+  const [hasFence, setHasFence] = useState<boolean | null>(null)
+  const [hasPets, setHasPets] = useState<boolean | null>(null)
+  const [inServiceArea, setInServiceArea] = useState(true)
   const [message, setMessage] = useState('')
 
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  // Custom quote mode (triggered when client says they're outside service area)
+  const [customQuoteMode, setCustomQuoteMode] = useState(false)
 
   // Pre-fill from URL params (used by AI receptionist SMS link) — jump straight to step 4
   useEffect(() => {
@@ -94,7 +116,7 @@ export default function BookingPage() {
   useEffect(() => {
     const fetchBusiness = async () => {
       const { data } = await (supabase.from('profiles') as any)
-        .select('id, business_name, booking_welcome_message, booking_enabled, booking_notify_sms, booking_notify_email, phone')
+        .select('id, business_name, booking_welcome_message, booking_enabled, booking_notify_sms, booking_notify_email, phone, booking_photo_url, booking_min_lead_hours, booking_ask_fence, booking_ask_pets, booking_allow_frequency, booking_arrival_windows, booking_service_zip, booking_service_radius, booking_cancellation_policy')
         .eq('booking_username', username)
         .single()
       if (!data || data.booking_enabled === false) {
@@ -118,9 +140,23 @@ export default function BookingPage() {
     setTimeout(() => goToStep(nextStep), 300)
   }
 
+  // Compute min date from lead time
+  const minDate = (() => {
+    const hours = business?.booking_min_lead_hours ?? 24
+    const d = new Date(Date.now() + hours * 60 * 60 * 1000)
+    return d.toISOString().split('T')[0]
+  })()
+
+  const hasServiceArea = !!(business?.booking_service_zip && business?.booking_service_radius)
+  const hasArrivalWindows = (business?.booking_arrival_windows?.length ?? 0) > 0
+
   const handleSubmit = async () => {
     if (!firstName.trim() || !clientPhone.trim() || !address.trim()) {
       setError('First name, phone number, and address are required.')
+      return
+    }
+    if (hasArrivalWindows && !arrivalWindow) {
+      setError('Please select a preferred arrival window.')
       return
     }
     setSubmitting(true)
@@ -141,6 +177,11 @@ export default function BookingPage() {
       preferred_time: null,
       message: message || null,
       status: 'pending',
+      has_fence: business?.booking_ask_fence ? hasFence : null,
+      has_pets: business?.booking_ask_pets ? hasPets : null,
+      service_frequency: business?.booking_allow_frequency ? frequency || null : null,
+      arrival_window: hasArrivalWindows ? arrivalWindow || null : null,
+      outside_service_area: hasServiceArea ? !inServiceArea : false,
     }])
 
     if (insertError) {
@@ -156,7 +197,7 @@ export default function BookingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: business.phone,
-          message: `🌿 New booking request from ${clientName}! Service: ${serviceLabel}${preferredDate ? ` on ${preferredDate}` : ''}. Check your LawnDesk Requests.`,
+          message: `🌿 New booking request from ${clientName}! Service: ${serviceLabel}${preferredDate ? ` on ${preferredDate}` : ''}${arrivalWindow ? `, ${arrivalWindow}` : ''}. Check your LawnDesk Requests.`,
         }),
       })
     }
@@ -185,8 +226,9 @@ export default function BookingPage() {
     </>
   )
 
-  const progressPct = (step / 4) * 100
-
+  // Total steps: 4 base + optionally a step for frequency if enabled
+  const totalSteps = 4
+  const progressPct = (step / totalSteps) * 100
   const pageName = business?.business_name || 'the business'
 
   return (
@@ -195,12 +237,31 @@ export default function BookingPage() {
       <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-50">
 
         {/* Header */}
-        <div className="bg-green-700 text-white px-6 py-8 text-center">
-          <Leaf className="w-10 h-10 text-green-300 mb-2 mx-auto" />
-          <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
-          <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
-            {business?.booking_welcome_message || "Answer a few quick questions and we'll get back to you within 24 hours with a free estimate."}
-          </p>
+        <div className="bg-green-700 text-white text-center overflow-hidden">
+          {business?.booking_photo_url && (
+            <div className="relative h-36 w-full">
+              <img
+                src={business.booking_photo_url}
+                alt={business.business_name || 'Business'}
+                className="w-full h-full object-cover opacity-40"
+              />
+              <div className="absolute inset-0 bg-green-800/60" />
+            </div>
+          )}
+          <div className="px-6 py-8">
+            <Leaf className="w-10 h-10 text-green-300 mb-2 mx-auto" />
+            <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
+            <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
+              {business?.booking_welcome_message || "Answer a few quick questions and we'll get back to you within 24 hours with a free estimate."}
+            </p>
+            {/* Service area badge */}
+            {hasServiceArea && (
+              <div className="inline-flex items-center gap-1.5 mt-3 bg-green-600/60 text-green-100 text-xs font-medium px-3 py-1.5 rounded-full">
+                <MapPin className="w-3.5 h-3.5" />
+                Serving within {business!.booking_service_radius} miles of {business!.booking_service_zip}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quiz card */}
@@ -237,9 +298,14 @@ export default function BookingPage() {
                       {propertySize}
                     </span>
                   )}
-                  {timing && (
+                  {frequency && (
                     <span className="bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                      {timing}
+                      {frequency}
+                    </span>
+                  )}
+                  {arrivalWindow && (
+                    <span className="bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                      {arrivalWindow}
                     </span>
                   )}
                 </div>
@@ -262,7 +328,7 @@ export default function BookingPage() {
                 {step === 1 && (
                   <>
                     <h2 className="text-lg font-bold text-gray-800 mb-1">What service are you looking for?</h2>
-                    <p className="text-gray-400 text-sm mb-5">Step 1 of 4</p>
+                    <p className="text-gray-400 text-sm mb-5">Step 1 of {totalSteps}</p>
                     <div className="space-y-3">
                       {QUIZ_SERVICE_OPTIONS.map(({ value, label, Icon }) => (
                         <button
@@ -286,7 +352,7 @@ export default function BookingPage() {
                 {step === 2 && (
                   <>
                     <h2 className="text-lg font-bold text-gray-800 mb-1">How big is your property?</h2>
-                    <p className="text-gray-400 text-sm mb-5">Step 2 of 4</p>
+                    <p className="text-gray-400 text-sm mb-5">Step 2 of {totalSteps}</p>
                     <div className="space-y-3">
                       {PROPERTY_SIZE_OPTIONS.map(({ value, label, Icon }) => (
                         <button
@@ -306,11 +372,11 @@ export default function BookingPage() {
                   </>
                 )}
 
-                {/* Step 3 — Timing */}
+                {/* Step 3 — Timing + optional frequency */}
                 {step === 3 && (
                   <>
                     <h2 className="text-lg font-bold text-gray-800 mb-1">When do you need this done?</h2>
-                    <p className="text-gray-400 text-sm mb-5">Step 3 of 4</p>
+                    <p className="text-gray-400 text-sm mb-5">Step 3 of {totalSteps}</p>
                     <div className="space-y-3">
                       {TIMING_OPTIONS.map(({ value, label, Icon }) => (
                         <button
@@ -327,6 +393,28 @@ export default function BookingPage() {
                         </button>
                       ))}
                     </div>
+
+                    {/* Frequency — shown inline when enabled */}
+                    {business?.booking_allow_frequency && (
+                      <div className="mt-5">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">How often would you like service?</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {FREQUENCY_OPTIONS.map(({ value, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => setFrequency(value)}
+                              className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+                                frequency === value
+                                  ? 'border-green-500 bg-green-50 text-green-800'
+                                  : 'border-gray-200 text-gray-600 hover:border-green-300'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -334,7 +422,36 @@ export default function BookingPage() {
                 {step === 4 && (
                   <>
                     <h2 className="text-lg font-bold text-gray-800 mb-1">Almost done — how do we reach you?</h2>
-                    <p className="text-gray-400 text-sm mb-5">Step 4 of 4</p>
+                    <p className="text-gray-400 text-sm mb-5">Step 4 of {totalSteps}</p>
+
+                    {/* Service area check */}
+                    {hasServiceArea && (
+                      <div className={`rounded-xl p-4 mb-4 border ${inServiceArea ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+                        <div className="flex items-start gap-3">
+                          <MapPin className={`w-4 h-4 mt-0.5 shrink-0 ${inServiceArea ? 'text-green-600' : 'text-amber-600'}`} />
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-800 mb-1">
+                              We serve within {business!.booking_service_radius} miles of {business!.booking_service_zip}
+                            </p>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={inServiceArea}
+                                onChange={e => { setInServiceArea(e.target.checked); setCustomQuoteMode(!e.target.checked) }}
+                                className="w-4 h-4 rounded accent-green-700 cursor-pointer"
+                              />
+                              <span className="text-sm text-gray-700">My property is within the service area</span>
+                            </label>
+                            {!inServiceArea && (
+                              <p className="text-xs text-amber-700 mt-2 font-medium">
+                                Your request will be flagged as outside our standard service area. We'll reach out with a custom quote.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <input
@@ -370,15 +487,96 @@ export default function BookingPage() {
                         onChange={e => setAddress(e.target.value)}
                         className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
                       />
+
+                      {/* Preferred date with lead-time enforcement */}
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 ml-1">Preferred date (optional)</label>
+                        <label className="block text-xs text-gray-400 mb-1 ml-1 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          Preferred date{(business?.booking_min_lead_hours ?? 24) > 0 && (
+                            <span className="text-gray-400"> · earliest {business?.booking_min_lead_hours ?? 24}h from now</span>
+                          )}
+                        </label>
                         <input
                           type="date"
                           value={preferredDate}
+                          min={minDate}
                           onChange={e => setPreferredDate(e.target.value)}
                           className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
                         />
                       </div>
+
+                      {/* Arrival window */}
+                      {hasArrivalWindows && (
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">Preferred Arrival Window *</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {business!.booking_arrival_windows!.map(w => (
+                              <button
+                                key={w}
+                                type="button"
+                                onClick={() => setArrivalWindow(w)}
+                                className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all cursor-pointer text-center ${
+                                  arrivalWindow === w
+                                    ? 'border-green-500 bg-green-50 text-green-800'
+                                    : 'border-gray-200 text-gray-600 hover:border-green-300'
+                                }`}
+                              >
+                                {w}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Property details */}
+                      {(business?.booking_ask_fence || business?.booking_ask_pets) && (
+                        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-bold text-gray-500 uppercase">Property Details</p>
+                          {business?.booking_ask_fence && (
+                            <div>
+                              <p className="text-sm text-gray-700 mb-1.5">Is there a fence on the property?</p>
+                              <div className="flex gap-2">
+                                {[{ val: true, label: 'Yes' }, { val: false, label: 'No' }].map(({ val, label }) => (
+                                  <button
+                                    key={label}
+                                    type="button"
+                                    onClick={() => setHasFence(val)}
+                                    className={`px-5 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+                                      hasFence === val
+                                        ? 'border-green-500 bg-green-50 text-green-800'
+                                        : 'border-gray-200 text-gray-600 hover:border-green-300'
+                                    }`}
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {business?.booking_ask_pets && (
+                            <div>
+                              <p className="text-sm text-gray-700 mb-1.5">Are there pets or animals on the property?</p>
+                              <div className="flex gap-2">
+                                {[{ val: true, label: 'Yes' }, { val: false, label: 'No' }].map(({ val, label }) => (
+                                  <button
+                                    key={label}
+                                    type="button"
+                                    onClick={() => setHasPets(val)}
+                                    className={`px-5 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+                                      hasPets === val
+                                        ? 'border-green-500 bg-green-50 text-green-800'
+                                        : 'border-gray-200 text-gray-600 hover:border-green-300'
+                                    }`}
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <textarea
                         placeholder="Additional notes (optional)"
                         value={message}
@@ -386,6 +584,17 @@ export default function BookingPage() {
                         rows={3}
                         className="w-full border border-gray-300 rounded-xl p-3 text-gray-800 resize-none"
                       />
+
+                      {/* Cancellation policy */}
+                      {business?.booking_cancellation_policy && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-3">
+                          <Ban className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-bold text-gray-500 uppercase mb-1">Cancellation Policy</p>
+                            <p className="text-sm text-gray-600 leading-relaxed">{business.booking_cancellation_policy}</p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* SMS consent — required for A2P 10DLC compliance */}
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-gray-600 leading-relaxed">
@@ -403,7 +612,7 @@ export default function BookingPage() {
                         disabled={!firstName.trim() || !clientPhone.trim() || submitting}
                         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg hover:scale-[1.02] transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                       >
-                        {submitting ? 'Sending...' : 'Send Request'}
+                        {submitting ? 'Sending...' : customQuoteMode ? 'Request Custom Quote' : 'Send Request'}
                       </button>
                     </div>
                   </>
