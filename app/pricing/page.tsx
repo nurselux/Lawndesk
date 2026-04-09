@@ -19,20 +19,19 @@ const STARTER_FEATURES = [
   { icon: Calendar,       text: 'Unlimited job scheduling' },
   { icon: FileText,       text: 'Invoicing & online payments' },
   { icon: FileText,       text: 'Quote sending & client approvals' },
+  { icon: MessageSquare,  text: 'SMS invoice & job completion texts' },
   { icon: LayoutDashboard,text: 'Client portal' },
   { icon: LayoutDashboard,text: 'Dashboard & reports' },
+  { icon: Shield,         text: "Today's route optimization" },
   { icon: Smartphone,     text: 'Mobile-friendly — works on any phone' },
   { icon: MessageSquare,  text: 'Email support' },
 ]
 
 const PRO_FEATURES = [
   { icon: CheckCircle,    text: 'Everything in Starter' },
-  { icon: Users,          text: 'Unlimited team members' },
-  { icon: Smartphone,     text: 'Worker app (On My Way alerts)' },
-  { icon: Calendar,       text: 'Online booking page (your URL)' },
+  { icon: Users,          text: 'Unlimited team members & worker app' },
+  { icon: Calendar,       text: 'Online booking page (your custom URL)' },
   { icon: RefreshCw,      text: 'Recurring job automation' },
-  { icon: MessageSquare,  text: 'SMS notifications to clients & crew' },
-  { icon: Shield,         text: "Today's route optimization" },
   { icon: Star,           text: 'Automated Google review requests' },
   { icon: Zap,            text: 'AI Receptionist — answers calls 24/7' },
 ]
@@ -311,7 +310,7 @@ function PricingContent() {
           {[
             { value: '500+', label: 'Businesses' },
             { value: '98%', label: 'Satisfaction' },
-            { value: '60%', label: 'Cheaper than Jobber' },
+            { value: '$1,320', label: 'Saved vs Jobber/yr' },
             { value: '14-day', label: 'Free Trial' },
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl p-5 text-center shadow-sm border border-gray-100">
@@ -319,6 +318,109 @@ function PricingContent() {
               <div className="text-gray-500 text-sm font-medium">{s.label}</div>
             </div>
           ))}
+        </div>
+
+        {/* Jobber Comparison */}
+        <div className="mb-20">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-yellow-400 rounded-full px-5 py-2 mb-5 shadow-lg">
+              <span className="text-yellow-900 text-sm font-black uppercase tracking-wide">💰 Save up to $1,320/year vs Jobber</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3">
+              Why Landscapers Are{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
+                Switching from Jobber
+              </span>
+            </h2>
+            <p className="text-gray-500 text-base max-w-xl mx-auto">Same features. A fraction of the price. Plus an AI Receptionist Jobber doesn't offer at any tier.</p>
+          </div>
+
+          {/* Comparison table */}
+          <div className="overflow-x-auto rounded-3xl shadow-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="bg-gray-50 text-left px-6 py-5 font-bold text-gray-600 text-base w-2/5">Feature</th>
+                  <th className="bg-gradient-to-b from-[#0d3320] to-emerald-900 px-4 py-5 text-center relative">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-black px-3 py-1 rounded-full whitespace-nowrap">Best Value</div>
+                    <div className="text-white font-black text-base">LawnDesk Pro</div>
+                    <div className="text-emerald-300 font-bold text-xl mt-1">$39<span className="text-sm font-normal">/mo</span></div>
+                  </th>
+                  <th className="bg-gray-50 px-4 py-5 text-center border-l border-gray-200">
+                    <div className="text-gray-500 font-bold text-base">Jobber Core</div>
+                    <div className="text-gray-400 font-bold text-xl mt-1">$49<span className="text-sm font-normal">/mo</span></div>
+                  </th>
+                  <th className="bg-gray-50 px-4 py-5 text-center border-l border-gray-200">
+                    <div className="text-gray-500 font-bold text-base">Jobber Connect</div>
+                    <div className="text-gray-400 font-bold text-xl mt-1">$149<span className="text-sm font-normal">/mo</span></div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { feature: 'Clients, Jobs & Scheduling',     ld: true,  jCore: true,  jConnect: true  },
+                  { feature: 'Invoicing & Online Payments',    ld: true,  jCore: true,  jConnect: true  },
+                  { feature: 'Quote Sending & Approvals',      ld: true,  jCore: true,  jConnect: true  },
+                  { feature: "Today's Route Optimization",     ld: true,  jCore: true,  jConnect: true  },
+                  { feature: 'SMS Notifications to Clients',   ld: true,  jCore: false, jConnect: true  },
+                  { feature: 'Team Management & Worker App',   ld: true,  jCore: false, jConnect: true  },
+                  { feature: 'Online Booking Page',            ld: true,  jCore: false, jConnect: true  },
+                  { feature: 'Recurring Job Automation',       ld: true,  jCore: false, jConnect: true  },
+                  { feature: 'Automated Google Review Texts',  ld: true,  jCore: false, jConnect: false },
+                  { feature: 'AI Receptionist (24/7)',         ld: true,  jCore: false, jConnect: false },
+                ].map((row, i) => (
+                  <tr key={row.feature} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                    <td className="px-6 py-4 font-medium text-gray-700">{row.feature}</td>
+                    <td className="px-4 py-4 text-center bg-emerald-50/40 border-l-2 border-r-2 border-emerald-200">
+                      {row.ld
+                        ? <span className="inline-flex items-center justify-center w-7 h-7 bg-emerald-500 rounded-full text-white font-black text-base">✓</span>
+                        : <span className="inline-flex items-center justify-center w-7 h-7 bg-gray-200 rounded-full text-gray-400 font-black text-base">✕</span>}
+                    </td>
+                    <td className="px-4 py-4 text-center border-l border-gray-100">
+                      {row.jCore
+                        ? <span className="inline-flex items-center justify-center w-7 h-7 bg-gray-300 rounded-full text-gray-600 font-black text-base">✓</span>
+                        : <span className="inline-flex items-center justify-center w-7 h-7 bg-red-100 rounded-full text-red-400 font-black text-base">✕</span>}
+                    </td>
+                    <td className="px-4 py-4 text-center border-l border-gray-100">
+                      {row.jConnect
+                        ? <span className="inline-flex items-center justify-center w-7 h-7 bg-gray-300 rounded-full text-gray-600 font-black text-base">✓</span>
+                        : <span className="inline-flex items-center justify-center w-7 h-7 bg-red-100 rounded-full text-red-400 font-black text-base">✕</span>}
+                    </td>
+                  </tr>
+                ))}
+                {/* Price row */}
+                <tr className="border-t-2 border-gray-200">
+                  <td className="px-6 py-5 font-black text-gray-900 text-base">Monthly Cost</td>
+                  <td className="px-4 py-5 text-center bg-emerald-50/40 border-l-2 border-r-2 border-emerald-200">
+                    <span className="text-2xl font-black text-emerald-700">$39</span>
+                  </td>
+                  <td className="px-4 py-5 text-center border-l border-gray-100">
+                    <span className="text-2xl font-black text-gray-400 line-through">$49</span>
+                  </td>
+                  <td className="px-4 py-5 text-center border-l border-gray-100">
+                    <span className="text-2xl font-black text-gray-400 line-through">$149</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Savings callout */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl p-6 text-white text-center shadow-lg">
+              <div className="text-4xl font-black mb-1">$120</div>
+              <div className="text-emerald-200 text-sm font-semibold">Saved per year vs Jobber Core</div>
+            </div>
+            <div className="bg-gradient-to-br from-[#0d3320] to-emerald-900 rounded-2xl p-6 text-white text-center shadow-xl ring-2 ring-yellow-400">
+              <div className="text-yellow-400 text-xs font-black uppercase tracking-widest mb-1">Best Comparison</div>
+              <div className="text-4xl font-black mb-1">$1,320</div>
+              <div className="text-emerald-300 text-sm font-semibold">Saved per year vs Jobber Connect</div>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-2xl p-6 text-white text-center shadow-lg">
+              <div className="text-4xl font-black mb-1">Priceless</div>
+              <div className="text-emerald-200 text-sm font-semibold">AI Receptionist — not on Jobber at any price</div>
+            </div>
+          </div>
         </div>
 
         {/* FAQ */}

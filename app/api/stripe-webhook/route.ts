@@ -50,12 +50,15 @@ export async function POST(req: Request) {
 
   // Log the event if not already in the table
   if (!existing || existing.length === 0) {
-    await supabase.from('stripe_webhooks').insert({
+    const { error: insertError } = await supabase.from('stripe_webhooks').insert({
       event_id: event.id,
       event_type: event.type,
       event_data: event.data,
       processed: false,
     })
+    if (insertError) {
+      console.error('stripe_webhooks insert failed:', insertError.message, insertError.code)
+    }
   }
 
   // Process the event synchronously with retry logic
@@ -160,7 +163,7 @@ export async function POST(req: Request) {
   }, 3)
 
   // Update audit log with result
-  await supabase
+  const { error: updateError } = await supabase
     .from('stripe_webhooks')
     .update({
       processed: success,
@@ -169,6 +172,9 @@ export async function POST(req: Request) {
       retry_count: attemptCount - 1,
     })
     .eq('event_id', event.id)
+  if (updateError) {
+    console.error('stripe_webhooks update failed:', updateError.message, updateError.code)
+  }
 
   if (!success) {
     console.error(`Webhook ${event.id} failed after ${attemptCount} attempts:`, processingError)
