@@ -111,6 +111,7 @@ function PricingContent() {
   const searchParams = useSearchParams()
   const reason = searchParams.get('reason')
   const banner = reason ? REASON_BANNERS[reason] ?? null : null
+  const isReturning = !!reason  // returning user — no trial messaging
 
   const handleSubscribe = async (priceId: string) => {
     setLoading(priceId)
@@ -168,12 +169,21 @@ function PricingContent() {
               <Link href="/login" className="text-emerald-100 hover:text-white font-medium transition-colors duration-200">
                 Sign In
               </Link>
-              <Link
-                href="/login?signup=true"
-                className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-emerald-400 hover:to-green-500 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 cursor-pointer"
-              >
-                Start Free Trial
-              </Link>
+              {isReturning ? (
+                <Link
+                  href="/login"
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-emerald-400 hover:to-green-500 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  Sign In
+                </Link>
+              ) : (
+                <Link
+                  href="/login?signup=true"
+                  className="bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold py-2.5 px-6 rounded-xl hover:from-emerald-400 hover:to-green-500 transition-all duration-200 shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-0.5 cursor-pointer"
+                >
+                  Start Free Trial
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -182,12 +192,14 @@ function PricingContent() {
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#0a4d3e] via-[#0d3320] to-[#14532d] text-white py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-yellow-400/90 backdrop-blur-sm rounded-full px-5 py-2 mb-8 shadow-lg border border-yellow-300">
-            <Leaf className="w-4 h-4 text-yellow-900" aria-hidden="true" />
-            <span className="text-yellow-900 text-xs font-black tracking-wide uppercase">
-              14-Day Free Trial · No Credit Card Required
-            </span>
-          </div>
+          {!isReturning && (
+            <div className="inline-flex items-center gap-2 bg-yellow-400/90 backdrop-blur-sm rounded-full px-5 py-2 mb-8 shadow-lg border border-yellow-300">
+              <Leaf className="w-4 h-4 text-yellow-900" aria-hidden="true" />
+              <span className="text-yellow-900 text-xs font-black tracking-wide uppercase">
+                14-Day Free Trial · No Credit Card Required
+              </span>
+            </div>
+          )}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-tight mb-4">
             Simple, Transparent{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200">
@@ -235,6 +247,8 @@ function PricingContent() {
               >
                 {loading === STARTER_PRICE_ID ? (
                   <span className="animate-pulse">Loading…</span>
+                ) : isReturning ? (
+                  <>Subscribe — $19/mo<ArrowRight className="w-5 h-5" aria-hidden="true" /></>
                 ) : (
                   <>Try Free for 14 Days<ArrowRight className="w-5 h-5" aria-hidden="true" /></>
                 )}
@@ -282,6 +296,8 @@ function PricingContent() {
               >
                 {loading === PRO_PRICE_ID ? (
                   <span className="animate-pulse">Loading…</span>
+                ) : isReturning ? (
+                  <>Subscribe — $39/mo<ArrowRight className="w-5 h-5" aria-hidden="true" /></>
                 ) : (
                   <>Try Free for 14 Days<ArrowRight className="w-5 h-5" aria-hidden="true" /></>
                 )}
