@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-  CheckCircle, ArrowRight, Sparkles, Zap, Leaf,
+  CheckCircle, ArrowRight, Zap, Leaf,
   Users, Calendar, FileText, RefreshCw, Smartphone,
   MessageSquare, LayoutDashboard, Shield, Star,
   ChevronDown, ChevronUp,
@@ -34,7 +34,7 @@ const PRO_FEATURES = [
   { icon: MessageSquare,  text: 'SMS notifications to clients & crew' },
   { icon: Shield,         text: "Today's route optimization" },
   { icon: Star,           text: 'Automated Google review requests' },
-  { icon: Zap,            text: 'Priority support' },
+  { icon: Zap,            text: 'AI Receptionist — answers calls 24/7' },
 ]
 
 const FAQS = [
@@ -67,8 +67,8 @@ const FAQS = [
     a: 'Absolutely. Industry-standard encryption and security practices. Your data is stored securely in Supabase PostgreSQL databases.',
   },
   {
-    q: 'What is the AI Receptionist add-on?',
-    a: 'The AI Receptionist answers calls and texts 24/7, qualifies leads, and books appointments — so you never miss a customer even while you\'re in the field.',
+    q: 'What is the AI Receptionist?',
+    a: 'The AI Receptionist is included with the Pro plan. It answers calls and texts 24/7, qualifies leads, and sends clients a booking link — so you never miss a job even while you\'re in the field.',
   },
 ]
 
@@ -105,7 +105,6 @@ const REASON_BANNERS: Record<string, { title: string; body: string; color: strin
 }
 
 function PricingContent() {
-  const [aiAddOn, setAiAddOn] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -273,7 +272,7 @@ function PricingContent() {
                 </div>
                 <div className="flex items-end gap-2 mb-2">
                   <span className="text-6xl font-black text-white">
-                    ${aiAddOn ? 54 : 39}
+                    $39
                   </span>
                   <span className="text-emerald-300 text-lg mb-2">/mo</span>
                 </div>
@@ -303,48 +302,6 @@ function PricingContent() {
                 )}
               </button>
               <p className="text-center text-xs text-emerald-400 mt-2">Cancel anytime</p>
-            </div>
-          </div>
-        </div>
-
-        {/* AI Add-on */}
-        <div className="max-w-2xl mx-auto mb-16">
-          <div className="bg-gray-900 rounded-2xl p-6 shadow-xl border border-gray-800">
-            <div className="flex items-start gap-4">
-              <button
-                onClick={() => setAiAddOn(!aiAddOn)}
-                className={`flex-shrink-0 relative w-14 h-8 rounded-full transition-all duration-300 cursor-pointer ${
-                  aiAddOn ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-gray-700'
-                }`}
-                aria-label="Toggle AI Receptionist add-on"
-                role="switch"
-                aria-checked={aiAddOn}
-              >
-                <div
-                  className={`absolute top-1 w-6 h-6 rounded-full transition-all duration-300 ${
-                    aiAddOn ? 'left-7 bg-white' : 'left-1 bg-gray-400'
-                  } flex items-center justify-center`}
-                >
-                  <Sparkles className={`w-3 h-3 ${aiAddOn ? 'text-emerald-600' : 'text-gray-600'}`} aria-hidden="true" />
-                </div>
-              </button>
-
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Zap className="w-5 h-5 text-yellow-400" aria-hidden="true" />
-                  <h3 className="text-white font-bold text-lg">AI Receptionist Add-On</h3>
-                  <span className="bg-emerald-600 text-emerald-100 text-xs font-bold px-2 py-0.5 rounded-full">New</span>
-                </div>
-                <p className="text-gray-400 text-sm mb-3 leading-relaxed">
-                  AI answers calls &amp; texts 24/7, qualifies leads, and books appointments — so you never miss a customer while you're in the field.
-                </p>
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-3xl font-extrabold transition-colors duration-300 ${aiAddOn ? 'text-emerald-400' : 'text-gray-500'}`}>
-                    +$15
-                  </span>
-                  <span className="text-gray-400">/mo · Pro plan required</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

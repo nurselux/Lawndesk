@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/useAuth'
+import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import ProGate from '../../components/ProGate'
 import { Inbox, Phone, Mail, MapPin, Calendar, ClipboardList, UserPlus, XCircle, Trash2, RotateCcw, CheckCircle } from 'lucide-react'
 
 interface BookingRequest {
@@ -37,6 +40,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function RequestsPage() {
   const router = useRouter()
+  useAuth()
+  const { checking } = useSubscriptionGate()
   const [requests, setRequests] = useState<BookingRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'declined' | 'deleted'>('pending')
@@ -212,6 +217,8 @@ export default function RequestsPage() {
     return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
   }
 
+  if (checking) return null
+
   if (loading) return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="h-10 w-48 bg-gray-200 rounded-xl animate-pulse" />
@@ -225,6 +232,7 @@ export default function RequestsPage() {
   )
 
   return (
+    <ProGate page featureName="Booking Requests" description="Receive and manage booking requests from your public booking page. Available on the Pro plan.">
     <div className="max-w-2xl mx-auto space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -529,5 +537,6 @@ export default function RequestsPage() {
         </div>
       ))}
     </div>
+    </ProGate>
   )
 }

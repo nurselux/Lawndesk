@@ -6,7 +6,8 @@ import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import Link from 'next/link'
 import { RECURRING_CONFIG, JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, Lock } from 'lucide-react'
+import { usePlan } from '../../lib/usePlan'
 
 interface Job {
   id: string
@@ -55,6 +56,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function CalendarPage() {
   const { user, loading } = useAuth()
   const { checking } = useSubscriptionGate()
+  const { isPro } = usePlan()
   const [jobs, setJobs] = useState<Job[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [estimateVisits, setEstimateVisits] = useState<EstimateVisit[]>([])
@@ -175,11 +177,17 @@ export default function CalendarPage() {
             <p className="text-gray-500 text-sm">Monthly job overview</p>
           </div>
         </div>
-        {routeUrl && (
-          <a href={routeUrl} target="_blank" rel="noopener noreferrer">
-            <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow text-sm">
-              🗺️ Today's Route
-            </button>
+        {isPro ? (
+          routeUrl && (
+            <a href={routeUrl} target="_blank" rel="noopener noreferrer">
+              <button className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 px-4 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow text-sm">
+                🗺️ Today's Route
+              </button>
+            </a>
+          )
+        ) : (
+          <a href="/pricing" className="flex items-center gap-1.5 border border-dashed border-green-300 bg-green-50 text-green-700 font-bold py-2 px-4 rounded-xl text-sm hover:bg-green-100 transition-colors">
+            <Lock className="w-3.5 h-3.5" />Today's Route
           </a>
         )}
       </div>

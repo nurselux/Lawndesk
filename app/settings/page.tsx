@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
+import { usePlan } from '../../lib/usePlan'
+import ProGate from '../../components/ProGate'
 import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList, FileText, Clock, Repeat, MapPin, ImagePlus, Ban } from 'lucide-react'
 
 interface Profile {
@@ -37,6 +39,7 @@ function subLabel(status: string | null, plan: string | null) {
 export default function SettingsPage() {
   const { user, loading } = useAuth()
   const { checking } = useSubscriptionGate()
+  const { isPro } = usePlan()
   const [userEmail, setUserEmail] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [displayName, setDisplayName] = useState('')
@@ -554,6 +557,9 @@ export default function SettingsPage() {
       </div>
 
       {/* Online Booking */}
+      {!isPro ? (
+        <div className="mb-6"><ProGate featureName="Online Booking Page" description="Let clients book directly from your custom public link. Set arrival windows, service area, cancellation policy, and more." /></div>
+      ) : (
       <div className="bg-white rounded-xl p-6 shadow mb-6">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-5 h-5" aria-hidden="true" />Online Booking Page</h3>
@@ -794,8 +800,12 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* AI Receptionist */}
+      {!isPro ? (
+        <div className="mb-6"><ProGate featureName="AI Receptionist" description="A dedicated phone number that answers calls 24/7, captures leads, and texts them a booking link — automatically." /></div>
+      ) : (
       <div className="bg-white rounded-xl p-6 shadow mb-6">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Phone className="w-5 h-5" aria-hidden="true" />AI Receptionist</h3>
@@ -900,6 +910,7 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Google Review Link */}
       <div className="bg-white rounded-xl p-6 shadow mb-6">

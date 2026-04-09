@@ -9,6 +9,7 @@ import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
 import { Leaf, Map, Pencil, Trash2, MessageSquare, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera, RefreshCw, Minus, Scissors, Wind, TreePine, Axe, Layers, Sprout, Ban, Circle, Wheat, Grid3x3, Flower2, Droplets, Zap, Snowflake, Pipette, type LucideIcon } from 'lucide-react'
 import { JobStatusBadge, jobStatusConfig, stripEmoji } from '../../lib/statusIcons'
+import { usePlan } from '../../lib/usePlan'
 
 interface Job {
   id: string
@@ -179,6 +180,7 @@ const JOB_TYPES = [
 export default function JobsPage() {
   const { user, loading } = useAuth()
   const { checking } = useSubscriptionGate()
+  const { isPro } = usePlan()
   const [jobs, setJobs] = useState<Job[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [workers, setWorkers] = useState<Worker[]>([])
@@ -721,13 +723,20 @@ export default function JobsPage() {
               <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />Time (optional)</label>
               <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
             </div>
-            <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option value="🔂 One-time">One-time</option>
-              <option value="📅 Weekly">Weekly</option>
-              <option value="🗓️ Biweekly">Biweekly</option>
-              <option value="📆 Monthly">Monthly</option>
-              <option value="✏️ Custom">Custom</option>
-            </select>
+            {isPro ? (
+              <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
+                <option value="🔂 One-time">One-time</option>
+                <option value="📅 Weekly">Weekly</option>
+                <option value="🗓️ Biweekly">Biweekly</option>
+                <option value="📆 Monthly">Monthly</option>
+                <option value="✏️ Custom">Custom</option>
+              </select>
+            ) : (
+              <div className="border border-dashed border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
+                <span className="text-sm text-gray-500">Recurring jobs</span>
+                <a href="/pricing" className="text-xs font-bold text-green-700 flex items-center gap-1 hover:underline">🔒 Pro only →</a>
+              </div>
+            )}
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option value="🔵 Scheduled">Scheduled</option>
               <option value="🟡 In Progress">In Progress</option>

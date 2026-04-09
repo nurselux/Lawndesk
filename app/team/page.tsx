@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import { JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
 import { HardHat } from 'lucide-react'
+import ProGate from '../../components/ProGate'
 
 interface Worker {
   id: string
@@ -297,6 +298,7 @@ export default function TeamPage() {
   )
 
   return (
+    <ProGate page featureName="Team Management" description="Invite workers, assign jobs, and manage crew permissions. Available on the Pro plan.">
     <div className="p-6 pb-6 bg-gray-50 min-h-dvh max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md"><HardHat className="w-6 h-6" /></div>
@@ -680,5 +682,6 @@ export default function TeamPage() {
         )}
       </div>
     </div>
+    </ProGate>
   )
 }
