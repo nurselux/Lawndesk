@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       metadata: { userId: userId || '' },
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: isReturningUser ? {} : { trial_period_days: 14 },
-      success_url: `https://lawndesk.pro/dashboard?success=true`,
+      success_url: `https://lawndesk.pro/subscription-success`,
       cancel_url: `https://lawndesk.pro/pricing?cancelled=true`,
     })
 
