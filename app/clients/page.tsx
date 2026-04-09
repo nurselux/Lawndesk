@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import { Users, Search, Phone, Mail, MapPin, Pencil, Trash2 } from 'lucide-react'
+import AddressAutocomplete from '../../components/AddressAutocomplete'
 
 interface Client {
   id: string
@@ -227,11 +228,11 @@ export default function ClientsPage() {
               onChange={(e) => setPhone(e.target.value)}
               className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
-            <input
-              placeholder="Address"
+            <AddressAutocomplete
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              onChange={setAddress}
+              placeholder="Address"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
             />
             <textarea
               placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
@@ -282,11 +283,11 @@ export default function ClientsPage() {
               onChange={(e) => setEditPhone(e.target.value)}
               className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
             />
-            <input
-              placeholder="Address"
+            <AddressAutocomplete
               value={editAddress}
-              onChange={(e) => setEditAddress(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              onChange={setEditAddress}
+              placeholder="Address"
+              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
             />
             <textarea
               placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."

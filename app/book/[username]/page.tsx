@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
+import AddressAutocomplete from '../../../components/AddressAutocomplete'
 import { CheckCircle, ChevronLeft, Leaf, Scissors, Layers, Wind, Droplets, HelpCircle, Home, TreePine, Maximize2, Map, Zap, CalendarDays, Calendar, Tag, Clock, MapPin, Ban, ExternalLink } from 'lucide-react'
 
 interface BusinessProfile {
@@ -481,11 +482,12 @@ export default function BookingPage() {
                         onChange={e => setClientEmail(e.target.value)}
                         className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
                       />
-                      <input
-                        placeholder="Property address *"
+                      <AddressAutocomplete
                         value={address}
-                        onChange={e => setAddress(e.target.value)}
+                        onChange={setAddress}
+                        placeholder="Property address *"
                         className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
+                        required
                       />
 
                       {/* Preferred date with lead-time enforcement */}
