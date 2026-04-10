@@ -7,7 +7,9 @@ import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import { usePlan } from '../../lib/usePlan'
 import ProGate from '../../components/ProGate'
-import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList, FileText, Clock, Repeat, MapPin, ImagePlus, Ban } from 'lucide-react'
+import { Settings as SettingsIcon, Mail, MessageSquare, Link2, AlertTriangle, Phone, Trash2, RefreshCw, Star, Wrench, Bell, User, XCircle, CreditCard, Shield, Globe, Copy, CheckCircle2, ClipboardList, FileText, Clock, Repeat, MapPin, ImagePlus, Ban, Building2, Users } from 'lucide-react'
+
+type TabId = 'business' | 'account' | 'billing' | 'automation' | 'notifications'
 
 interface Profile {
   subscription_status: string | null
@@ -36,16 +38,27 @@ function subLabel(status: string | null, plan: string | null) {
   return { text: status, color: 'bg-gray-100 text-gray-700' }
 }
 
+const TABS: { id: TabId; label: string; Icon: React.ElementType }[] = [
+  { id: 'business', label: 'Business', Icon: Building2 },
+  { id: 'account', label: 'Account', Icon: User },
+  { id: 'billing', label: 'Billing', Icon: CreditCard },
+  { id: 'automation', label: 'Automation', Icon: Wrench },
+  { id: 'notifications', label: 'Notifications', Icon: Bell },
+]
+
 export default function SettingsPage() {
   const { user, loading } = useAuth()
   const { checking } = useSubscriptionGate()
   const { isPro } = usePlan()
+  const [activeTab, setActiveTab] = useState<TabId>('business')
   const [userEmail, setUserEmail] = useState('')
   const [profile, setProfile] = useState<Profile | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [phone, setPhone] = useState('')
   const [accountSaving, setAccountSaving] = useState(false)
   const [accountMessage, setAccountMessage] = useState('')
+  const [businessSaving, setBusinessSaving] = useState(false)
+  const [businessMessage, setBusinessMessage] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [emailSaving, setEmailSaving] = useState(false)
   const [emailMessage, setEmailMessage] = useState('')
@@ -59,8 +72,6 @@ export default function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState('')
   const [reviewLink, setReviewLink] = useState('')
-  const [reviewSaving, setReviewSaving] = useState(false)
-  const [reviewMessage, setReviewMessage] = useState('')
   const [bookingUsername, setBookingUsername] = useState('')
   const [businessName, setBusinessName] = useState('')
   const [bookingEnabled, setBookingEnabled] = useState(true)
@@ -91,6 +102,8 @@ export default function SettingsPage() {
   const [invoiceDueDays, setInvoiceDueDays] = useState(15)
   const [invoiceDueSaving, setInvoiceDueSaving] = useState(false)
   const [invoiceDueMessage, setInvoiceDueMessage] = useState('')
+  const [notifSaving, setNotifSaving] = useState(false)
+  const [notifMessage, setNotifMessage] = useState('')
   // Advanced booking settings
   const [bookingMinLeadHours, setBookingMinLeadHours] = useState(24)
   const [bookingAskFence, setBookingAskFence] = useState(false)
@@ -146,13 +159,25 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!showDeleteModal) return
     if (deleteCountdown <= 0) return
-
-    const timer = setTimeout(() => {
-      setDeleteCountdown(deleteCountdown - 1)
-    }, 1000)
-
+    const timer = setTimeout(() => setDeleteCountdown(deleteCountdown - 1), 1000)
     return () => clearTimeout(timer)
   }, [showDeleteModal, deleteCountdown])
+
+  const handleSaveBusiness = async () => {
+    setBusinessSaving(true)
+    await (supabase.from('profiles') as any)
+      .update({
+        business_name: businessName || null,
+        phone: phone || null,
+        google_review_link: reviewLink || null,
+        booking_service_zip: bookingServiceZip.trim() || null,
+        booking_service_radius: bookingServiceRadius || null,
+      })
+      .eq('id', user?.id)
+    setBusinessMessage('Saved!')
+    setTimeout(() => setBusinessMessage(''), 3000)
+    setBusinessSaving(false)
+  }
 
   const handleChangePassword = async () => {
     setPwError('')
@@ -160,11 +185,9 @@ export default function SettingsPage() {
     if (!pwCurrent || !pwNew || !pwConfirm) { setPwError('All fields are required.'); return }
     if (pwNew.length < 6) { setPwError('New password must be at least 6 characters.'); return }
     if (pwNew !== pwConfirm) { setPwError('New passwords do not match.'); return }
-
     setPwSaving(true)
     const { error: signInError } = await supabase.auth.signInWithPassword({ email: userEmail, password: pwCurrent })
     if (signInError) { setPwError('Current password is incorrect.'); setPwSaving(false); return }
-
     const { error } = await supabase.auth.updateUser({ password: pwNew })
     if (error) {
       setPwError(error.message)
@@ -180,7 +203,7 @@ export default function SettingsPage() {
   const handleSaveAccount = async () => {
     setAccountSaving(true)
     await (supabase.from('profiles') as any)
-      .update({ name: displayName || null, phone: phone || null })
+      .update({ name: displayName || null })
       .eq('id', user?.id)
     setAccountMessage('Saved!')
     setTimeout(() => setAccountMessage(''), 3000)
@@ -219,22 +242,16 @@ export default function SettingsPage() {
     setBookingError('')
     const slug = bookingUsername.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
     if (!slug) { setBookingError('Please enter a booking username.'); return }
-    if (!businessName) { setBookingError('Please enter your business name.'); return }
     setBookingSaving(true)
     const { error } = await (supabase.from('profiles') as any).update({
       booking_username: slug,
-      business_name: businessName,
       booking_enabled: bookingEnabled,
-      booking_notify_sms: bookingNotifySms,
-      booking_notify_email: bookingNotifyEmail,
       booking_welcome_message: bookingWelcome || null,
       booking_min_lead_hours: bookingMinLeadHours,
       booking_ask_fence: bookingAskFence,
       booking_ask_pets: bookingAskPets,
       booking_allow_frequency: bookingAllowFrequency,
       booking_arrival_windows: bookingArrivalWindows,
-      booking_service_zip: bookingServiceZip.trim() || null,
-      booking_service_radius: bookingServiceRadius || null,
       booking_cancellation_policy: bookingCancellationPolicy.trim() || null,
       booking_photo_url: bookingPhotoUrl || null,
     }).eq('id', user?.id)
@@ -282,16 +299,14 @@ export default function SettingsPage() {
     setAiProvisioning(false)
   }
 
-  const handleSaveReviewLink = async () => {
-    setReviewSaving(true)
-    const { error } = await (supabase.from('profiles') as any)
-      .update({ google_review_link: reviewLink || null })
+  const handleSaveNotifications = async () => {
+    setNotifSaving(true)
+    await (supabase.from('profiles') as any)
+      .update({ booking_notify_sms: bookingNotifySms, booking_notify_email: bookingNotifyEmail })
       .eq('id', user?.id)
-    if (!error) {
-      setReviewMessage('Saved!')
-      setTimeout(() => setReviewMessage(''), 3000)
-    }
-    setReviewSaving(false)
+    setNotifMessage('Saved!')
+    setTimeout(() => setNotifMessage(''), 3000)
+    setNotifSaving(false)
   }
 
   const handleDeleteAccount = async () => {
@@ -304,7 +319,6 @@ export default function SettingsPage() {
       setDeleteError('Email does not match your account')
       return
     }
-
     setDeleteDeleting(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -313,28 +327,17 @@ export default function SettingsPage() {
         setDeleteDeleting(false)
         return
       }
-
       const res = await fetch('/api/delete-account', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          email: deleteEmail,
-          password: deletePassword,
-        }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ email: deleteEmail, password: deletePassword }),
       })
-
       const data = await res.json()
-
       if (!res.ok) {
         setDeleteError(data.error || 'Failed to delete account')
         setDeleteDeleting(false)
         return
       }
-
-      // Account successfully deleted - redirect to login
       await new Promise(resolve => setTimeout(resolve, 1500))
       window.location.href = '/login'
     } catch (error: any) {
@@ -373,11 +376,16 @@ export default function SettingsPage() {
   }
 
   if (checking) return (
-    <div className="p-6 max-w-2xl mx-auto space-y-4">
-      <div className="h-9 w-32 bg-gray-200 rounded-xl animate-pulse" />
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-32 bg-gray-200 rounded-2xl animate-pulse" />
-      ))}
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      <div className="h-9 w-32 bg-gray-200 rounded-xl animate-pulse mb-6" />
+      <div className="flex gap-6">
+        <div className="hidden sm:block w-44 space-y-2">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-10 bg-gray-200 rounded-xl animate-pulse" />)}
+        </div>
+        <div className="flex-1 space-y-4">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-gray-200 rounded-2xl animate-pulse" />)}
+        </div>
+      </div>
     </div>
   )
 
@@ -385,608 +393,698 @@ export default function SettingsPage() {
   const hasStripe = !!profile?.stripe_customer_id
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"><SettingsIcon className="w-6 h-6" aria-hidden="true" />Settings</h2>
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <SettingsIcon className="w-6 h-6" aria-hidden="true" />Settings
+      </h2>
 
-      {/* Account */}
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Account</h3>
-        <div className="flex items-center gap-4 mb-5">
-          <div className="bg-green-700 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
-            {(displayName || userEmail).charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <p className="font-bold text-gray-800">{displayName || userEmail}</p>
-            <p className="text-gray-500 text-sm">{userEmail}</p>
-          </div>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Your Name</label>
-            <input
-              placeholder="e.g. John Smith"
-              value={displayName}
-              onChange={e => setDisplayName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" aria-hidden="true" />Phone Number</label>
-            <input
-              type="tel"
-              placeholder="e.g. (555) 555-5555"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-            />
-            <p className="text-xs text-gray-400 mt-1">Required to receive SMS notifications.</p>
-          </div>
-          {accountMessage && <p className="text-green-600 text-sm font-semibold">{accountMessage}</p>}
-          <button
-            onClick={handleSaveAccount}
-            disabled={accountSaving}
-            className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-          >
-            Save
-          </button>
-        </div>
-
-        <div className="border-t border-gray-100 mt-5 pt-5">
-          <h4 className="text-sm font-bold text-gray-700 mb-3">Change Email Address</h4>
-          <p className="text-xs text-gray-400 mb-3">A confirmation link will be sent to your new email before the change takes effect.</p>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              placeholder="New email address"
-              value={newEmail}
-              onChange={e => setNewEmail(e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-            />
+      <div className="flex flex-col sm:flex-row gap-6">
+        {/* Sidebar nav */}
+        <nav className="flex flex-row sm:flex-col gap-1 overflow-x-auto sm:overflow-visible sm:w-44 sm:shrink-0 pb-1 sm:pb-0">
+          {TABS.map(({ id, label, Icon }) => (
             <button
-              onClick={handleChangeEmail}
-              disabled={emailSaving}
-              className="bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition cursor-pointer disabled:opacity-50 text-sm whitespace-nowrap"
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer w-full text-left ${
+                activeTab === id
+                  ? 'bg-green-700 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
-              {emailSaving ? 'Updating...' : 'Update Email'}
+              <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+              {label}
             </button>
-          </div>
-          {emailError && <p className="text-red-500 text-sm mt-2">{emailError}</p>}
-          {emailMessage && <p className="text-green-600 text-sm font-semibold mt-2">{emailMessage}</p>}
-        </div>
-      </div>
+          ))}
+        </nav>
 
-      {/* Invoicing */}
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-          <FileText className="w-5 h-5 text-emerald-600" aria-hidden="true" />
-          Invoicing
-        </h3>
-        <p className="text-gray-500 text-sm mb-4">Set your default payment terms. New invoices will automatically use this due date.</p>
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-semibold text-gray-700">Default due date</label>
-          <select
-            value={invoiceDueDays}
-            onChange={(e) => setInvoiceDueDays(Number(e.target.value))}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-gray-800 text-sm cursor-pointer"
-          >
-            <option value={7}>Net 7 — due in 7 days</option>
-            <option value={15}>Net 15 — due in 15 days</option>
-            <option value={30}>Net 30 — due in 30 days</option>
-            <option value={60}>Net 60 — due in 60 days</option>
-          </select>
-          <button
-            onClick={handleSaveInvoiceDue}
-            disabled={invoiceDueSaving}
-            className="bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-emerald-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
-          >
-            {invoiceDueSaving ? 'Saving...' : 'Save'}
-          </button>
-          {invoiceDueMessage && <span className="text-emerald-600 text-sm font-semibold">{invoiceDueMessage}</span>}
-        </div>
-      </div>
+        {/* Tab content */}
+        <div className="flex-1 min-w-0 space-y-6">
 
-      {/* Subscription */}
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-3">Subscription</h3>
-        <div className="flex items-center gap-3 mb-4">
-          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${sub.color}`}>
-            {sub.text}
-          </span>
-        </div>
-        {profile?.subscription_status === 'trialing' && (
-          <p className="text-gray-500 text-sm mb-4">
-            You're on a free trial. Your card will be charged after the trial ends. You can cancel anytime through the billing portal.
-          </p>
-        )}
-        {hasStripe ? (
-          <div>
-            <button
-              onClick={handleManageBilling}
-              disabled={portalLoading}
-              className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-            >
-              {portalLoading ? 'Opening...' : 'Manage Billing'}
-            </button>
-            <p className="text-gray-400 text-xs mt-2">Update payment method, view invoices, or cancel — all in one place.</p>
-            {portalError && <p className="text-red-500 text-sm mt-2">{portalError}</p>}
-          </div>
-        ) : (
-          <Link href="/pricing">
-            <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
-              View Plans
-            </button>
-          </Link>
-        )}
-      </div>
+          {/* ── BUSINESS TAB ── */}
+          {activeTab === 'business' && (
+            <>
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-green-700" aria-hidden="true" />Business Profile
+                </h3>
+                <p className="text-gray-500 text-sm mb-4">This information appears on your invoices, booking page, and client messages.</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Business Name</label>
+                    <input
+                      placeholder="e.g. Green Thumb Lawn Care"
+                      value={businessName}
+                      onChange={e => setBusinessName(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5" aria-hidden="true" />Business Phone
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="e.g. (555) 555-5555"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Required to receive SMS notifications.</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />Google Review Link
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://g.page/r/your-business/review"
+                      value={reviewLink}
+                      onChange={e => setReviewLink(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Sent automatically when a job is marked complete.</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" />Service Area <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                    </label>
+                    <p className="text-xs text-gray-500 mb-3">Clients outside your area will be directed to request a custom quote instead.</p>
+                    <div className="flex gap-2 flex-wrap">
+                      <input
+                        type="text"
+                        placeholder="Base ZIP code"
+                        value={bookingServiceZip}
+                        onChange={e => setBookingServiceZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                        maxLength={5}
+                        className="border border-gray-300 rounded-lg p-2.5 text-sm w-32 text-gray-800"
+                      />
+                      <select
+                        value={bookingServiceRadius}
+                        onChange={e => setBookingServiceRadius(e.target.value ? Number(e.target.value) : '')}
+                        className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 text-sm cursor-pointer"
+                      >
+                        <option value="">No radius limit</option>
+                        <option value={5}>Within 5 miles</option>
+                        <option value={10}>Within 10 miles</option>
+                        <option value={15}>Within 15 miles</option>
+                        <option value={25}>Within 25 miles</option>
+                        <option value={50}>Within 50 miles</option>
+                      </select>
+                    </div>
+                  </div>
+                  {businessMessage && <p className="text-green-600 text-sm font-semibold">{businessMessage}</p>}
+                  <button
+                    onClick={handleSaveBusiness}
+                    disabled={businessSaving}
+                    className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {businessSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
-      {/* Change Password */}
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Change Password</h3>
-        <div className="space-y-3">
-          <input
-            type="password"
-            placeholder="Current password"
-            value={pwCurrent}
-            onChange={e => setPwCurrent(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-          />
-          <input
-            type="password"
-            placeholder="New password (min. 6 characters)"
-            value={pwNew}
-            onChange={e => setPwNew(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-          />
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            value={pwConfirm}
-            onChange={e => setPwConfirm(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-          />
-          {pwError && <p className="text-red-500 text-sm">{pwError}</p>}
-          {pwMessage && <p className="text-green-600 text-sm font-semibold">{pwMessage}</p>}
-          <button
-            onClick={handleChangePassword}
-            disabled={pwSaving}
-            className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-          >
-            {pwSaving ? 'Updating...' : 'Update Password'}
-          </button>
-        </div>
-      </div>
+          {/* ── ACCOUNT TAB ── */}
+          {activeTab === 'account' && (
+            <>
+              {/* Profile */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Profile</h3>
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="bg-green-700 text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold shrink-0">
+                    {(displayName || userEmail).charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-800">{displayName || userEmail}</p>
+                    <p className="text-gray-500 text-sm">{userEmail}</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Your Name</label>
+                    <input
+                      placeholder="e.g. John Smith"
+                      value={displayName}
+                      onChange={e => setDisplayName(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                    />
+                  </div>
+                  {accountMessage && <p className="text-green-600 text-sm font-semibold">{accountMessage}</p>}
+                  <button
+                    onClick={handleSaveAccount}
+                    disabled={accountSaving}
+                    className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {accountSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
 
-      {/* Online Booking */}
-      <ProGate featureName="Online Booking Page" description="Let clients book directly from your custom public link. Set arrival windows, service area, cancellation policy, and more.">
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-5 h-5" aria-hidden="true" />Online Booking Page</h3>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <span className="text-sm text-gray-500">Active</span>
-            <div
-              onClick={() => setBookingEnabled(!bookingEnabled)}
-              className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${bookingEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-            </div>
-          </label>
-        </div>
-        <p className="text-gray-500 text-sm mb-4">Clients can book jobs directly from your unique link. Share it on your website, Instagram, or anywhere.</p>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Business Name</label>
-            <input
-              placeholder="e.g. Green Thumb Lawn Care"
-              value={businessName}
-              onChange={e => setBusinessName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Booking Username</label>
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-              <span className="bg-gray-50 text-gray-400 text-sm px-3 py-3 border-r border-gray-300 whitespace-nowrap">lawndesk.pro/book/</span>
-              <input
-                placeholder="your-business"
-                value={bookingUsername}
-                onChange={e => setBookingUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                className="flex-1 p-3 text-gray-800 text-sm outline-none"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Welcome Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
-            <textarea
-              placeholder="e.g. Thanks for choosing us! Fill out the form and we'll get back to you within 24 hours."
-              value={bookingWelcome}
-              onChange={e => setBookingWelcome(e.target.value)}
-              rows={2}
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-            />
-          </div>
-          {/* ── Booking Photo ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
-              <ImagePlus className="w-3.5 h-3.5" aria-hidden="true" />Cover Photo <span className="text-gray-400 font-normal normal-case">(optional)</span>
-            </label>
-            <div className="flex items-center gap-3">
-              {bookingPhotoUrl && (
-                <img src={bookingPhotoUrl} alt="Booking cover" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
-              )}
-              <label className="cursor-pointer">
-                <span className="inline-block border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition">
-                  {bookingPhotoUploading ? 'Uploading…' : bookingPhotoUrl ? 'Change Photo' : 'Upload Photo'}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleBookingPhotoUpload(f) }}
-                />
-              </label>
-              {bookingPhotoUrl && (
-                <button onClick={() => setBookingPhotoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
-              )}
-            </div>
-            <p className="text-xs text-gray-400 mt-1">Shown at the top of your booking page. JPG or PNG, under 5 MB.</p>
-          </div>
-
-          {/* ── Schedule ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" aria-hidden="true" />Minimum Booking Lead Time
-            </label>
-            <select
-              value={bookingMinLeadHours}
-              onChange={e => setBookingMinLeadHours(Number(e.target.value))}
-              className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 text-sm cursor-pointer"
-            >
-              <option value={4}>4 hours in advance</option>
-              <option value={12}>12 hours in advance</option>
-              <option value={24}>24 hours in advance</option>
-              <option value={48}>48 hours in advance</option>
-              <option value={72}>72 hours in advance</option>
-            </select>
-            <p className="text-xs text-gray-400 mt-1">Clients won't be able to request a date sooner than this.</p>
-          </div>
-
-          {/* ── Arrival Windows ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" aria-hidden="true" />Arrival Windows
-            </label>
-            <p className="text-xs text-gray-500 mb-3">Check which 4-hour windows you're available. Clients choose from these on the booking form.</p>
-            <div className="space-y-2">
-              {['Morning (8am–12pm)', 'Midday (10am–2pm)', 'Afternoon (12pm–4pm)', 'Late (2pm–6pm)'].map(w => (
-                <label key={w} className="flex items-center gap-2.5 cursor-pointer">
+              {/* Change Email */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1">Change Email Address</h3>
+                <p className="text-xs text-gray-400 mb-3">A confirmation link will be sent to your new email before the change takes effect.</p>
+                <div className="flex gap-2">
                   <input
-                    type="checkbox"
-                    checked={bookingArrivalWindows.includes(w)}
-                    onChange={e => setBookingArrivalWindows(e.target.checked
-                      ? [...bookingArrivalWindows, w]
-                      : bookingArrivalWindows.filter(x => x !== w)
-                    )}
-                    className="w-4 h-4 rounded accent-green-700 cursor-pointer"
+                    type="email"
+                    placeholder="New email address"
+                    value={newEmail}
+                    onChange={e => setNewEmail(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
                   />
-                  <span className="text-sm text-gray-700">{w}</span>
-                </label>
-              ))}
-            </div>
-            {bookingArrivalWindows.length === 0 && (
-              <p className="text-xs text-gray-400 mt-2">No windows selected — arrival time won't be asked.</p>
-            )}
-          </div>
-
-          {/* ── Service Frequency ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1.5">
-                  <Repeat className="w-3.5 h-3.5" aria-hidden="true" />Service Frequency
-                </label>
-                <p className="text-xs text-gray-500 mt-1">Let clients choose one-time, weekly, or biweekly service when booking.</p>
-              </div>
-              <div onClick={() => setBookingAllowFrequency(!bookingAllowFrequency)}
-                className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ml-4 ${bookingAllowFrequency ? 'bg-green-500' : 'bg-gray-300'}`}>
-                <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingAllowFrequency ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </div>
-            </div>
-          </div>
-
-          {/* ── Property Details ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Property Details to Ask</label>
-            <p className="text-xs text-gray-500 mb-3">These questions appear on the booking form for clients to answer.</p>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" checked={bookingAskFence} onChange={e => setBookingAskFence(e.target.checked)}
-                  className="w-4 h-4 rounded accent-green-700 cursor-pointer" />
-                <span className="text-sm text-gray-700 flex items-center gap-1.5">
-                  Ask: <span className="font-medium">"Is there a fence on the property?"</span>
-                </span>
-              </label>
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" checked={bookingAskPets} onChange={e => setBookingAskPets(e.target.checked)}
-                  className="w-4 h-4 rounded accent-green-700 cursor-pointer" />
-                <span className="text-sm text-gray-700 flex items-center gap-1.5">
-                  Ask: <span className="font-medium">"Are there pets or animals on the property?"</span>
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* ── Service Area ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" aria-hidden="true" />Service Area <span className="text-gray-400 font-normal normal-case">(optional)</span>
-            </label>
-            <p className="text-xs text-gray-500 mb-3">Clients outside your area will be directed to request a custom quote instead.</p>
-            <div className="flex gap-2 flex-wrap">
-              <input
-                type="text"
-                placeholder="Base ZIP code"
-                value={bookingServiceZip}
-                onChange={e => setBookingServiceZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                maxLength={5}
-                className="border border-gray-300 rounded-lg p-2.5 text-sm w-32 text-gray-800"
-              />
-              <select
-                value={bookingServiceRadius}
-                onChange={e => setBookingServiceRadius(e.target.value ? Number(e.target.value) : '')}
-                className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 text-sm cursor-pointer"
-              >
-                <option value="">No radius limit</option>
-                <option value={5}>Within 5 miles</option>
-                <option value={10}>Within 10 miles</option>
-                <option value={15}>Within 15 miles</option>
-                <option value={25}>Within 25 miles</option>
-                <option value={50}>Within 50 miles</option>
-              </select>
-            </div>
-          </div>
-
-          {/* ── Cancellation Policy ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5">
-              <Ban className="w-3.5 h-3.5" aria-hidden="true" />Cancellation Policy <span className="text-gray-400 font-normal normal-case">(optional)</span>
-            </label>
-            <textarea
-              placeholder="e.g. Cancellations must be made at least 24 hours before your scheduled appointment. Late cancellations may be subject to a fee."
-              value={bookingCancellationPolicy}
-              onChange={e => setBookingCancellationPolicy(e.target.value)}
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-            />
-            <p className="text-xs text-gray-400 mt-1">Shown on the booking page before clients submit their request.</p>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Notify me when a request comes in</label>
-            <div className="flex gap-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <div onClick={() => setBookingNotifyEmail(!bookingNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${bookingNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifyEmail ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  <button
+                    onClick={handleChangeEmail}
+                    disabled={emailSaving}
+                    className="bg-gray-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-900 transition cursor-pointer disabled:opacity-50 text-sm whitespace-nowrap"
+                  >
+                    {emailSaving ? 'Updating...' : 'Update Email'}
+                  </button>
                 </div>
-                <span className="text-sm text-gray-700 flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Email</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <div onClick={() => setBookingNotifySms(!bookingNotifySms)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer ${bookingNotifySms ? 'bg-green-500' : 'bg-gray-300'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifySms ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                </div>
-                <span className="text-sm text-gray-700 flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        {bookingError && <p className="text-red-500 text-sm mt-3">{bookingError}</p>}
-        {bookingMessage && <p className="text-green-600 text-sm font-semibold mt-3">{bookingMessage}</p>}
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={handleSaveBooking}
-            disabled={bookingSaving}
-            className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-          >
-            {bookingSaving ? 'Saving...' : 'Save'}
-          </button>
-          {bookingUsername && (
-            <button
-              onClick={() => { navigator.clipboard.writeText(`https://lawndesk.pro/book/${bookingUsername}`); setBookingCopied(true); setTimeout(() => setBookingCopied(false), 2000) }}
-              className="border-2 border-green-700 text-green-700 font-bold py-3 px-6 rounded-lg hover:bg-green-50 transition cursor-pointer"
-            >
-              {bookingCopied ? 'Copied!' : 'Copy Link'}
-            </button>
-          )}
-        </div>
-      </div>
-      </ProGate>
-
-      {/* AI Receptionist */}
-      <ProGate featureName="AI Receptionist" description="A dedicated phone number that answers calls 24/7, captures leads, and texts them a booking link — automatically.">
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Phone className="w-5 h-5" aria-hidden="true" />AI Receptionist</h3>
-          {twilioNumber && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <span className="text-sm text-gray-500">Active</span>
-              <div
-                onClick={() => setAiEnabled(!aiEnabled)}
-                className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${aiEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
-              >
-                <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${aiEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                {emailError && <p className="text-red-500 text-sm mt-2">{emailError}</p>}
+                {emailMessage && <p className="text-green-600 text-sm font-semibold mt-2">{emailMessage}</p>}
               </div>
-            </label>
-          )}
-        </div>
-        <p className="text-gray-500 text-sm mb-4">When clients call your number, the AI answers, collects their info, and sends you the lead. You never miss a job.</p>
 
-        {twilioNumber ? (
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Your AI Receptionist Number</label>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-black text-gray-800 tracking-wide">
-                  {twilioNumber.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')}
-                </span>
+              {/* Change Password */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Change Password</h3>
+                <div className="space-y-3">
+                  <input
+                    type="password"
+                    placeholder="Current password"
+                    value={pwCurrent}
+                    onChange={e => setPwCurrent(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                  />
+                  <input
+                    type="password"
+                    placeholder="New password (min. 6 characters)"
+                    value={pwNew}
+                    onChange={e => setPwNew(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={pwConfirm}
+                    onChange={e => setPwConfirm(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                  />
+                  {pwError && <p className="text-red-500 text-sm">{pwError}</p>}
+                  {pwMessage && <p className="text-green-600 text-sm font-semibold">{pwMessage}</p>}
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={pwSaving}
+                    className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {pwSaving ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Team */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-green-700" aria-hidden="true" />Team Management
+                </h3>
+                <p className="text-gray-500 text-sm mb-4">Invite workers, manage permissions, and view your active Pros.</p>
+                <Link href="/team">
+                  <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
+                    Manage Team →
+                  </button>
+                </Link>
+              </div>
+
+              {/* Need Help */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Need Help?</h3>
+                <p className="text-gray-500 mb-4">Our support team is here to help you get the most out of LawnDesk.</p>
+                <a href="mailto:support@lawndesk.pro">
+                  <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-2">
+                    <Mail className="w-4 h-4" aria-hidden="true" /> Contact Support
+                  </button>
+                </a>
+              </div>
+
+              {/* Danger Zone */}
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-red-700 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" aria-hidden="true" />Danger Zone
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(twilioNumber); setAiCopied(true); setTimeout(() => setAiCopied(false), 2000) }}
-                  className="text-xs px-3 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+                  onClick={() => setDeleteExpanded(!deleteExpanded)}
+                  className="text-red-700 text-sm font-semibold mb-3 hover:underline"
                 >
-                  {aiCopied ? 'Copied' : 'Copy'}
+                  {deleteExpanded ? '▼ Hide' : '▶ Show'} what gets deleted
+                </button>
+                {deleteExpanded && (
+                  <div className="bg-white rounded p-3 mb-4 text-sm text-gray-600 border border-red-100">
+                    <p className="font-semibold text-gray-700 mb-2">Your account deletion will remove:</p>
+                    <ul className="list-disc list-inside space-y-1 text-gray-600">
+                      <li>Your profile and personal information</li>
+                      <li>All clients and contact information</li>
+                      <li>All jobs and job history</li>
+                      <li>All invoices and payment records</li>
+                      <li>All quotes and booking requests</li>
+                      <li>Your online booking page</li>
+                    </ul>
+                    <p className="font-semibold text-gray-700 mt-3 mb-2">What happens to linked workers:</p>
+                    <ul className="list-disc list-inside text-gray-600">
+                      <li>Workers will be unlinked from your account</li>
+                      <li>They will become independent accounts</li>
+                      <li>They can create their own business account if needed</li>
+                    </ul>
+                    {profile?.subscription_status === 'active' && (
+                      <p className="font-semibold text-gray-700 mt-3 mb-1">Your active Stripe subscription will be cancelled.</p>
+                    )}
+                  </div>
+                )}
+                <button
+                  onClick={() => { setShowDeleteModal(true); setDeleteCountdown(30); setDeletePassword(''); setDeleteEmail(''); setDeleteError('') }}
+                  className="bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 mr-1 inline" aria-hidden="true" />Delete Account Permanently
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1">Give this number to clients — put it on your website, truck, or business card.</p>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Notifications</label>
-              <div className="space-y-2">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <div onClick={() => setAiNotifyOwner(!aiNotifyOwner)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${aiNotifyOwner ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiNotifyOwner ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                  </div>
+            </>
+          )}
+
+          {/* ── BILLING TAB ── */}
+          {activeTab === 'billing' && (
+            <>
+              {/* Subscription */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-3">Subscription</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className={`text-sm font-semibold px-3 py-1 rounded-full ${sub.color}`}>
+                    {sub.text}
+                  </span>
+                </div>
+                {profile?.subscription_status === 'trialing' && (
+                  <p className="text-gray-500 text-sm mb-4">
+                    You're on a free trial. Your card will be charged after the trial ends. You can cancel anytime through the billing portal.
+                  </p>
+                )}
+                {hasStripe ? (
                   <div>
-                    <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />Text me when AI takes a call</p>
-                    <p className="text-xs text-gray-400">You receive a lead summary SMS after every AI call</p>
+                    <button
+                      onClick={handleManageBilling}
+                      disabled={portalLoading}
+                      className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                    >
+                      {portalLoading ? 'Opening...' : 'Manage Billing'}
+                    </button>
+                    <p className="text-gray-400 text-xs mt-2">Update payment method, view invoices, or cancel — all in one place.</p>
+                    {portalError && <p className="text-red-500 text-sm mt-2">{portalError}</p>}
                   </div>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <div onClick={() => setAiTextCaller(!aiTextCaller)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${aiTextCaller ? 'bg-green-500' : 'bg-gray-300'}`}>
-                    <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiTextCaller ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />Text caller a confirmation link</p>
-                    <p className="text-xs text-gray-400">Caller gets a pre-filled booking link to review and confirm their request</p>
-                  </div>
-                </label>
+                ) : (
+                  <Link href="/pricing">
+                    <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
+                      View Plans
+                    </button>
+                  </Link>
+                )}
               </div>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Greeting Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
-              <textarea
-                placeholder={`Thank you for calling${businessName ? ` ${businessName}` : ''}. How can I help you today?`}
-                value={aiGreeting}
-                onChange={e => setAiGreeting(e.target.value)}
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
-              />
-            </div>
-            {aiMessage && <p className="text-green-600 text-sm font-semibold">{aiMessage}</p>}
-            <button
-              onClick={handleSaveAI}
-              disabled={aiSaving}
-              className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-            >
-              {aiSaving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-              <p className="text-sm font-bold text-gray-800 mb-1">Get your dedicated business number</p>
-              <p className="text-xs text-gray-500 mb-4">Clients call this number — your AI answers, collects their info, and sends you the lead instantly.</p>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  placeholder="Area code (optional, e.g. 404)"
-                  value={aiAreaCode}
-                  onChange={e => setAiAreaCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                  maxLength={3}
-                  className="border border-gray-300 rounded-lg p-2.5 text-sm w-44 text-gray-800"
-                />
+
+              {/* Invoicing */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-emerald-600" aria-hidden="true" />Invoicing Preferences
+                </h3>
+                <p className="text-gray-500 text-sm mb-4">Set your default payment terms. New invoices will automatically use this due date.</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <label className="text-sm font-semibold text-gray-700">Default due date</label>
+                  <select
+                    value={invoiceDueDays}
+                    onChange={(e) => setInvoiceDueDays(Number(e.target.value))}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-gray-800 text-sm cursor-pointer"
+                  >
+                    <option value={7}>Net 7 — due in 7 days</option>
+                    <option value={15}>Net 15 — due in 15 days</option>
+                    <option value={30}>Net 30 — due in 30 days</option>
+                    <option value={60}>Net 60 — due in 60 days</option>
+                  </select>
+                  <button
+                    onClick={handleSaveInvoiceDue}
+                    disabled={invoiceDueSaving}
+                    className="bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-emerald-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
+                  >
+                    {invoiceDueSaving ? 'Saving...' : 'Save'}
+                  </button>
+                  {invoiceDueMessage && <span className="text-emerald-600 text-sm font-semibold">{invoiceDueMessage}</span>}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* ── AUTOMATION TAB ── */}
+          {activeTab === 'automation' && (
+            <>
+              {/* Online Booking */}
+              <ProGate featureName="Online Booking Page" description="Let clients book directly from your custom public link. Set arrival windows, cancellation policy, and more.">
+                <div className="bg-white rounded-xl p-6 shadow">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <ClipboardList className="w-5 h-5" aria-hidden="true" />Online Booking Page
+                    </h3>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-sm text-gray-500">Active</span>
+                      <div
+                        onClick={() => setBookingEnabled(!bookingEnabled)}
+                        className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${bookingEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
+                      >
+                        <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      </div>
+                    </label>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-4">Clients can book jobs directly from your unique link. Share it on your website, Instagram, or anywhere.</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Booking Username</label>
+                      <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                        <span className="bg-gray-50 text-gray-400 text-sm px-3 py-3 border-r border-gray-300 whitespace-nowrap">lawndesk.pro/book/</span>
+                        <input
+                          placeholder="your-business"
+                          value={bookingUsername}
+                          onChange={e => setBookingUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                          className="flex-1 p-3 text-gray-800 text-sm outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Welcome Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+                      <textarea
+                        placeholder="e.g. Thanks for choosing us! Fill out the form and we'll get back to you within 24 hours."
+                        value={bookingWelcome}
+                        onChange={e => setBookingWelcome(e.target.value)}
+                        rows={2}
+                        className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                      />
+                    </div>
+
+                    {/* Cover Photo */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+                        <ImagePlus className="w-3.5 h-3.5" aria-hidden="true" />Cover Photo <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                      </label>
+                      <div className="flex items-center gap-3">
+                        {bookingPhotoUrl && (
+                          <img src={bookingPhotoUrl} alt="Booking cover" className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+                        )}
+                        <label className="cursor-pointer">
+                          <span className="inline-block border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition">
+                            {bookingPhotoUploading ? 'Uploading…' : bookingPhotoUrl ? 'Change Photo' : 'Upload Photo'}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => { const f = e.target.files?.[0]; if (f) handleBookingPhotoUpload(f) }}
+                          />
+                        </label>
+                        {bookingPhotoUrl && (
+                          <button onClick={() => setBookingPhotoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">Shown at the top of your booking page. JPG or PNG, under 5 MB.</p>
+                    </div>
+
+                    {/* Lead Time */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" aria-hidden="true" />Minimum Booking Lead Time
+                      </label>
+                      <select
+                        value={bookingMinLeadHours}
+                        onChange={e => setBookingMinLeadHours(Number(e.target.value))}
+                        className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 text-sm cursor-pointer"
+                      >
+                        <option value={4}>4 hours in advance</option>
+                        <option value={12}>12 hours in advance</option>
+                        <option value={24}>24 hours in advance</option>
+                        <option value={48}>48 hours in advance</option>
+                        <option value={72}>72 hours in advance</option>
+                      </select>
+                      <p className="text-xs text-gray-400 mt-1">Clients won't be able to request a date sooner than this.</p>
+                    </div>
+
+                    {/* Arrival Windows */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" aria-hidden="true" />Arrival Windows
+                      </label>
+                      <p className="text-xs text-gray-500 mb-3">Check which 4-hour windows you're available. Clients choose from these on the booking form.</p>
+                      <div className="space-y-2">
+                        {['Morning (8am–12pm)', 'Midday (10am–2pm)', 'Afternoon (12pm–4pm)', 'Late (2pm–6pm)'].map(w => (
+                          <label key={w} className="flex items-center gap-2.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={bookingArrivalWindows.includes(w)}
+                              onChange={e => setBookingArrivalWindows(e.target.checked
+                                ? [...bookingArrivalWindows, w]
+                                : bookingArrivalWindows.filter(x => x !== w)
+                              )}
+                              className="w-4 h-4 rounded accent-green-700 cursor-pointer"
+                            />
+                            <span className="text-sm text-gray-700">{w}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {bookingArrivalWindows.length === 0 && (
+                        <p className="text-xs text-gray-400 mt-2">No windows selected — arrival time won't be asked.</p>
+                      )}
+                    </div>
+
+                    {/* Frequency */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1.5">
+                            <Repeat className="w-3.5 h-3.5" aria-hidden="true" />Service Frequency
+                          </label>
+                          <p className="text-xs text-gray-500 mt-1">Let clients choose one-time, weekly, or biweekly service when booking.</p>
+                        </div>
+                        <div onClick={() => setBookingAllowFrequency(!bookingAllowFrequency)}
+                          className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ml-4 ${bookingAllowFrequency ? 'bg-green-500' : 'bg-gray-300'}`}>
+                          <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingAllowFrequency ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Property Details */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Property Details to Ask</label>
+                      <p className="text-xs text-gray-500 mb-3">These questions appear on the booking form for clients to answer.</p>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input type="checkbox" checked={bookingAskFence} onChange={e => setBookingAskFence(e.target.checked)}
+                            className="w-4 h-4 rounded accent-green-700 cursor-pointer" />
+                          <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                            Ask: <span className="font-medium">"Is there a fence on the property?"</span>
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input type="checkbox" checked={bookingAskPets} onChange={e => setBookingAskPets(e.target.checked)}
+                            className="w-4 h-4 rounded accent-green-700 cursor-pointer" />
+                          <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                            Ask: <span className="font-medium">"Are there pets or animals on the property?"</span>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Cancellation Policy */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5">
+                        <Ban className="w-3.5 h-3.5" aria-hidden="true" />Cancellation Policy <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                      </label>
+                      <textarea
+                        placeholder="e.g. Cancellations must be made at least 24 hours before your scheduled appointment. Late cancellations may be subject to a fee."
+                        value={bookingCancellationPolicy}
+                        onChange={e => setBookingCancellationPolicy(e.target.value)}
+                        rows={3}
+                        className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Shown on the booking page before clients submit their request.</p>
+                    </div>
+                  </div>
+                  {bookingError && <p className="text-red-500 text-sm mt-3">{bookingError}</p>}
+                  {bookingMessage && <p className="text-green-600 text-sm font-semibold mt-3">{bookingMessage}</p>}
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={handleSaveBooking}
+                      disabled={bookingSaving}
+                      className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                    >
+                      {bookingSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    {bookingUsername && (
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(`https://lawndesk.pro/book/${bookingUsername}`); setBookingCopied(true); setTimeout(() => setBookingCopied(false), 2000) }}
+                        className="border-2 border-green-700 text-green-700 font-bold py-3 px-6 rounded-lg hover:bg-green-50 transition cursor-pointer"
+                      >
+                        {bookingCopied ? 'Copied!' : 'Copy Link'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </ProGate>
+
+              {/* AI Receptionist */}
+              <ProGate featureName="AI Receptionist" description="A dedicated phone number that answers calls 24/7, captures leads, and texts them a booking link — automatically.">
+                <div className="bg-white rounded-xl p-6 shadow">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <Phone className="w-5 h-5" aria-hidden="true" />AI Receptionist
+                    </h3>
+                    {twilioNumber && (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <span className="text-sm text-gray-500">Active</span>
+                        <div
+                          onClick={() => setAiEnabled(!aiEnabled)}
+                          className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${aiEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${aiEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-gray-500 text-sm mb-4">When clients call your number, the AI answers, collects their info, and sends you the lead. You never miss a job.</p>
+                  {twilioNumber ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Your AI Receptionist Number</label>
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl font-black text-gray-800 tracking-wide">
+                            {twilioNumber.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')}
+                          </span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(twilioNumber); setAiCopied(true); setTimeout(() => setAiCopied(false), 2000) }}
+                            className="text-xs px-3 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition"
+                          >
+                            {aiCopied ? 'Copied' : 'Copy'}
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">Give this number to clients — put it on your website, truck, or business card.</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Notifications</label>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <div onClick={() => setAiNotifyOwner(!aiNotifyOwner)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${aiNotifyOwner ? 'bg-green-500' : 'bg-gray-300'}`}>
+                              <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiNotifyOwner ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />Text me when AI takes a call</p>
+                              <p className="text-xs text-gray-400">You receive a lead summary SMS after every AI call</p>
+                            </div>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <div onClick={() => setAiTextCaller(!aiTextCaller)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${aiTextCaller ? 'bg-green-500' : 'bg-gray-300'}`}>
+                              <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${aiTextCaller ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />Text caller a confirmation link</p>
+                              <p className="text-xs text-gray-400">Caller gets a pre-filled booking link to review and confirm their request</p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Greeting Message <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+                        <textarea
+                          placeholder={`Thank you for calling${businessName ? ` ${businessName}` : ''}. How can I help you today?`}
+                          value={aiGreeting}
+                          onChange={e => setAiGreeting(e.target.value)}
+                          rows={2}
+                          className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
+                        />
+                      </div>
+                      {aiMessage && <p className="text-green-600 text-sm font-semibold">{aiMessage}</p>}
+                      <button
+                        onClick={handleSaveAI}
+                        disabled={aiSaving}
+                        className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                      >
+                        {aiSaving ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                        <p className="text-sm font-bold text-gray-800 mb-1">Get your dedicated business number</p>
+                        <p className="text-xs text-gray-500 mb-4">Clients call this number — your AI answers, collects their info, and sends you the lead instantly.</p>
+                        <div className="flex gap-2 mb-3">
+                          <input
+                            type="text"
+                            placeholder="Area code (optional, e.g. 404)"
+                            value={aiAreaCode}
+                            onChange={e => setAiAreaCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                            maxLength={3}
+                            className="border border-gray-300 rounded-lg p-2.5 text-sm w-44 text-gray-800"
+                          />
+                          <button
+                            onClick={handleProvisionNumber}
+                            disabled={aiProvisioning}
+                            className="flex-1 bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-green-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
+                          >
+                            {aiProvisioning ? 'Getting your number…' : 'Get My Number'}
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-400">Enter an area code to get a local number for your city, or leave blank for any available number.</p>
+                      </div>
+                      {aiMessage && <p className="text-sm font-semibold text-green-700">{aiMessage}</p>}
+                    </div>
+                  )}
+                </div>
+              </ProGate>
+            </>
+          )}
+
+          {/* ── NOTIFICATIONS TAB ── */}
+          {activeTab === 'notifications' && (
+            <>
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-green-700" aria-hidden="true" />Your Notifications
+                </h3>
+                <p className="text-gray-500 text-sm mb-5">Choose how you'd like to be alerted when new booking requests come in.</p>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div onClick={() => setBookingNotifyEmail(!bookingNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${bookingNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifyEmail ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Email me on new booking request</p>
+                      <p className="text-xs text-gray-400">Sent to {userEmail || 'your account email'}</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div onClick={() => setBookingNotifySms(!bookingNotifySms)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${bookingNotifySms ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifySms ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS me on new booking request</p>
+                      <p className="text-xs text-gray-400">
+                        {phone ? `Sent to ${phone}` : 'Set your business phone in the Business tab to enable SMS.'}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+                {notifMessage && <p className="text-green-600 text-sm font-semibold mt-4">{notifMessage}</p>}
                 <button
-                  onClick={handleProvisionNumber}
-                  disabled={aiProvisioning}
-                  className="flex-1 bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-green-800 transition-colors cursor-pointer disabled:opacity-50 text-sm"
+                  onClick={handleSaveNotifications}
+                  disabled={notifSaving}
+                  className="mt-5 bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
-                  {aiProvisioning ? 'Getting your number…' : 'Get My Number'}
+                  {notifSaving ? 'Saving...' : 'Save'}
                 </button>
               </div>
-              <p className="text-xs text-gray-400">Enter an area code to get a local number for your city, or leave blank for any available number.</p>
-            </div>
-            {aiMessage && <p className="text-sm font-semibold text-green-700">{aiMessage}</p>}
-          </div>
-        )}
-      </div>
-      </ProGate>
+            </>
+          )}
 
-      {/* Google Review Link */}
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2"><Star className="w-5 h-5 text-amber-400" aria-hidden="true" />Google Review Link</h3>
-        <p className="text-gray-500 text-sm mb-4">When a job is marked complete, your client automatically receives a text asking for a Google review. Paste your Google Business review link below.</p>
-        <input
-          type="url"
-          placeholder="https://g.page/r/your-business/review"
-          value={reviewLink}
-          onChange={e => setReviewLink(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm mb-3"
-        />
-        {reviewMessage && <p className="text-green-600 text-sm font-semibold mb-2">{reviewMessage}</p>}
-        <button
-          onClick={handleSaveReviewLink}
-          disabled={reviewSaving}
-          className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-        >
-          {reviewSaving ? 'Saving...' : 'Save'}
-        </button>
-      </div>
-
-      {/* Need Help */}
-      <div className="bg-white rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Need Help?</h3>
-        <p className="text-gray-500 mb-4">Our support team is here to help you get the most out of LawnDesk.</p>
-        <a href="mailto:support@lawndesk.pro">
-          <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer flex items-center gap-2">
-            <Mail className="w-4 h-4" aria-hidden="true" /> Contact Support
-          </button>
-        </a>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 shadow mb-6">
-        <h3 className="text-lg font-bold text-red-700 mb-2 flex items-center gap-2"><AlertTriangle className="w-5 h-5" aria-hidden="true" />Danger Zone</h3>
-        <p className="text-gray-600 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-
-        <button
-          onClick={() => setDeleteExpanded(!deleteExpanded)}
-          className="text-red-700 text-sm font-semibold mb-3 hover:underline"
-        >
-          {deleteExpanded ? '▼ Hide' : '▶ Show'} what gets deleted
-        </button>
-
-        {deleteExpanded && (
-          <div className="bg-white rounded p-3 mb-4 text-sm text-gray-600 border border-red-100">
-            <p className="font-semibold text-gray-700 mb-2">Your account deletion will remove:</p>
-            <ul className="list-disc list-inside space-y-1 text-gray-600">
-              <li>Your profile and personal information</li>
-              <li>All clients and contact information</li>
-              <li>All jobs and job history</li>
-              <li>All invoices and payment records</li>
-              <li>All quotes and booking requests</li>
-              <li>Your online booking page</li>
-            </ul>
-            <p className="font-semibold text-gray-700 mt-3 mb-2">What happens to linked workers:</p>
-            <ul className="list-disc list-inside text-gray-600">
-              <li>Workers will be unlinked from your account</li>
-              <li>They will become independent accounts</li>
-              <li>They can create their own business account if needed</li>
-            </ul>
-            {profile?.subscription_status === 'active' && (
-              <p className="font-semibold text-gray-700 mt-3 mb-1">Your active Stripe subscription will be cancelled.</p>
-            )}
-          </div>
-        )}
-
-        <button
-          onClick={() => {
-            setShowDeleteModal(true)
-            setDeleteCountdown(30)
-            setDeletePassword('')
-            setDeleteEmail('')
-            setDeleteError('')
-          }}
-          className="bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200 cursor-pointer"
-        >
-          <Trash2 className="w-4 h-4 mr-1" aria-hidden="true" />Delete Account Permanently
-        </button>
+        </div>
       </div>
 
       {/* Delete Account Confirmation Modal */}
@@ -995,7 +1093,6 @@ export default function SettingsPage() {
           <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl">
             <h4 className="text-xl font-bold text-red-700 mb-2">Delete Account?</h4>
             <p className="text-gray-600 text-sm mb-4">This action cannot be undone. All your data will be permanently deleted.</p>
-
             <div className="space-y-3 mb-4">
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Confirm your email</label>
@@ -1007,7 +1104,6 @@ export default function SettingsPage() {
                   className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
                 />
               </div>
-
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Enter your password</label>
                 <input
@@ -1019,13 +1115,10 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
-
             {deleteError && <p className="text-red-600 text-sm font-semibold mb-3">{deleteError}</p>}
-
             <p className="text-red-600 text-sm font-semibold mb-4">
               Account deletion in {deleteCountdown}s
             </p>
-
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
