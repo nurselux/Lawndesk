@@ -33,11 +33,17 @@ export async function POST(req: Request) {
   await supabase.from('Quotes').update({ status: action }).eq('id', quoteId)
 
   // Fetch owner notification preferences and contact info
-  const { data: owner } = await supabase
+  const { data: ownerProfile } = await supabase
     .from('profiles')
-    .select('email, phone, name, business_name, quote_notify_email, quote_notify_sms')
+    .select('phone, name, business_name, quote_notify_email, quote_notify_sms')
     .eq('id', quote.user_id)
     .single()
+
+  // Get owner email from auth (profiles table has no email column)
+  const { data: authData } = await supabase.auth.admin.getUserById(quote.user_id)
+  const ownerEmail = authData?.user?.email ?? null
+
+  const owner = ownerProfile ? { ...ownerProfile, email: ownerEmail } : null
 
   if (owner) {
     const actionLabel = action === 'approved' ? 'approved' : 'declined'

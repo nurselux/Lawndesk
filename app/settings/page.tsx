@@ -168,8 +168,11 @@ export default function SettingsPage() {
   }, [showDeleteModal, deleteCountdown])
 
   const handleSaveBusiness = async () => {
+    if (!user?.id) return
     setBusinessSaving(true)
-    await (supabase.from('profiles') as any)
+    setBusinessMessage('')
+    const { error } = await (supabase as any)
+      .from('profiles')
       .update({
         business_name: businessName || null,
         phone: phone || null,
@@ -177,9 +180,13 @@ export default function SettingsPage() {
         booking_service_zip: bookingServiceZip.trim() || null,
         booking_service_radius: bookingServiceRadius || null,
       })
-      .eq('id', user?.id)
-    setBusinessMessage('Saved!')
-    setTimeout(() => setBusinessMessage(''), 3000)
+      .eq('id', user.id)
+    if (error) {
+      setBusinessMessage(`Error: ${error.message}`)
+    } else {
+      setBusinessMessage('Saved!')
+      setTimeout(() => setBusinessMessage(''), 3000)
+    }
     setBusinessSaving(false)
   }
 
@@ -205,12 +212,19 @@ export default function SettingsPage() {
   }
 
   const handleSaveAccount = async () => {
+    if (!user?.id) return
     setAccountSaving(true)
-    await (supabase.from('profiles') as any)
+    setAccountMessage('')
+    const { error } = await (supabase as any)
+      .from('profiles')
       .update({ name: displayName || null })
-      .eq('id', user?.id)
-    setAccountMessage('Saved!')
-    setTimeout(() => setAccountMessage(''), 3000)
+      .eq('id', user.id)
+    if (error) {
+      setAccountMessage(`Error: ${error.message}`)
+    } else {
+      setAccountMessage('Saved!')
+      setTimeout(() => setAccountMessage(''), 3000)
+    }
     setAccountSaving(false)
   }
 
@@ -304,12 +318,19 @@ export default function SettingsPage() {
   }
 
   const handleSaveNotifications = async () => {
+    if (!user?.id) return
     setNotifSaving(true)
-    await (supabase.from('profiles') as any)
+    setNotifMessage('')
+    const { error } = await (supabase as any)
+      .from('profiles')
       .update({ booking_notify_sms: bookingNotifySms, booking_notify_email: bookingNotifyEmail, quote_notify_email: quoteNotifyEmail, quote_notify_sms: quoteNotifySms })
-      .eq('id', user?.id)
-    setNotifMessage('Saved!')
-    setTimeout(() => setNotifMessage(''), 3000)
+      .eq('id', user.id)
+    if (error) {
+      setNotifMessage(`Error: ${error.message}`)
+    } else {
+      setNotifMessage('Saved!')
+      setTimeout(() => setNotifMessage(''), 3000)
+    }
     setNotifSaving(false)
   }
 
@@ -498,7 +519,7 @@ export default function SettingsPage() {
                       </select>
                     </div>
                   </div>
-                  {businessMessage && <p className="text-green-600 text-sm font-semibold">{businessMessage}</p>}
+                  {businessMessage && <p className={`text-sm font-semibold ${businessMessage.startsWith('Error') ? 'text-red-600' : 'text-green-600'}`}>{businessMessage}</p>}
                   <button
                     onClick={handleSaveBusiness}
                     disabled={businessSaving}
@@ -536,7 +557,7 @@ export default function SettingsPage() {
                       className="w-full border border-gray-300 rounded-lg p-3 text-gray-800 text-sm"
                     />
                   </div>
-                  {accountMessage && <p className="text-green-600 text-sm font-semibold">{accountMessage}</p>}
+                  {accountMessage && <p className={`text-sm font-semibold ${accountMessage.startsWith('Error') ? 'text-red-600' : 'text-green-600'}`}>{accountMessage}</p>}
                   <button
                     onClick={handleSaveAccount}
                     disabled={accountSaving}
@@ -1099,7 +1120,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                {notifMessage && <p className="text-green-600 text-sm font-semibold mb-3">{notifMessage}</p>}
+                {notifMessage && <p className={`text-sm font-semibold mb-3 ${notifMessage.startsWith('Error') ? 'text-red-600' : 'text-green-600'}`}>{notifMessage}</p>}
                 <button
                   onClick={handleSaveNotifications}
                   disabled={notifSaving}
