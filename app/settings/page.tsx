@@ -104,6 +104,8 @@ export default function SettingsPage() {
   const [invoiceDueMessage, setInvoiceDueMessage] = useState('')
   const [notifSaving, setNotifSaving] = useState(false)
   const [notifMessage, setNotifMessage] = useState('')
+  const [quoteNotifyEmail, setQuoteNotifyEmail] = useState(true)
+  const [quoteNotifySms, setQuoteNotifySms] = useState(false)
   // Advanced booking settings
   const [bookingMinLeadHours, setBookingMinLeadHours] = useState(24)
   const [bookingAskFence, setBookingAskFence] = useState(false)
@@ -121,7 +123,7 @@ export default function SettingsPage() {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days, booking_min_lead_hours, booking_ask_fence, booking_ask_pets, booking_allow_frequency, booking_arrival_windows, booking_service_zip, booking_service_radius, booking_cancellation_policy, booking_photo_url')
+        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days, booking_min_lead_hours, booking_ask_fence, booking_ask_pets, booking_allow_frequency, booking_arrival_windows, booking_service_zip, booking_service_radius, booking_cancellation_policy, booking_photo_url, quote_notify_email, quote_notify_sms')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -151,6 +153,8 @@ export default function SettingsPage() {
             setBookingServiceRadius((data as any).booking_service_radius ?? '')
             setBookingCancellationPolicy((data as any).booking_cancellation_policy ?? '')
             setBookingPhotoUrl((data as any).booking_photo_url ?? '')
+            setQuoteNotifyEmail((data as any).quote_notify_email ?? true)
+            setQuoteNotifySms((data as any).quote_notify_sms ?? false)
           }
         })
     }
@@ -302,7 +306,7 @@ export default function SettingsPage() {
   const handleSaveNotifications = async () => {
     setNotifSaving(true)
     await (supabase.from('profiles') as any)
-      .update({ booking_notify_sms: bookingNotifySms, booking_notify_email: bookingNotifyEmail })
+      .update({ booking_notify_sms: bookingNotifySms, booking_notify_email: bookingNotifyEmail, quote_notify_email: quoteNotifyEmail, quote_notify_sms: quoteNotifySms })
       .eq('id', user?.id)
     setNotifMessage('Saved!')
     setTimeout(() => setNotifMessage(''), 3000)
@@ -1034,18 +1038,19 @@ export default function SettingsPage() {
           {/* ── NOTIFICATIONS TAB ── */}
           {activeTab === 'notifications' && (
             <>
+              {/* Booking Notifications */}
               <div className="bg-white rounded-xl p-6 shadow">
                 <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-green-700" aria-hidden="true" />Your Notifications
+                  <Bell className="w-5 h-5 text-green-700" aria-hidden="true" />Booking Requests
                 </h3>
-                <p className="text-gray-500 text-sm mb-5">Choose how you'd like to be alerted when new booking requests come in.</p>
+                <p className="text-gray-500 text-sm mb-5">Alert me when a client submits a new booking request.</p>
                 <div className="space-y-4">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <div onClick={() => setBookingNotifyEmail(!bookingNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${bookingNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>
                       <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifyEmail ? 'translate-x-5' : 'translate-x-0.5'}`} />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Email me on new booking request</p>
+                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Email</p>
                       <p className="text-xs text-gray-400">Sent to {userEmail || 'your account email'}</p>
                     </div>
                   </label>
@@ -1054,18 +1059,51 @@ export default function SettingsPage() {
                       <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifySms ? 'translate-x-5' : 'translate-x-0.5'}`} />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS me on new booking request</p>
+                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS</p>
                       <p className="text-xs text-gray-400">
                         {phone ? `Sent to ${phone}` : 'Set your business phone in the Business tab to enable SMS.'}
                       </p>
                     </div>
                   </label>
                 </div>
-                {notifMessage && <p className="text-green-600 text-sm font-semibold mt-4">{notifMessage}</p>}
+              </div>
+
+              {/* Quote Notifications */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-green-700" aria-hidden="true" />Quote Approvals & Declines
+                </h3>
+                <p className="text-gray-500 text-sm mb-5">Alert me when a client approves or declines a quote.</p>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div onClick={() => setQuoteNotifyEmail(!quoteNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${quoteNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${quoteNotifyEmail ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Email</p>
+                      <p className="text-xs text-gray-400">Sent to {userEmail || 'your account email'}</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <div onClick={() => setQuoteNotifySms(!quoteNotifySms)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${quoteNotifySms ? 'bg-green-500' : 'bg-gray-300'}`}>
+                      <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${quoteNotifySms ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS</p>
+                      <p className="text-xs text-gray-400">
+                        {phone ? `Sent to ${phone}` : 'Set your business phone in the Business tab to enable SMS.'}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                {notifMessage && <p className="text-green-600 text-sm font-semibold mb-3">{notifMessage}</p>}
                 <button
                   onClick={handleSaveNotifications}
                   disabled={notifSaving}
-                  className="mt-5 bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {notifSaving ? 'Saving...' : 'Save'}
                 </button>
