@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { Users, Search, Phone, Mail, MapPin, Pencil, Trash2 } from 'lucide-react'
+import { Users, User, Search, Phone, Mail, MapPin, Pencil, Trash2, StickyNote } from 'lucide-react'
 import AddressAutocomplete from '../../components/AddressAutocomplete'
 
 interface Client {
@@ -210,37 +210,52 @@ export default function ClientsPage() {
         <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900 mb-4">New Client</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input
-              placeholder="Full Name *"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-            />
-            <input
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-            />
-            <input
-              placeholder="Phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-            />
-            <AddressAutocomplete
-              value={address}
-              onChange={setAddress}
-              placeholder="Address"
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
-            />
-            <textarea
-              placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="border border-amber-200 rounded-xl p-3 text-slate-800 sm:col-span-2 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
-              rows={3}
-            />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Full Name *"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              />
+            </div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              />
+            </div>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              />
+            </div>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <AddressAutocomplete
+                value={address}
+                onChange={setAddress}
+                placeholder="Address"
+                className="border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
+              />
+            </div>
+            <div className="relative sm:col-span-2">
+              <StickyNote className="absolute left-3 top-3.5 w-4 h-4 text-amber-400 pointer-events-none" aria-hidden="true" />
+              <textarea
+                placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full border border-amber-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
+                rows={3}
+              />
+            </div>
           </div>
           <div className="flex gap-3 mt-5">
             <button
@@ -265,37 +280,52 @@ export default function ClientsPage() {
         <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 rounded-2xl p-6 mb-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900 mb-4">Edit Client</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input
-              placeholder="Full Name *"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-            />
-            <input
-              placeholder="Email"
-              value={editEmail}
-              onChange={(e) => setEditEmail(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-            />
-            <input
-              placeholder="Phone"
-              value={editPhone}
-              onChange={(e) => setEditPhone(e.target.value)}
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
-            />
-            <AddressAutocomplete
-              value={editAddress}
-              onChange={setEditAddress}
-              placeholder="Address"
-              className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
-            />
-            <textarea
-              placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
-              value={editNotes}
-              onChange={(e) => setEditNotes(e.target.value)}
-              className="border border-amber-200 rounded-xl p-3 text-slate-800 sm:col-span-2 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
-              rows={3}
-            />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Full Name *"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              />
+            </div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              />
+            </div>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Phone"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+              />
+            </div>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" aria-hidden="true" />
+              <AddressAutocomplete
+                value={editAddress}
+                onChange={setEditAddress}
+                placeholder="Address"
+                className="border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
+              />
+            </div>
+            <div className="relative sm:col-span-2">
+              <StickyNote className="absolute left-3 top-3.5 w-4 h-4 text-amber-400 pointer-events-none" aria-hidden="true" />
+              <textarea
+                placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                className="w-full border border-amber-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
+                rows={3}
+              />
+            </div>
           </div>
           <div className="flex gap-3 mt-5">
             <button
