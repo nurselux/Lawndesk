@@ -451,6 +451,7 @@ export default function SettingsPage() {
                     />
                     <p className="text-xs text-gray-400 mt-1">Required to receive SMS notifications.</p>
                   </div>
+                  <ProGate featureName="Google Review Automation" description="Automatically send clients a review request when a job is marked complete.">
                   <div>
                     <label className="text-xs font-bold text-gray-500 uppercase mb-1 block flex items-center gap-1.5">
                       <Star className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />Google Review Link
@@ -464,6 +465,7 @@ export default function SettingsPage() {
                     />
                     <p className="text-xs text-gray-400 mt-1">Sent automatically when a job is marked complete.</p>
                   </div>
+                  </ProGate>
                   <div>
                     <label className="text-xs font-bold text-gray-500 uppercase mb-2 block flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5" aria-hidden="true" />Service Area <span className="text-gray-400 font-normal normal-case">(optional)</span>
@@ -600,19 +602,6 @@ export default function SettingsPage() {
                     {pwSaving ? 'Updating...' : 'Update Password'}
                   </button>
                 </div>
-              </div>
-
-              {/* Team */}
-              <div className="bg-white rounded-xl p-6 shadow">
-                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-green-700" aria-hidden="true" />Team Management
-                </h3>
-                <p className="text-gray-500 text-sm mb-4">Invite workers, manage permissions, and view your active Pros.</p>
-                <Link href="/team">
-                  <button className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer">
-                    Manage Team →
-                  </button>
-                </Link>
               </div>
 
               {/* Need Help */}
