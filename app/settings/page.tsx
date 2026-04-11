@@ -251,7 +251,10 @@ export default function SettingsPage() {
     const { error: upErr } = await supabase.storage.from('booking-photos').upload(path, file, { upsert: true })
     if (!upErr) {
       const { data: urlData } = supabase.storage.from('booking-photos').getPublicUrl(path)
-      setBookingPhotoUrl(urlData.publicUrl)
+      const publicUrl = urlData.publicUrl
+      setBookingPhotoUrl(publicUrl)
+      // Auto-save the URL to the profile so it shows on the booking page immediately
+      await (supabase as any).from('profiles').update({ booking_photo_url: publicUrl }).eq('id', user?.id)
     }
     setBookingPhotoUploading(false)
   }
@@ -818,7 +821,7 @@ export default function SettingsPage() {
                           />
                         </label>
                         {bookingPhotoUrl && (
-                          <button onClick={() => setBookingPhotoUrl('')} className="text-xs text-red-500 hover:underline">Remove</button>
+                          <button onClick={async () => { setBookingPhotoUrl(''); await (supabase as any).from('profiles').update({ booking_photo_url: null }).eq('id', user?.id) }} className="text-xs text-red-500 hover:underline">Remove</button>
                         )}
                       </div>
                       <p className="text-xs text-gray-400 mt-1">Shown at the top of your booking page. JPG or PNG, under 5 MB.</p>
