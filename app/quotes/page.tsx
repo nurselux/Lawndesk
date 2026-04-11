@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle } from 'lucide-react'
+import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock } from 'lucide-react'
 import { QuoteStatusBadge } from '../../lib/statusIcons'
 
 interface LineItem {
@@ -27,6 +27,9 @@ interface Quote {
   share_token: string
   expires_at: string | null
   notes: string | null
+  service_date: string | null
+  service_time: string | null
+  address: string | null
   created_at: string
 }
 
@@ -35,6 +38,7 @@ interface Client {
   name: string
   email: string | null
   phone: string | null
+  address: string | null
 }
 
 const emptyItem = (): LineItem => ({ description: '', quantity: 1, unit_price: 0 })
@@ -66,6 +70,9 @@ export default function QuotesPage() {
   const [lineItems, setLineItems] = useState<LineItem[]>([emptyItem()])
   const [expiresAt, setExpiresAt] = useState('')
   const [notes, setNotes] = useState('')
+  const [serviceDate, setServiceDate] = useState('')
+  const [serviceTime, setServiceTime] = useState('')
+  const [address, setAddress] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -90,7 +97,7 @@ export default function QuotesPage() {
   const fetchQuotes = async () => {
     const { data } = await supabase
       .from('Quotes')
-      .select('id, client_id, client_name, client_email, client_phone, title, description, line_items, amount, status, share_token, expires_at, notes, created_at')
+      .select('id, client_id, client_name, client_email, client_phone, title, description, line_items, amount, status, share_token, expires_at, notes, service_date, service_time, address, created_at')
       .eq('user_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setQuotes(data as Quote[])
@@ -99,7 +106,7 @@ export default function QuotesPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name, email, phone')
+      .select('id, name, email, phone, address')
       .eq('user_id', user?.id)
       .order('name')
     if (data) setClients(data as Client[])
@@ -115,6 +122,7 @@ export default function QuotesPage() {
       setClientName(c.name)
       setClientEmail(c.email || '')
       setClientPhone(c.phone || '')
+      setAddress(c.address || '')
     }
   }
 
@@ -155,6 +163,9 @@ export default function QuotesPage() {
       status: clientEmail.trim() ? 'sent' : 'draft',
       expires_at: expiresAt || null,
       notes: notes.trim() || null,
+      service_date: serviceDate || null,
+      service_time: serviceTime || null,
+      address: address.trim() || null,
     }]).select().single()
 
     if (!error && quote) {
@@ -268,6 +279,9 @@ export default function QuotesPage() {
     setLineItems([emptyItem()])
     setExpiresAt('')
     setNotes('')
+    setServiceDate('')
+    setServiceTime('')
+    setAddress('')
   }
 
   const updateStatus = async (id: string, status: string) => {
@@ -473,6 +487,41 @@ export default function QuotesPage() {
               onChange={e => setDescription(e.target.value)}
               className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
             />
+            {/* Service location */}
+            <div className="relative">
+              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+              <input
+                placeholder="Service address (optional)"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl pl-10 pr-3.5 py-3.5 text-gray-800"
+              />
+            </div>
+            {/* Service date + time */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-gray-500 font-bold uppercase tracking-wide block mb-1.5 flex items-center gap-1">
+                  <CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />Service Date
+                </label>
+                <input
+                  type="date"
+                  value={serviceDate}
+                  onChange={e => setServiceDate(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 font-bold uppercase tracking-wide block mb-1.5 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" aria-hidden="true" />Service Time
+                </label>
+                <input
+                  type="time"
+                  value={serviceTime}
+                  onChange={e => setServiceTime(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Line items */}
@@ -610,6 +659,32 @@ export default function QuotesPage() {
                       </p>
                     )}
                     {quote.description && <p className="text-gray-400 text-xs mt-1 truncate">{quote.description}</p>}
+                    {(quote.service_date || quote.service_time || quote.address) && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+                        {quote.service_date && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3 text-gray-400" aria-hidden="true" />
+                            {new Date(quote.service_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        )}
+                        {quote.service_time && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-gray-400" aria-hidden="true" />
+                            {(() => {
+                              const [h, m] = quote.service_time.split(':').map(Number)
+                              const ampm = h >= 12 ? 'PM' : 'AM'
+                              return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
+                            })()}
+                          </span>
+                        )}
+                        {quote.address && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-gray-400" aria-hidden="true" />
+                            {quote.address}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-2xl font-bold text-blue-700">${quote.amount.toFixed(2)}</p>
