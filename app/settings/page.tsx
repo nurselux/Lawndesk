@@ -77,6 +77,7 @@ export default function SettingsPage() {
   const [bookingEnabled, setBookingEnabled] = useState(true)
   const [bookingNotifySms, setBookingNotifySms] = useState(false)
   const [bookingNotifyEmail, setBookingNotifyEmail] = useState(true)
+  const [bookingNotifyClientSms, setBookingNotifyClientSms] = useState(true)
   const [bookingWelcome, setBookingWelcome] = useState('')
   const [bookingSaving, setBookingSaving] = useState(false)
   const [bookingMessage, setBookingMessage] = useState('')
@@ -155,6 +156,7 @@ export default function SettingsPage() {
             setBookingPhotoUrl((data as any).booking_photo_url ?? '')
             setQuoteNotifyEmail((data as any).quote_notify_email ?? true)
             setQuoteNotifySms((data as any).quote_notify_sms ?? false)
+            setBookingNotifyClientSms((data as any).booking_notify_client_sms ?? true)
           }
         })
     }
@@ -326,7 +328,7 @@ export default function SettingsPage() {
     setNotifMessage('')
     const { error } = await (supabase as any)
       .from('profiles')
-      .update({ booking_notify_sms: bookingNotifySms, booking_notify_email: bookingNotifyEmail, quote_notify_email: quoteNotifyEmail, quote_notify_sms: quoteNotifySms })
+      .update({ booking_notify_sms: bookingNotifySms, booking_notify_email: bookingNotifyEmail, quote_notify_email: quoteNotifyEmail, quote_notify_sms: quoteNotifySms, booking_notify_client_sms: bookingNotifyClientSms })
       .eq('id', user.id)
     if (error) {
       setNotifMessage(`Error: ${error.message}`)
@@ -1090,6 +1092,23 @@ export default function SettingsPage() {
                     </div>
                   </label>
                 </div>
+              </div>
+
+              {/* Client Visit Confirmation */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-green-700" aria-hidden="true" />Client Visit Confirmations
+                </h3>
+                <p className="text-gray-500 text-sm mb-5">Text the client when you schedule a site visit so they know what day you're coming.</p>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div onClick={() => setBookingNotifyClientSms(!bookingNotifyClientSms)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${bookingNotifyClientSms ? 'bg-green-500' : 'bg-gray-300'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow mt-0.5 transition-transform ${bookingNotifyClientSms ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-700 font-medium flex items-center gap-1.5"><MessageSquare className="w-4 h-4" aria-hidden="true" />SMS client on visit scheduled</p>
+                    <p className="text-xs text-gray-400">Client receives a text with the confirmed visit date</p>
+                  </div>
+                </label>
               </div>
 
               {/* Quote Notifications */}

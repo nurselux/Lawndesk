@@ -65,6 +65,7 @@ export default function RequestsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [savedClientIds, setSavedClientIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
+  const [ownerProfile, setOwnerProfile] = useState<{ business_name: string | null; booking_notify_client_sms: boolean } | null>(null)
   // Scheduling form state
   const [schedulingId, setSchedulingId] = useState<string | null>(null)
   const [visitDate, setVisitDate] = useState('')
@@ -84,6 +85,15 @@ export default function RequestsPage() {
 
   useEffect(() => {
     fetchRequests()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      ;(supabase as any)
+        .from('profiles')
+        .select('business_name, booking_notify_client_sms')
+        .eq('id', session.user.id)
+        .single()
+        .then(({ data }: any) => { if (data) setOwnerProfile(data) })
+    })
   }, [fetchRequests])
 
   const notifySidebarUpdate = () => {
@@ -163,6 +173,19 @@ export default function RequestsPage() {
       setVisitDate('')
       setVisitTime('')
       notifySidebarUpdate()
+
+      // Text the client their confirmed visit date if the owner has this enabled
+      if (ownerProfile?.booking_notify_client_sms && req.client_phone) {
+        const dateLabel = new Date(visitDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+        const timeLabel = visitTime ? ` at ${visitTime.replace(/^(\d+):(\d+)$/, (_, h, m) => { const n = Number(h); return `${n % 12 || 12}:${m} ${n >= 12 ? 'PM' : 'AM'}` })}` : ''
+        const biz = ownerProfile.business_name || 'Your landscaper'
+        const msg = `Hi ${req.client_name}! ${biz} has scheduled a site visit for ${dateLabel}${timeLabel}. We'll see you then! Reply STOP to opt out.`
+        fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: req.client_phone, message: msg }),
+        }).catch(() => {/* non-blocking */})
+      }
     } finally {
       setActionLoading(null)
     }
