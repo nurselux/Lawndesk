@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import AdminViewBanner from '../../../components/AdminViewBanner'
 import AddressAutocomplete from '../../../components/AddressAutocomplete'
-import { CheckCircle, ChevronLeft, Leaf, Scissors, Layers, Wind, Droplets, HelpCircle, Home, TreePine, Maximize2, Map, Zap, CalendarDays, Calendar, Tag, Clock, MapPin, Ban, ExternalLink } from 'lucide-react'
+import { CheckCircle, ChevronLeft, Leaf, Scissors, Layers, Wind, Droplets, HelpCircle, Home, TreePine, Maximize2, Map, Zap, CalendarDays, Calendar, Tag, Clock, MapPin, Ban, ExternalLink, Sprout, Flower } from 'lucide-react'
 
 interface BusinessProfile {
   id: string
@@ -27,11 +27,16 @@ interface BusinessProfile {
 }
 
 const QUIZ_SERVICE_OPTIONS = [
-  { value: 'lawn_mowing',             label: 'Lawn Mowing',     Icon: Scissors },
-  { value: 'mulch_bed_work',          label: 'Mulch & Bed Work', Icon: Layers },
-  { value: 'general_cleanup',         label: 'Cleanup',          Icon: Wind },
-  { value: 'irrigation_system_check', label: 'Irrigation',       Icon: Droplets },
-  { value: 'other',                   label: 'Something Else',   Icon: HelpCircle },
+  { value: 'lawn_mowing',          label: 'Lawn Mowing',              Icon: Scissors  },
+  { value: 'hedge_shrub_trimming', label: 'Hedge & Shrub Trimming',   Icon: Scissors  },
+  { value: 'leaf_removal',         label: 'Leaf Removal',             Icon: Leaf      },
+  { value: 'mulch_bed_work',       label: 'Mulch & Bed Work',         Icon: Layers    },
+  { value: 'lawn_treatment',       label: 'Fertilization & Weed Control', Icon: Sprout },
+  { value: 'tree_trimming',        label: 'Tree Trimming & Pruning',  Icon: TreePine  },
+  { value: 'aeration_overseeding', label: 'Aeration & Overseeding',   Icon: Droplets  },
+  { value: 'general_cleanup',      label: 'General Cleanup',          Icon: Wind      },
+  { value: 'landscaping_design',   label: 'Landscaping & Design',     Icon: Flower    },
+  { value: 'other',                label: 'Something Else',           Icon: HelpCircle},
 ]
 
 const PROPERTY_SIZE_OPTIONS = [
@@ -607,7 +612,7 @@ export default function BookingPage() {
                       {/* SMS consent — required for A2P 10DLC compliance */}
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-gray-600 leading-relaxed">
                         By submitting this form, I agree to receive automated SMS text messages from{' '}
-                        <span className="font-semibold">LawnDesk</span> and the service provider regarding my
+                        <span className="font-semibold">LawnDesk</span>{' '}and the service provider regarding my
                         appointment, quote, and service updates. Message frequency varies. Msg &amp; data rates
                         may apply. Reply <span className="font-semibold">STOP</span> to opt out,{' '}
                         <span className="font-semibold">HELP</span> for help.
