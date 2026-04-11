@@ -26,6 +26,22 @@ interface BookingRequest {
   created_at: string
 }
 
+const SERVICE_LABELS: Record<string, string> = {
+  lawn_mowing:          'Lawn Mowing',
+  hedge_shrub_trimming: 'Hedge & Shrub Trimming',
+  leaf_removal:         'Leaf Removal',
+  mulch_bed_work:       'Mulch & Bed Work',
+  lawn_treatment:       'Fertilization & Weed Control',
+  tree_trimming:        'Tree Trimming & Pruning',
+  aeration_overseeding: 'Aeration & Overseeding',
+  general_cleanup:      'General Cleanup',
+  landscaping_design:   'Landscaping & Design',
+  irrigation_system_check: 'Irrigation',
+  other:                'Other / Custom',
+}
+
+const SERVICE_LABEL = (val: string) => SERVICE_LABELS[val] ?? val.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   approved: 'bg-green-100 text-green-800 border-green-300',
@@ -321,7 +337,7 @@ export default function RequestsPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-green-700 font-semibold mt-0.5">{req.service_type}</p>
+                <p className="text-sm text-green-700 font-semibold mt-0.5">{SERVICE_LABEL(req.service_type)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
                   Requested {formatDate(req.created_at)}
                   {req.preferred_date && ` · Preferred: ${formatDate(req.preferred_date)}${req.preferred_time ? ` at ${formatTime(req.preferred_time)}` : ''}`}
@@ -416,25 +432,57 @@ export default function RequestsPage() {
                   {schedulingId === req.id && (
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
                       <p className="text-sm font-bold text-green-800">Schedule your site visit</p>
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <label className="text-xs text-gray-500 font-semibold block mb-1">Date *</label>
-                          <input
-                            type="date"
-                            value={visitDate}
-                            onChange={e => setVisitDate(e.target.value)}
-                            className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
-                          />
+                      {/* Quick-pick day buttons — next 7 days from today */}
+                      <div>
+                        <label className="text-xs text-gray-500 font-semibold block mb-2">Date *</label>
+                        <div className="grid grid-cols-4 gap-1.5 mb-2">
+                          {Array.from({ length: 7 }).map((_, i) => {
+                            const d = new Date()
+                            d.setDate(d.getDate() + i)
+                            const iso = d.toISOString().split('T')[0]
+                            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' })
+                            const monthDay = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })
+                            const selected = visitDate === iso
+                            return (
+                              <button
+                                key={iso}
+                                type="button"
+                                onClick={() => setVisitDate(iso)}
+                                className={`flex flex-col items-center justify-center py-2.5 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+                                  selected
+                                    ? 'border-green-500 bg-white text-green-800 shadow-sm'
+                                    : 'border-green-200 bg-white/60 text-gray-600 hover:border-green-400'
+                                }`}
+                              >
+                                <span className="text-xs font-bold uppercase tracking-wide">{dayName}</span>
+                                <span className={`text-sm font-black mt-0.5 ${selected ? 'text-green-700' : 'text-gray-700'}`}>{monthDay}</span>
+                              </button>
+                            )
+                          })}
+                          <button
+                            type="button"
+                            onClick={() => setVisitDate('')}
+                            className="flex flex-col items-center justify-center py-2.5 rounded-xl border border-dashed border-green-300 bg-white/40 text-green-600 hover:border-green-500 text-xs font-medium transition-all cursor-pointer"
+                          >
+                            <span className="text-base leading-none">+</span>
+                            <span>Other</span>
+                          </button>
                         </div>
-                        <div className="flex-1">
-                          <label className="text-xs text-gray-500 font-semibold block mb-1">Time (optional)</label>
-                          <input
-                            type="time"
-                            value={visitTime}
-                            onChange={e => setVisitTime(e.target.value)}
-                            className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm bg-white"
-                          />
-                        </div>
+                        <input
+                          type="date"
+                          value={visitDate}
+                          onChange={e => setVisitDate(e.target.value)}
+                          className="w-full border border-green-200 rounded-xl p-2.5 text-gray-800 text-sm bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 font-semibold block mb-1">Time (optional)</label>
+                        <input
+                          type="time"
+                          value={visitTime}
+                          onChange={e => setVisitTime(e.target.value)}
+                          className="w-full border border-green-200 rounded-xl p-2.5 text-gray-800 text-sm bg-white"
+                        />
                       </div>
                       <div className="flex gap-2">
                         <button
