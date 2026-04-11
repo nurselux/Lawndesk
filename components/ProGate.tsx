@@ -37,7 +37,7 @@ export default function ProGate({ featureName, description, page, children }: Pr
           </span>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{featureName}</h2>
           <p className="text-gray-500 mb-8">{description}</p>
-          <Link href="/pricing">
+          <Link href="/upgrade">
             <button className="w-full bg-green-700 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-800 transition-colors cursor-pointer">
               Upgrade to Pro →
             </button>
@@ -62,7 +62,7 @@ export default function ProGate({ featureName, description, page, children }: Pr
         </div>
         <p className="font-semibold text-gray-800 text-sm">{featureName}</p>
         <p className="text-gray-500 text-sm mt-0.5">{description}</p>
-        <Link href="/pricing">
+        <Link href="/upgrade">
           <button className="mt-3 bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm hover:bg-green-800 transition-colors cursor-pointer">
             Upgrade to Pro →
           </button>

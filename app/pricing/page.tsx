@@ -164,9 +164,11 @@ function PricingContent() {
               <Link href="/pricing" className="text-emerald-100 hover:text-white font-medium transition-colors duration-200">
                 Pricing
               </Link>
-              <Link href="/login" className="text-emerald-100 hover:text-white font-medium transition-colors duration-200">
-                Sign In
-              </Link>
+              {!isReturning && (
+                <Link href="/login" className="text-emerald-100 hover:text-white font-medium transition-colors duration-200">
+                  Sign In
+                </Link>
+              )}
               {isReturning ? (
                 <Link
                   href="/login"

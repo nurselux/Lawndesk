@@ -736,7 +736,7 @@ export default function JobsPage() {
             ) : (
               <div className="border border-dashed border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
                 <span className="text-sm text-gray-500">Recurring jobs</span>
-                <a href="/pricing" className="text-xs font-bold text-green-700 flex items-center gap-1 hover:underline">🔒 Pro only →</a>
+                <a href="/upgrade" className="text-xs font-bold text-green-700 flex items-center gap-1 hover:underline">🔒 Pro only →</a>
               </div>
             )}
             <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
