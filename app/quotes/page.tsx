@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock } from 'lucide-react'
+import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock, CreditCard } from 'lucide-react'
 import { QuoteStatusBadge } from '../../lib/statusIcons'
 
 interface LineItem {
@@ -30,6 +30,8 @@ interface Quote {
   service_date: string | null
   service_time: string | null
   address: string | null
+  require_payment: boolean
+  deposit_amount: number | null
   created_at: string
 }
 
@@ -73,6 +75,8 @@ export default function QuotesPage() {
   const [serviceDate, setServiceDate] = useState('')
   const [serviceTime, setServiceTime] = useState('')
   const [address, setAddress] = useState('')
+  const [requirePayment, setRequirePayment] = useState(false)
+  const [depositAmount, setDepositAmount] = useState('')
 
   useEffect(() => {
     if (user) {
@@ -97,7 +101,7 @@ export default function QuotesPage() {
   const fetchQuotes = async () => {
     const { data } = await supabase
       .from('Quotes')
-      .select('id, client_id, client_name, client_email, client_phone, title, description, line_items, amount, status, share_token, expires_at, notes, service_date, service_time, address, created_at')
+      .select('id, client_id, client_name, client_email, client_phone, title, description, line_items, amount, status, share_token, expires_at, notes, service_date, service_time, address, require_payment, deposit_amount, created_at')
       .eq('user_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setQuotes(data as Quote[])
@@ -166,6 +170,8 @@ export default function QuotesPage() {
       service_date: serviceDate || null,
       service_time: serviceTime || null,
       address: address.trim() || null,
+      require_payment: requirePayment,
+      deposit_amount: requirePayment && depositAmount ? parseFloat(depositAmount) : null,
     }]).select().single()
 
     if (!error && quote) {
@@ -282,6 +288,8 @@ export default function QuotesPage() {
     setServiceDate('')
     setServiceTime('')
     setAddress('')
+    setRequirePayment(false)
+    setDepositAmount('')
   }
 
   const updateStatus = async (id: string, status: string) => {
@@ -585,6 +593,42 @@ export default function QuotesPage() {
             </div>
           </div>
 
+          {/* Deposit / payment required */}
+          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={requirePayment}
+                onChange={e => { setRequirePayment(e.target.checked); if (!e.target.checked) setDepositAmount('') }}
+                className="w-4 h-4 accent-blue-600 cursor-pointer"
+              />
+              <span className="text-sm font-bold text-gray-700">Require payment to approve</span>
+            </label>
+            {requirePayment && (
+              <div>
+                <label className="text-xs text-gray-500 font-bold uppercase tracking-wide block mb-1.5">Deposit Amount (leave blank to require full payment)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    placeholder={total > 0 ? total.toFixed(2) : '0.00'}
+                    value={depositAmount}
+                    onChange={e => setDepositAmount(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl pl-8 pr-3.5 py-3 text-gray-800"
+                    inputMode="decimal"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {depositAmount && total > 0
+                    ? `Client pays $${parseFloat(depositAmount).toFixed(2)} now — $${(total - parseFloat(depositAmount || '0')).toFixed(2)} remaining after service`
+                    : 'Client must pay the full amount to approve this quote'}
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Expires + Notes — stacked, not side by side */}
           <div className="space-y-3">
             <div>
@@ -647,6 +691,12 @@ export default function QuotesPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <QuoteStatusBadge status={quote.status} />
+                      {quote.require_payment && (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold py-1 px-2.5 rounded-full bg-blue-100 text-blue-700">
+                          <CreditCard className="w-3 h-3" aria-hidden="true" />
+                          {quote.deposit_amount ? `$${quote.deposit_amount.toFixed(2)} deposit` : 'Full payment req.'}
+                        </span>
+                      )}
                       {quote.expires_at && (
                         <span className="text-xs text-gray-400">Expires {new Date(quote.expires_at).toLocaleDateString()}</span>
                       )}

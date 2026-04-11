@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   const { data: invoice, error } = await supabase
     .from('Invoices')
-    .select('id, invoice_number, client_name, amount, status, share_token')
+    .select('id, invoice_number, client_name, amount, amount_paid, status, share_token')
     .eq('id', invoiceId)
     .eq('share_token', token)
     .single()
@@ -28,13 +28,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
   }
 
-  if (invoice.status === 'paid') {
+  if (invoice.status === '🟢 Paid') {
     return NextResponse.json({ error: 'Invoice already paid' }, { status: 400 })
+  }
+
+  // Charge only the remaining balance (full amount if no partial payments yet)
+  const amountPaid = invoice.amount_paid ?? 0
+  const remaining = Math.max(0, invoice.amount - amountPaid)
+  if (remaining <= 0) {
+    return NextResponse.json({ error: 'Invoice already paid in full' }, { status: 400 })
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   const invoiceNum = `INV-${String(invoice.invoice_number).padStart(3, '0')}`
   const origin = req.headers.get('origin') || 'https://lawndesk.pro'
+  const label = amountPaid > 0
+    ? `${invoiceNum} — Balance due ($${amountPaid.toFixed(2)} already paid)`
+    : `${invoiceNum} — Lawn Services`
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -44,9 +54,9 @@ export async function POST(req: Request) {
         quantity: 1,
         price_data: {
           currency: 'usd',
-          unit_amount: Math.round(invoice.amount * 100),
+          unit_amount: Math.round(remaining * 100),
           product_data: {
-            name: `${invoiceNum} — Lawn Services`,
+            name: label,
             description: `Bill to: ${invoice.client_name}`,
           },
         },

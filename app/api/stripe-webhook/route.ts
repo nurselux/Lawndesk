@@ -72,8 +72,18 @@ export async function POST(req: Request) {
           const { invoiceId } = session.metadata
           const { error } = await supabase
             .from('Invoices')
-            .update({ status: 'paid', stripe_payment_id: session.payment_intent as string })
+            .update({ status: '🟢 Paid', stripe_payment_id: session.payment_intent as string })
             .eq('id', invoiceId)
+          if (error) throw new Error(error.message)
+          break
+        }
+
+        if (session.metadata?.type === 'quote_payment') {
+          const { quoteId } = session.metadata
+          const { error } = await supabase
+            .from('Quotes')
+            .update({ status: 'approved' })
+            .eq('id', quoteId)
           if (error) throw new Error(error.message)
           break
         }

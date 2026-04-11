@@ -18,6 +18,7 @@ interface Invoice {
   invoice_number: number
   client_name: string
   amount: number
+  amount_paid: number
   status: string
   due_date: string
   description: string
@@ -45,7 +46,7 @@ export default function PublicInvoicePage() {
     const fetchInvoice = async () => {
       const { data, error } = await supabase
         .from('Invoices')
-        .select('id, invoice_number, client_name, amount, status, due_date, description, notes, tax_rate, line_items, created_at')
+        .select('id, invoice_number, client_name, amount, amount_paid, status, due_date, description, notes, tax_rate, line_items, created_at')
         .eq('share_token', token)
         .single()
 
@@ -90,6 +91,8 @@ export default function PublicInvoicePage() {
   const taxRate = invoice.tax_rate ?? 0
   const taxAmount = subtotal * (taxRate / 100)
   const total = subtotal + taxAmount
+  const amountPaid = invoice.amount_paid ?? 0
+  const remaining = Math.max(0, total - amountPaid)
 
   return (
     <main className="min-h-dvh bg-gray-100 flex flex-col items-center justify-start p-6 print:bg-white print:p-0">
@@ -194,9 +197,21 @@ export default function PublicInvoicePage() {
                 </div>
               )}
               <div className="flex justify-between pt-2 border-t border-gray-200">
-                <span className="font-bold text-gray-800">Total Due</span>
+                <span className="font-bold text-gray-800">Total</span>
                 <span className="text-2xl font-bold text-green-700">${total.toFixed(2)}</span>
               </div>
+              {amountPaid > 0 && (
+                <>
+                  <div className="flex justify-between text-sm text-emerald-600">
+                    <span className="font-semibold">Paid</span>
+                    <span className="font-semibold">−${amountPaid.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-gray-200">
+                    <span className="font-bold text-gray-800">Balance Due</span>
+                    <span className="text-2xl font-bold text-orange-600">${remaining.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -209,7 +224,7 @@ export default function PublicInvoicePage() {
           )}
 
           {/* Pay Now button */}
-          {invoice.status !== '🟢 Paid' && invoice.status !== '📝 Draft' && (
+          {invoice.status !== '🟢 Paid' && invoice.status !== '📝 Draft' && remaining > 0 && (
             <div className="mb-6 print:hidden">
               <button
                 onClick={async () => {
@@ -232,7 +247,7 @@ export default function PublicInvoicePage() {
               >
                 {payLoading
                   ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Redirecting...</>
-                  : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${total.toFixed(2)} Now</>
+                  : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${remaining.toFixed(2)} Now</>
                 }
               </button>
               <p className="text-center text-gray-400 text-xs mt-2">Secure payment powered by Stripe</p>

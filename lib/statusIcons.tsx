@@ -8,6 +8,7 @@ import {
   RefreshCw,
   FileText,
   Send,
+  DollarSign,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -71,6 +72,12 @@ export const invoiceStatusConfig: Record<string, StatusConfig> = {
     color: 'text-red-700',
     bg: 'bg-red-100',
     label: 'Overdue',
+  },
+  '🟠 Partial': {
+    icon: DollarSign,
+    color: 'text-orange-700',
+    bg: 'bg-orange-100',
+    label: 'Partial',
   },
 }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-import { Leaf, Search, CheckCircle2, XCircle, AlertTriangle, RefreshCw } from 'lucide-react'
+import { Leaf, Search, CheckCircle2, XCircle, AlertTriangle, RefreshCw, CreditCard, Loader2 } from 'lucide-react'
 
 interface LineItem {
   description: string
@@ -23,6 +23,8 @@ interface Quote {
   notes: string | null
   created_at: string
   share_token: string
+  require_payment: boolean
+  deposit_amount: number | null
 }
 
 export default function PublicQuotePage() {
@@ -32,6 +34,13 @@ export default function PublicQuotePage() {
   const [loading, setLoading] = useState(true)
   const [actionDone, setActionDone] = useState<'approved' | 'declined' | null>(null)
   const [working, setWorking] = useState(false)
+  const [justPaid, setJustPaid] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('paid=true')) {
+      setJustPaid(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (token) fetchQuote()
@@ -40,29 +49,62 @@ export default function PublicQuotePage() {
   const fetchQuote = async () => {
     const { data } = await supabase
       .from('Quotes')
-      .select('id, client_name, title, description, line_items, amount, status, expires_at, notes, created_at, share_token')
+      .select('id, client_name, title, description, line_items, amount, status, expires_at, notes, created_at, share_token, require_payment, deposit_amount')
       .eq('share_token', token)
       .single()
     if (data) setQuote(data as Quote)
     setLoading(false)
   }
 
-  const handleAction = async (action: 'approved' | 'declined') => {
+  const handleDecline = async () => {
     if (!quote) return
     setWorking(true)
     await fetch('/api/approve-quote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quoteId: quote.id, token: quote.share_token, action }),
+      body: JSON.stringify({ quoteId: quote.id, token: quote.share_token, action: 'declined' }),
     })
-    setActionDone(action)
-    setQuote((prev) => prev ? { ...prev, status: action } : prev)
+    setActionDone('declined')
+    setQuote((prev) => prev ? { ...prev, status: 'declined' } : prev)
+    setWorking(false)
+  }
+
+  const handleApprove = async () => {
+    if (!quote) return
+    setWorking(true)
+    await fetch('/api/approve-quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quoteId: quote.id, token: quote.share_token, action: 'approved' }),
+    })
+    setActionDone('approved')
+    setQuote((prev) => prev ? { ...prev, status: 'approved' } : prev)
+    setWorking(false)
+  }
+
+  const handlePayAndApprove = async () => {
+    if (!quote) return
+    setWorking(true)
+    try {
+      const res = await fetch('/api/create-quote-payment-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quoteId: quote.id, token: quote.share_token }),
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch {
+      alert('Something went wrong. Please try again.')
+    }
     setWorking(false)
   }
 
   const isExpired = quote?.expires_at
     ? new Date(quote.expires_at) < new Date()
     : false
+
+  const chargeAmount = quote?.deposit_amount ?? quote?.amount ?? 0
+  const isDeposit = !!(quote?.deposit_amount && quote.deposit_amount < quote.amount)
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-dvh bg-gray-50">
@@ -97,6 +139,14 @@ export default function PublicQuotePage() {
             </p>
           )}
         </div>
+
+        {/* Paid banner */}
+        {justPaid && (
+          <div className="bg-green-100 border border-green-300 text-green-800 font-bold text-center py-4 px-5 rounded-2xl mb-6 flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
+            Payment received! Your quote has been approved.
+          </div>
+        )}
 
         {/* Quote card */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
@@ -135,9 +185,23 @@ export default function PublicQuotePage() {
           )}
 
           {/* Total */}
-          <div className="bg-gray-50 px-6 py-4 flex justify-between items-center border-t border-gray-100">
-            <span className="font-bold text-gray-700 text-lg">Total Estimate</span>
-            <span className="text-3xl font-bold text-green-700">${quote.amount.toFixed(2)}</span>
+          <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-gray-700 text-lg">Total Estimate</span>
+              <span className="text-3xl font-bold text-green-700">${quote.amount.toFixed(2)}</span>
+            </div>
+            {quote.require_payment && isDeposit && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-blue-700 font-semibold">Deposit due now</span>
+                <span className="text-blue-700 font-bold">${chargeAmount.toFixed(2)}</span>
+              </div>
+            )}
+            {quote.require_payment && isDeposit && (
+              <div className="flex justify-between items-center text-xs text-gray-400">
+                <span>Remaining after service</span>
+                <span>${(quote.amount - chargeAmount).toFixed(2)}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -160,23 +224,53 @@ export default function PublicQuotePage() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-md p-6 text-center">
-            <p className="text-gray-600 mb-5">Does this look right? Let us know!</p>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => handleAction('approved')}
-                disabled={working}
-                className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
-              >
-                {working ? '…' : <><CheckCircle2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Approve Quote</>}
-              </button>
-              <button
-                onClick={() => handleAction('declined')}
-                disabled={working}
-                className="border-2 border-red-300 text-red-500 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
-              >
-                <XCircle className="w-4 h-4 inline mr-1" aria-hidden="true" />Decline
-              </button>
-            </div>
+            {quote.require_payment ? (
+              <>
+                <p className="text-gray-600 mb-2">
+                  {isDeposit
+                    ? `A deposit of $${chargeAmount.toFixed(2)} is required to confirm your booking.`
+                    : `Full payment of $${chargeAmount.toFixed(2)} is required to approve this quote.`}
+                </p>
+                <p className="text-gray-400 text-xs mb-5">Secure payment powered by Stripe</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={handlePayAndApprove}
+                    disabled={working}
+                    className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {working ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <CreditCard className="w-4 h-4" aria-hidden="true" />}
+                    {working ? 'Redirecting…' : `Pay $${chargeAmount.toFixed(2)} & Approve`}
+                  </button>
+                  <button
+                    onClick={handleDecline}
+                    disabled={working}
+                    className="border-2 border-red-300 text-red-500 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    <XCircle className="w-4 h-4 inline mr-1" aria-hidden="true" />Decline
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-5">Does this look right? Let us know!</p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={handleApprove}
+                    disabled={working}
+                    className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
+                  >
+                    {working ? '…' : <><CheckCircle2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Approve Quote</>}
+                  </button>
+                  <button
+                    onClick={handleDecline}
+                    disabled={working}
+                    className="border-2 border-red-300 text-red-500 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    <XCircle className="w-4 h-4 inline mr-1" aria-hidden="true" />Decline
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
 

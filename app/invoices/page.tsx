@@ -8,7 +8,7 @@ import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import {
   Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search,
   CheckCircle2, Plus, Minus, Copy, ExternalLink, ArrowUpDown,
-  FileText, AlertTriangle, Clock, DollarSign, X
+  FileText, AlertTriangle, Clock, DollarSign, X, CreditCard
 } from 'lucide-react'
 import { InvoiceStatusBadge } from '../../lib/statusIcons'
 
@@ -25,6 +25,7 @@ interface Invoice {
   client_email: string | null
   client_phone: string | null
   amount: number
+  amount_paid: number
   status: string
   due_date: string
   description: string
@@ -50,6 +51,7 @@ type SortKey = 'number' | 'amount' | 'due_date' | 'status'
 const STATUSES = [
   { value: '📝 Draft',    label: 'Draft' },
   { value: '🟡 Unpaid',  label: 'Unpaid' },
+  { value: '🟠 Partial', label: 'Partial' },
   { value: '🟢 Paid',    label: 'Paid' },
   { value: '🔴 Overdue', label: 'Overdue' },
 ]
@@ -81,6 +83,9 @@ function InvoicesContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkSaving, setBulkSaving] = useState(false)
   const [defaultDueDays, setDefaultDueDays] = useState(15)
+  const [recordingPaymentId, setRecordingPaymentId] = useState<string | null>(null)
+  const [recordPaymentInput, setRecordPaymentInput] = useState('')
+  const [recordingSaving, setRecordingSaving] = useState(false)
 
   // Form state
   const [clientId, setClientId] = useState('')
@@ -112,14 +117,14 @@ function InvoicesContent() {
   const markOverdueInvoices = async () => {
     const today = new Date().toISOString().split('T')[0]
     await supabase.from('Invoices').update({ status: '🔴 Overdue' })
-      .eq('user_id', user?.id).eq('status', '🟡 Unpaid')
+      .eq('user_id', user?.id).in('status', ['🟡 Unpaid', '🟠 Partial'])
       .lt('due_date', today).not('due_date', 'is', null)
   }
 
   const fetchInvoices = async () => {
     const { data } = await supabase
       .from('Invoices')
-      .select('id, client_name, client_id, client_email, client_phone, amount, status, due_date, description, notes, tax_rate, line_items, user_id, invoice_number, share_token')
+      .select('id, client_name, client_id, client_email, client_phone, amount, amount_paid, status, due_date, description, notes, tax_rate, line_items, user_id, invoice_number, share_token')
       .eq('user_id', user?.id)
       .order('invoice_number', { ascending: false })
     if (data) setInvoices(data as Invoice[])
@@ -283,10 +288,32 @@ function InvoicesContent() {
   }
 
   const markPaid = async (id: string) => {
-    await supabase.from('Invoices').update({ status: '🟢 Paid' }).eq('id', id)
-    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: '🟢 Paid' } : inv))
+    const inv = invoices.find(i => i.id === id)
+    const newAmountPaid = inv ? inv.amount : 0
+    await supabase.from('Invoices').update({ status: '🟢 Paid', amount_paid: newAmountPaid }).eq('id', id)
+    setInvoices(prev => prev.map(i => i.id === id ? { ...i, status: '🟢 Paid', amount_paid: newAmountPaid } : i))
     setSuccessMessage('Marked as paid!')
     setTimeout(() => setSuccessMessage(''), 3000)
+  }
+
+  const recordPayment = async (inv: Invoice) => {
+    const payment = parseFloat(recordPaymentInput)
+    if (!payment || payment <= 0) return
+    setRecordingSaving(true)
+    const newAmountPaid = (inv.amount_paid || 0) + payment
+    const newStatus = newAmountPaid >= inv.amount ? '🟢 Paid' : '🟠 Partial'
+    const { error } = await supabase
+      .from('Invoices')
+      .update({ amount_paid: newAmountPaid, status: newStatus })
+      .eq('id', inv.id)
+    if (!error) {
+      setInvoices(prev => prev.map(i => i.id === inv.id ? { ...i, amount_paid: newAmountPaid, status: newStatus } : i))
+      setRecordingPaymentId(null)
+      setRecordPaymentInput('')
+      setSuccessMessage(newStatus === '🟢 Paid' ? 'Invoice fully paid!' : `Payment of $${payment.toFixed(2)} recorded — $${(inv.amount - newAmountPaid).toFixed(2)} remaining`)
+      setTimeout(() => setSuccessMessage(''), 5000)
+    }
+    setRecordingSaving(false)
   }
 
   const bulkMarkPaid = async () => {
@@ -400,7 +427,9 @@ function InvoicesContent() {
 
   // Stats
   const totalRevenue = invoices.filter(i => i.status === '🟢 Paid').reduce((s, i) => s + i.amount, 0)
-  const totalOutstanding = invoices.filter(i => ['🟡 Unpaid', '🔴 Overdue'].includes(i.status)).reduce((s, i) => s + i.amount, 0)
+  const totalOutstanding = invoices
+    .filter(i => ['🟡 Unpaid', '🔴 Overdue', '🟠 Partial'].includes(i.status))
+    .reduce((s, i) => s + (i.amount - (i.amount_paid || 0)), 0)
   const overdueCount = invoices.filter(i => i.status === '🔴 Overdue').length
 
   // Sort + filter
@@ -417,6 +446,7 @@ function InvoicesContent() {
         filterStatus === 'All' ||
         (filterStatus === 'Draft' && inv.status === '📝 Draft') ||
         (filterStatus === 'Unpaid' && inv.status === '🟡 Unpaid') ||
+        (filterStatus === 'Partial' && inv.status === '🟠 Partial') ||
         (filterStatus === 'Overdue' && inv.status === '🔴 Overdue') ||
         (filterStatus === 'Paid' && inv.status === '🟢 Paid')
       return matchSearch && matchStatus
@@ -501,12 +531,14 @@ function InvoicesContent() {
           { key: 'All', color: 'emerald' },
           { key: 'Draft', color: 'gray' },
           { key: 'Unpaid', color: 'amber' },
+          { key: 'Partial', color: 'orange' },
           { key: 'Overdue', color: 'red' },
           { key: 'Paid', color: 'green' },
         ].map(({ key, color }) => {
           const count = key === 'All' ? invoices.length
             : key === 'Draft' ? invoices.filter(i => i.status === '📝 Draft').length
             : key === 'Unpaid' ? invoices.filter(i => i.status === '🟡 Unpaid').length
+            : key === 'Partial' ? invoices.filter(i => i.status === '🟠 Partial').length
             : key === 'Overdue' ? invoices.filter(i => i.status === '🔴 Overdue').length
             : invoices.filter(i => i.status === '🟢 Paid').length
           const active = filterStatus === key
@@ -518,6 +550,7 @@ function InvoicesContent() {
                 active
                   ? color === 'red' ? 'bg-red-600 text-white'
                   : color === 'amber' ? 'bg-amber-500 text-white'
+                  : color === 'orange' ? 'bg-orange-500 text-white'
                   : color === 'green' ? 'bg-green-600 text-white'
                   : color === 'gray' ? 'bg-gray-600 text-white'
                   : 'bg-emerald-600 text-white'
@@ -786,9 +819,12 @@ function InvoicesContent() {
             const isPaid = inv.status === '🟢 Paid'
             const isOverdue = inv.status === '🔴 Overdue'
             const isDraft = inv.status === '📝 Draft'
+            const isPartial = inv.status === '🟠 Partial'
+            const amountPaid = inv.amount_paid || 0
+            const remaining = inv.amount - amountPaid
             const isSendingEmail = sending?.id === inv.id && sending.type === 'email'
             const isSendingSMS = sending?.id === inv.id && sending.type === 'sms'
-            const borderColor = isPaid ? 'border-emerald-500' : isOverdue ? 'border-red-500' : isDraft ? 'border-gray-300' : 'border-amber-400'
+            const borderColor = isPaid ? 'border-emerald-500' : isOverdue ? 'border-red-500' : isDraft ? 'border-gray-300' : isPartial ? 'border-orange-400' : 'border-amber-400'
             return (
               <div
                 key={inv.id}
@@ -816,9 +852,12 @@ function InvoicesContent() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`text-2xl font-black leading-none ${isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : isDraft ? 'text-gray-400' : 'text-amber-600'}`}>
+                      <p className={`text-2xl font-black leading-none ${isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : isDraft ? 'text-gray-400' : isPartial ? 'text-orange-600' : 'text-amber-600'}`}>
                         ${inv.amount.toFixed(2)}
                       </p>
+                      {isPartial && amountPaid > 0 && (
+                        <p className="text-xs text-orange-500 font-semibold mt-0.5">${remaining.toFixed(2)} remaining</p>
+                      )}
                       {inv.due_date && (
                         <p className={`text-xs mt-0.5 font-medium flex items-center justify-end gap-1 ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
                           {isOverdue && <AlertTriangle className="w-3 h-3" aria-hidden="true" />}
@@ -828,7 +867,7 @@ function InvoicesContent() {
                     </div>
                   </div>
 
-                  {/* Status + Mark Paid */}
+                  {/* Status + Mark Paid + Record Payment */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <select
                       value={inv.status}
@@ -837,6 +876,7 @@ function InvoicesContent() {
                         isPaid ? 'bg-emerald-100 text-emerald-700' :
                         isOverdue ? 'bg-red-100 text-red-700' :
                         isDraft ? 'bg-gray-100 text-gray-600' :
+                        isPartial ? 'bg-orange-100 text-orange-700' :
                         'bg-amber-100 text-amber-700'
                       }`}
                     >
@@ -850,7 +890,54 @@ function InvoicesContent() {
                         <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Mark Paid
                       </button>
                     )}
+                    {!isPaid && !isDraft && (
+                      <button
+                        onClick={() => { setRecordingPaymentId(inv.id); setRecordPaymentInput('') }}
+                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors cursor-pointer flex items-center gap-1"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" aria-hidden="true" /> Record Payment
+                      </button>
+                    )}
                   </div>
+
+                  {/* Record Payment inline form */}
+                  {recordingPaymentId === inv.id && (
+                    <div className="mt-3 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">$</span>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          max={remaining}
+                          placeholder={remaining.toFixed(2)}
+                          value={recordPaymentInput}
+                          onChange={e => setRecordPaymentInput(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-gray-800 text-sm focus:border-blue-400 outline-none"
+                          inputMode="decimal"
+                          autoFocus
+                        />
+                      </div>
+                      <button
+                        onClick={() => recordPayment(inv)}
+                        disabled={recordingSaving || !recordPaymentInput}
+                        className="bg-blue-600 text-white font-bold text-xs py-2 px-4 rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      >
+                        {recordingSaving ? '…' : 'Save'}
+                      </button>
+                      <button
+                        onClick={() => setRecordingPaymentId(null)}
+                        className="text-gray-400 hover:text-gray-600 cursor-pointer text-xs font-bold"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {isPartial && amountPaid > 0 && (
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      ${amountPaid.toFixed(2)} paid · ${remaining.toFixed(2)} remaining
+                    </p>
+                  )}
                 </div>
 
                 {/* Action bar */}
