@@ -503,18 +503,54 @@ export default function BookingPage() {
 
                       {/* Preferred date with lead-time enforcement */}
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 ml-1 flex items-center gap-1">
+                        <label className="block text-xs text-gray-400 mb-2 ml-1 flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           Preferred date{(business?.booking_min_lead_hours ?? 24) > 0 && (
                             <span className="text-gray-400"> · earliest {business?.booking_min_lead_hours ?? 24}h from now</span>
                           )}
                         </label>
+                        {/* Quick-pick day buttons — next 7 eligible days */}
+                        <div className="grid grid-cols-4 gap-2 mb-2">
+                          {Array.from({ length: 7 }).map((_, i) => {
+                            const d = new Date(minDate + 'T12:00:00')
+                            d.setDate(d.getDate() + i)
+                            const iso = d.toISOString().split('T')[0]
+                            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' })
+                            const monthDay = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })
+                            const selected = preferredDate === iso
+                            return (
+                              <button
+                                key={iso}
+                                type="button"
+                                onClick={() => setPreferredDate(iso)}
+                                className={`flex flex-col items-center justify-center py-3 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
+                                  selected
+                                    ? 'border-green-500 bg-green-50 text-green-800'
+                                    : 'border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50/50'
+                                }`}
+                              >
+                                <span className="text-xs font-bold uppercase tracking-wide">{dayName}</span>
+                                <span className={`text-base font-black mt-0.5 ${selected ? 'text-green-700' : 'text-gray-800'}`}>{monthDay}</span>
+                              </button>
+                            )
+                          })}
+                          {/* 8th slot: manual picker toggle */}
+                          <button
+                            type="button"
+                            onClick={() => setPreferredDate('')}
+                            className="flex flex-col items-center justify-center py-3 rounded-xl border border-dashed border-gray-300 text-gray-400 hover:border-green-300 hover:text-green-700 text-xs font-medium transition-all cursor-pointer"
+                          >
+                            <span className="text-lg">+</span>
+                            <span>Other</span>
+                          </button>
+                        </div>
+                        {/* Manual input — always available, pre-filled when a quick button is selected */}
                         <input
                           type="date"
                           value={preferredDate}
                           min={minDate}
                           onChange={e => setPreferredDate(e.target.value)}
-                          className="w-full border border-gray-300 rounded-xl p-3 text-gray-800"
+                          className="w-full border border-gray-200 rounded-xl p-2.5 text-gray-700 text-sm"
                         />
                       </div>
 
