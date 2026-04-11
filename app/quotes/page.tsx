@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock, CreditCard } from 'lucide-react'
+import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock, CreditCard, UserPlus } from 'lucide-react'
 import { QuoteStatusBadge } from '../../lib/statusIcons'
 
 interface LineItem {
@@ -57,6 +57,7 @@ export default function QuotesPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState('All')
+  const [savedClientIds, setSavedClientIds] = useState<Set<string>>(new Set())
 
   // Booking request this quote was created from (for back-linking)
   const [fromReqId, setFromReqId] = useState('')
@@ -271,6 +272,36 @@ export default function QuotesPage() {
     setTimeout(() => setSuccessMessage(''), 5000)
     setTimeout(() => setErrorMessage(''), 5000)
     setSending(null)
+  }
+
+  const saveAsClient = async (quote: Quote) => {
+    // Check for existing client with same name
+    const { data: existing } = await supabase
+      .from('Clients')
+      .select('id')
+      .eq('user_id', user?.id)
+      .ilike('name', quote.client_name)
+      .maybeSingle()
+    if (existing) {
+      setSavedClientIds(prev => new Set([...prev, quote.id]))
+      setSuccessMessage(`${quote.client_name} is already in your clients list.`)
+      setTimeout(() => setSuccessMessage(''), 3000)
+      return
+    }
+    const { error } = await supabase.from('Clients').insert([{
+      user_id: user?.id,
+      name: quote.client_name,
+      email: quote.client_email || null,
+      phone: quote.client_phone || null,
+    }])
+    if (!error) {
+      setSavedClientIds(prev => new Set([...prev, quote.id]))
+      setSuccessMessage(`${quote.client_name} added to your clients!`)
+      setTimeout(() => setSuccessMessage(''), 4000)
+    } else {
+      setErrorMessage(`Failed to save client: ${error.message}`)
+      setTimeout(() => setErrorMessage(''), 4000)
+    }
   }
 
   const resetForm = () => {
@@ -802,6 +833,18 @@ export default function QuotesPage() {
                     >
                       <Receipt className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Convert to Invoice
                     </button>
+                    {!quote.client_id && (
+                      <button
+                        onClick={() => saveAsClient(quote)}
+                        disabled={savedClientIds.has(quote.id)}
+                        className="text-xs font-bold py-2 px-3 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors cursor-pointer disabled:opacity-60"
+                      >
+                        {savedClientIds.has(quote.id)
+                          ? <><CheckCircle2 className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Saved</>
+                          : <><UserPlus className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Save as Client</>
+                        }
+                      </button>
+                    )}
                   </>
                 )}
                 {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
