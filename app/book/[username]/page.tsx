@@ -238,30 +238,36 @@ export default function BookingPage() {
       <div className="min-h-dvh bg-gradient-to-br from-green-50 to-emerald-50">
 
         {/* Header */}
-        <div className="bg-green-700 text-white text-center overflow-hidden">
+        <div className="bg-white shadow-sm">
+          {/* Cover photo — fixed 180px, never stretched */}
           {business?.booking_photo_url && (
-            <div className="relative h-36 w-full">
+            <div className="w-full h-44 overflow-hidden">
               <img
                 src={business.booking_photo_url}
-                alt={business.business_name || 'Business'}
-                className="w-full h-full object-cover opacity-40"
+                alt={business.business_name || 'Cover photo'}
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-green-800/60" />
             </div>
           )}
-          <div className="px-6 py-8">
-            <Leaf className="w-10 h-10 text-green-300 mb-2 mx-auto" />
-            <h1 className="text-2xl font-bold">{business?.business_name || 'Request a Service'}</h1>
-            <p className="text-green-200 text-sm mt-1 max-w-sm mx-auto">
-              {business?.booking_welcome_message || "Answer a few quick questions and we'll get back to you within 24 hours with a free estimate."}
-            </p>
-            {/* Service area badge */}
-            {hasServiceArea && (
-              <div className="inline-flex items-center gap-1.5 mt-3 bg-green-600/60 text-green-100 text-xs font-medium px-3 py-1.5 rounded-full">
-                <MapPin className="w-3.5 h-3.5" />
-                Serving within {business!.booking_service_radius} miles of {business!.booking_service_zip}
-              </div>
-            )}
+          {/* Business identity */}
+          <div className="px-5 py-5 flex items-center gap-4 border-b border-gray-100">
+            <div className="w-12 h-12 rounded-xl bg-green-700 flex items-center justify-center shrink-0 shadow-sm">
+              <Leaf className="w-6 h-6 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-gray-900 leading-tight truncate">
+                {business?.business_name || 'Request a Service'}
+              </h1>
+              <p className="text-gray-500 text-sm mt-0.5 leading-snug">
+                {business?.booking_welcome_message || "Answer a few questions and we'll get back to you within 24 hours."}
+              </p>
+              {hasServiceArea && (
+                <div className="inline-flex items-center gap-1 mt-1.5 text-green-700 text-xs font-medium">
+                  <MapPin className="w-3 h-3" />
+                  Within {business!.booking_service_radius} mi of {business!.booking_service_zip}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
