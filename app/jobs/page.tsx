@@ -199,6 +199,7 @@ export default function JobsPage() {
   const [filterPeriod, setFilterPeriod] = useState('All')
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
+  const [formStep, setFormStep] = useState(1)
   const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editCustomTitle, setEditCustomTitle] = useState('')
@@ -609,7 +610,7 @@ export default function JobsPage() {
             )
           })()}
           <button
-            onClick={() => { setShowForm(!showForm); setEditingJob(null) }}
+            onClick={() => { setShowForm(!showForm); setFormStep(1); setEditingJob(null) }}
             className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-2 px-4 rounded-xl hover:opacity-90 hover:shadow-md transition-all duration-200 cursor-pointer shadow whitespace-nowrap text-sm"
           >
             + Schedule Job
@@ -693,99 +694,293 @@ export default function JobsPage() {
       )}
 
       {showForm && (
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Leaf className="w-5 h-5 text-blue-500" aria-hidden="true" />New Job</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <JobTypeSelect value={title} onChange={setTitle} />
-              {title === '✏️ Custom' && (
-                <input
-                  placeholder="Enter custom job title *"
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  className="border border-green-400 rounded-lg p-3 text-gray-800"
-                />
-              )}
-            </div>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800"
-            >
-              <option value="">Select a Client *</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" aria-hidden="true" />Date *</label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 px-1 flex items-center gap-1"><Clock className="w-3.5 h-3.5" aria-hidden="true" />Time (optional)</label>
-              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800" />
-            </div>
-            {isPro ? (
-              <select value={recurring} onChange={(e) => setRecurring(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-                <option value="🔂 One-time">One-time</option>
-                <option value="📅 Weekly">Weekly</option>
-                <option value="🗓️ Biweekly">Biweekly</option>
-                <option value="📆 Monthly">Monthly</option>
-                <option value="✏️ Custom">Custom</option>
-              </select>
-            ) : (
-              <div className="border border-dashed border-green-300 bg-green-50 rounded-lg p-3 flex items-center justify-between">
-                <span className="text-sm text-gray-500">Recurring jobs</span>
-                <a href="/upgrade" className="text-xs font-bold text-green-700 flex items-center gap-1 hover:underline">🔒 Pro only →</a>
-              </div>
-            )}
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-              <option value="🔵 Scheduled">Scheduled</option>
-              <option value="🟡 In Progress">In Progress</option>
-              <option value="🟢 Completed">Completed</option>
-              <option value="🔴 Cancelled">Cancelled</option>
-            </select>
-            {workers.length > 0 && (
-              <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
-                <option value="">Assign to Worker (optional)</option>
-                {workers.map((w) => (
-                  <option key={w.id} value={w.id}>{w.name || 'Unnamed Worker'}</option>
-                ))}
-              </select>
-            )}
-            {recurring === '✏️ Custom' && (
-              <input
-                placeholder="Describe your schedule (e.g. Every 10 days)"
-                value={customRecurring}
-                onChange={(e) => setCustomRecurring(e.target.value)}
-                className="border border-green-400 rounded-lg p-3 text-gray-800 sm:col-span-2"
-              />
-            )}
-            <textarea
-              placeholder="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="border border-gray-300 rounded-lg p-3 text-gray-800 sm:col-span-2"
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 mb-6">
+          {/* Step header */}
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-lg font-bold text-gray-800">New Job</h3>
+            <span className="text-xs font-semibold text-gray-400">Step {formStep} of 3</span>
+          </div>
+          {/* Progress bar */}
+          <div className="w-full bg-gray-100 rounded-full h-1.5 mb-5">
+            <div
+              className="bg-green-500 h-1.5 rounded-full transition-all duration-300"
+              style={{ width: `${(formStep / 3) * 100}%` }}
             />
           </div>
-          {recurring !== '🔂 One-time' && recurring !== '✏️ Custom' && (
-            <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-bold text-sm flex items-center gap-1.5"><RefreshCw className="w-4 h-4" aria-hidden="true" />This will automatically schedule jobs for the next 3 months!</p>
+
+          {/* ── Step 1: What & Who ── */}
+          {formStep === 1 && (
+            <div className="space-y-5">
+              <div>
+                <p className="text-sm font-bold text-gray-700 mb-3">What type of job?</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {JOB_TYPES.map((type) => {
+                    const Icon = JOB_TYPE_ICONS[type]
+                    const selected = title === type
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setTitle(type)}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all duration-150 cursor-pointer text-left ${
+                          selected
+                            ? 'border-green-500 bg-green-50 text-green-800'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-green-300 hover:bg-green-50/50'
+                        }`}
+                      >
+                        {Icon && <Icon className={`w-4 h-4 shrink-0 ${selected ? 'text-green-600' : (JOB_TYPE_COLORS[type] ?? 'text-gray-400')}`} aria-hidden="true" />}
+                        <span className="truncate">{stripEmoji(type)}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {title === '✏️ Custom' && (
+                  <input
+                    placeholder="Enter custom job title *"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    className="mt-3 w-full border border-green-400 rounded-xl p-3 text-gray-800 text-sm"
+                    autoFocus
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-gray-700 block mb-2 flex items-center gap-1.5"><User className="w-4 h-4 text-gray-400" aria-hidden="true" />Client</label>
+                <select
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none"
+                >
+                  <option value="">Select a client *</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>{client.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormStep(2)}
+                  disabled={!title || (title === '✏️ Custom' && !customTitle.trim()) || !clientId}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Next →
+                </button>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="border-2 border-gray-200 text-gray-500 font-bold py-3 px-5 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
-          {recurring === '✏️ Custom' && (
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-700 font-bold text-sm flex items-center gap-1.5"><FileText className="w-4 h-4" aria-hidden="true" />Custom schedule will be saved as a note on the job.</p>
+
+          {/* ── Step 2: When ── */}
+          {formStep === 2 && (
+            <div className="space-y-5">
+              <div>
+                <label className="text-sm font-bold text-gray-700 flex items-center gap-1.5 mb-3"><CalendarDays className="w-4 h-4 text-gray-400" aria-hidden="true" />Date *</label>
+                <div className="grid grid-cols-4 gap-2 mb-2">
+                  {Array.from({ length: 7 }).map((_, i) => {
+                    const d = new Date()
+                    d.setDate(d.getDate() + i)
+                    const iso = d.toISOString().split('T')[0]
+                    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' })
+                    const monthDay = d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })
+                    const selected = date === iso
+                    return (
+                      <button
+                        key={iso}
+                        type="button"
+                        onClick={() => setDate(iso)}
+                        className={`flex flex-col items-center justify-center py-2.5 rounded-xl border transition-all cursor-pointer ${
+                          selected
+                            ? 'border-green-500 bg-green-50 text-green-800'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-50/50'
+                        }`}
+                      >
+                        <span className="text-xs font-bold uppercase tracking-wide">{dayName}</span>
+                        <span className={`text-base font-black mt-0.5 ${selected ? 'text-green-700' : 'text-gray-800'}`}>{monthDay}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-gray-700 flex items-center gap-1.5 mb-2"><Clock className="w-4 h-4 text-gray-400" aria-hidden="true" />Time <span className="font-normal text-gray-400">(optional)</span></label>
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 focus:border-green-400 focus:ring-2 focus:ring-green-100 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormStep(1)}
+                  className="border-2 border-gray-200 text-gray-500 font-bold py-3 px-5 rounded-xl cursor-pointer"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setFormStep(3)}
+                  disabled={!date}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                >
+                  Next →
+                </button>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="border-2 border-gray-200 text-gray-500 font-bold py-3 px-5 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
-          <div className="flex gap-3 mt-4">
-            <button onClick={handleAddJob} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity duration-200 cursor-pointer shadow">
-              {saving ? 'Saving...' : 'Save Job'}
-            </button>
-            <button onClick={() => setShowForm(false)} className="border-2 border-gray-300 text-gray-600 font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer">
-              Cancel
-            </button>
-          </div>
+
+          {/* ── Step 3: Details ── */}
+          {formStep === 3 && (
+            <div className="space-y-5">
+              {/* Recurring — featured section */}
+              <div>
+                <p className="text-sm font-bold text-gray-700 mb-1">How often?</p>
+                <p className="text-xs text-gray-400 mb-3">Recurring jobs auto-schedule for 3 months — set it once and forget it.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* One-time */}
+                  {[
+                    { value: '🔂 One-time', label: 'One-time', sub: 'Single job', proOnly: false },
+                    { value: '📅 Weekly', label: 'Weekly', sub: 'Every 7 days · 13 jobs', proOnly: true },
+                    { value: '🗓️ Biweekly', label: 'Biweekly', sub: 'Every 2 weeks · 7 jobs', proOnly: true },
+                    { value: '📆 Monthly', label: 'Monthly', sub: 'Once a month · 3 jobs', proOnly: true },
+                  ].map(({ value, label, sub, proOnly }) => {
+                    const selected = recurring === value
+                    const locked = proOnly && !isPro
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => !locked && setRecurring(value)}
+                        className={`relative flex flex-col items-start px-4 py-3 rounded-xl border min-h-[72px] transition-all duration-150 ${
+                          locked
+                            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                            : selected
+                            ? 'border-green-500 bg-green-50 cursor-pointer'
+                            : 'border-gray-200 bg-white hover:border-green-300 hover:bg-green-50/40 cursor-pointer'
+                        }`}
+                      >
+                        <span className={`text-sm font-bold ${selected && !locked ? 'text-green-800' : 'text-gray-800'}`}>{label}</span>
+                        <span className={`text-xs mt-0.5 ${selected && !locked ? 'text-green-600' : 'text-gray-400'}`}>{sub}</span>
+                        {locked && (
+                          <a
+                            href="/upgrade"
+                            onClick={e => e.stopPropagation()}
+                            className="absolute top-2 right-2 text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full hover:bg-green-200 transition-colors"
+                          >
+                            🔒 Pro
+                          </a>
+                        )}
+                        {selected && !locked && (
+                          <span className="absolute top-2 right-2 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                {recurring !== '🔂 One-time' && (
+                  <div className="mt-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-green-600 shrink-0" aria-hidden="true" />
+                    <p className="text-green-700 font-bold text-sm">Jobs will be auto-scheduled for the next 3 months!</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Status pills */}
+              <div>
+                <p className="text-sm font-bold text-gray-700 mb-2">Status</p>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { value: '🔵 Scheduled', label: 'Scheduled', active: 'bg-blue-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300' },
+                    { value: '🟡 In Progress', label: 'In Progress', active: 'bg-amber-500 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-amber-300' },
+                    { value: '🟢 Completed', label: 'Completed', active: 'bg-emerald-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-emerald-300' },
+                    { value: '🔴 Cancelled', label: 'Cancelled', active: 'bg-red-500 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-red-300' },
+                  ].map(({ value, label, active, inactive }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setStatus(value)}
+                      className={`text-sm font-semibold px-4 py-2 rounded-full cursor-pointer transition-all ${status === value ? active : inactive}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Worker */}
+              {workers.length > 0 && (
+                <div>
+                  <label className="text-sm font-bold text-gray-700 block mb-2">Assign to Worker <span className="font-normal text-gray-400">(optional)</span></label>
+                  <select
+                    value={assignedTo}
+                    onChange={(e) => setAssignedTo(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 bg-white focus:border-green-400 outline-none"
+                  >
+                    <option value="">Unassigned</option>
+                    {workers.map((w) => (
+                      <option key={w.id} value={w.id}>{w.name || 'Unnamed Worker'}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <label className="text-sm font-bold text-gray-700 block mb-2">Notes <span className="font-normal text-gray-400">(optional)</span></label>
+                <textarea
+                  placeholder="Gate code, parking notes, special instructions…"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  className="w-full border border-gray-200 rounded-xl p-3 text-gray-800 text-sm resize-none focus:border-green-400 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFormStep(2)}
+                  className="border-2 border-gray-200 text-gray-500 font-bold py-3 px-5 rounded-xl cursor-pointer"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handleAddJob}
+                  disabled={saving}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-xl cursor-pointer disabled:opacity-50 shadow-sm"
+                >
+                  {saving ? 'Saving…' : '✓ Save Job'}
+                </button>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="border-2 border-gray-200 text-gray-500 font-bold py-3 px-5 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -900,7 +1095,7 @@ export default function JobsPage() {
             <p className="text-gray-700 text-xl font-bold mb-2">No jobs scheduled yet</p>
             <p className="text-gray-400 mb-6">Schedule your first job to start tracking your work.</p>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => { setShowForm(true); setFormStep(1) }}
               className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow-md"
             >
               + Schedule Your First Job
