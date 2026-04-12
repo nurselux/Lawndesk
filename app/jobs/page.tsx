@@ -7,7 +7,7 @@ import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import { getJobPhotos, getPhotoUrl, JobPhoto } from '../../lib/jobPhotos'
-import { Leaf, Map, Pencil, Trash2, MessageSquare, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera, RefreshCw, Minus, Scissors, Wind, TreePine, Axe, Layers, Sprout, Ban, Circle, Wheat, Grid3x3, Flower2, Droplets, Zap, Snowflake, Pipette, type LucideIcon } from 'lucide-react'
+import { Leaf, Map, Pencil, Trash2, MessageSquare, CalendarDays, Clock, FileText, User, Search, Phone, MapPin, Camera, RefreshCw, Minus, Scissors, Wind, TreePine, Axe, Layers, Sprout, Ban, Circle, Wheat, Grid3x3, Flower2, Droplets, Zap, Snowflake, Pipette, Navigation, CloudRain, CheckCheck, type LucideIcon } from 'lucide-react'
 import { JobStatusBadge, jobStatusConfig, stripEmoji } from '../../lib/statusIcons'
 import { usePlan } from '../../lib/usePlan'
 
@@ -225,6 +225,14 @@ export default function JobsPage() {
   const [cardPhotos, setCardPhotos] = useState<Record<string, JobPhoto[]>>({})
   const [notifyingJob, setNotifyingJob] = useState<string | null>(null)
   const [notifiedJob, setNotifiedJob] = useState<string | null>(null)
+  const [showContactMenu, setShowContactMenu] = useState<string | null>(null)
+  const [sendingEta, setSendingEta] = useState<string | null>(null)
+  const [sentEta, setSentEta] = useState<string | null>(null)
+  const [rainCheckMode, setRainCheckMode] = useState(false)
+  const [selectedRainCheck, setSelectedRainCheck] = useState<Set<string>>(new Set())
+  const [rescheduling, setRescheduling] = useState(false)
+  const [showRainCheckConfirm, setShowRainCheckConfirm] = useState(false)
+  const [showAiSummary, setShowAiSummary] = useState<string | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -441,6 +449,69 @@ export default function JobsPage() {
     fetchJobs()
   }
 
+  const handleStartFinishJob = async (job: Job) => {
+    const newStatus = job.status === '🔵 Scheduled' ? '🟡 In Progress' : '🟢 Completed'
+    await handleStatusChange(job.id, newStatus)
+  }
+
+  const handleSendEta = async (job: Job) => {
+    const client = clients.find(c => c.id === job.client_id)
+    if (!client?.phone) return
+    setSendingEta(job.id)
+    try {
+      await fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: client.phone, message: `Hi, it's Lawndesk! I'm about 15 minutes away.` }),
+      })
+      setSentEta(job.id)
+      setTimeout(() => setSentEta(null), 4000)
+    } catch {
+      setErrorMessage('Failed to send ETA.')
+      setTimeout(() => setErrorMessage(''), 4000)
+    }
+    setSendingEta(null)
+  }
+
+  const handleRainCheck = async (sendSms: boolean) => {
+    setRescheduling(true)
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]
+    const selectedIds = Array.from(selectedRainCheck)
+
+    await Promise.all(selectedIds.map(id =>
+      (supabase.from('Jobs') as any).update({ date: tomorrowStr }).eq('id', id)
+    ))
+
+    if (sendSms) {
+      const affectedJobs = jobs.filter(j => selectedIds.includes(j.id))
+      const seen = new Set<string>()
+      const uniqueClientJobs = affectedJobs.filter(j => {
+        if (seen.has(j.client_id)) return false
+        seen.add(j.client_id)
+        return true
+      })
+      await Promise.all(uniqueClientJobs.map(j => {
+        const client = clients.find(c => c.id === j.client_id)
+        if (!client?.phone) return Promise.resolve()
+        return fetch('https://jxsodtvsebtgipgqtdgl.supabase.co/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: client.phone, message: `Hi ${client.name}! Your lawn service has been rescheduled to tomorrow due to weather. Sorry for the inconvenience! — Lawndesk` }),
+        })
+      }))
+    }
+
+    setRainCheckMode(false)
+    setSelectedRainCheck(new Set())
+    setShowRainCheckConfirm(false)
+    setRescheduling(false)
+    fetchJobs()
+    setSuccessMessage(`${selectedIds.length} job${selectedIds.length !== 1 ? 's' : ''} moved to tomorrow!`)
+    setTimeout(() => setSuccessMessage(''), 5000)
+  }
+
   const getNextInvoiceNumber = async () => {
     const { data } = await supabase.from('Invoices').select('invoice_number')
       .eq('user_id', user?.id).order('invoice_number', { ascending: false }).limit(1)
@@ -527,6 +598,14 @@ export default function JobsPage() {
       }
     }
   }
+
+  const todayStr = new Date().toISOString().split('T')[0]
+  const todayActiveJobs = jobs.filter(j => j.date === todayStr && j.status !== '🔴 Cancelled')
+  const completedToday = todayActiveJobs.filter(j => j.status === '🟢 Completed').length
+  const totalToday = todayActiveJobs.length
+  const nextJob = todayActiveJobs
+    .filter(j => j.status === '🔵 Scheduled' || j.status === '🟡 In Progress')
+    .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))[0] ?? null
 
   const filteredJobs = jobs.filter((j) => {
     const q = search.toLowerCase()
@@ -617,6 +696,25 @@ export default function JobsPage() {
           </button>
         </div>
       </div>
+
+      {/* Daily Progress Bar */}
+      {totalToday > 0 && (
+        <div className="mb-4 bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between text-xs font-bold text-gray-500 mb-2">
+            <span>{completedToday} of {totalToday} jobs done today</span>
+            {completedToday === totalToday
+              ? <span className="text-emerald-600">Day complete!</span>
+              : <span className="text-gray-400">{totalToday - completedToday} remaining</span>
+            }
+          </div>
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500"
+              style={{ width: `${(completedToday / totalToday) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Period tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
@@ -1088,6 +1186,143 @@ export default function JobsPage() {
         </div>
       )}
 
+      {/* AI Summary modal */}
+      {showAiSummary && (() => {
+        const job = jobs.find(j => j.id === showAiSummary)
+        if (!job) return null
+        return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setShowAiSummary(null)}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+              <h3 className="font-black text-gray-800 mb-1">Client Notes</h3>
+              <p className="text-xs text-gray-400 mb-3">{job.client_name} · {job.title}</p>
+              <p className="text-gray-700 text-sm leading-relaxed">{job.notes || 'No notes on file for this job.'}</p>
+              <button onClick={() => setShowAiSummary(null)} className="mt-5 w-full py-2.5 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">Close</button>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Next Job Card */}
+      {nextJob && !editingJob && !showForm && (
+        <div className="mb-6 bg-white rounded-2xl shadow-lg border-2 border-emerald-400 ring-4 ring-emerald-50 p-5 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/60 to-transparent pointer-events-none" />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full uppercase tracking-wide">Next Up</span>
+                {nextJob.status === '🟡 In Progress' && (
+                  <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">In Progress</span>
+                )}
+              </div>
+              {nextJob.time && <span className="text-sm font-bold text-gray-500">{nextJob.time}</span>}
+            </div>
+
+            <h3 className="text-xl font-black text-gray-900 mb-0.5">{nextJob.title}</h3>
+            <p className="text-gray-500 font-semibold mb-1 flex items-center gap-1.5 text-sm"><User className="w-3.5 h-3.5" aria-hidden="true" />{nextJob.client_name}</p>
+            {(() => {
+              const addr = clients.find(c => c.id === nextJob.client_id)?.address
+              return addr ? <p className="text-gray-400 text-xs mb-3 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{addr}</p> : null
+            })()}
+            {nextJob.notes && (
+              <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-1.5"><FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{nextJob.notes}</p>
+            )}
+
+            {/* Big Three buttons */}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {/* Navigate */}
+              {(() => {
+                const addr = clients.find(c => c.id === nextJob.client_id)?.address
+                return addr ? (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(addr)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center justify-center gap-1.5 py-3 bg-blue-500 text-white rounded-xl font-bold text-xs hover:bg-blue-600 transition-colors"
+                  >
+                    <Navigation className="w-5 h-5" aria-hidden="true" />
+                    Navigate
+                  </a>
+                ) : (
+                  <button disabled className="flex flex-col items-center justify-center gap-1.5 py-3 bg-gray-100 text-gray-400 rounded-xl font-bold text-xs cursor-not-allowed">
+                    <Navigation className="w-5 h-5" aria-hidden="true" />
+                    Navigate
+                  </button>
+                )
+              })()}
+
+              {/* Contact */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowContactMenu(showContactMenu === nextJob.id ? null : nextJob.id)}
+                  className="w-full flex flex-col items-center justify-center gap-1.5 py-3 bg-purple-500 text-white rounded-xl font-bold text-xs hover:bg-purple-600 transition-colors"
+                >
+                  <Phone className="w-5 h-5" aria-hidden="true" />
+                  Contact
+                </button>
+                {showContactMenu === nextJob.id && (
+                  <div className="absolute bottom-full mb-2 left-0 right-0 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-20 min-w-[140px]">
+                    {clients.find(c => c.id === nextJob.client_id)?.phone && (
+                      <a
+                        href={`tel:${clients.find(c => c.id === nextJob.client_id)!.phone}`}
+                        onClick={() => setShowContactMenu(null)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                      >
+                        <Phone className="w-4 h-4 text-green-600" aria-hidden="true" />
+                        <span className="font-semibold text-gray-700 text-sm">Call</span>
+                      </a>
+                    )}
+                    {clients.find(c => c.id === nextJob.client_id)?.phone && (
+                      <a
+                        href={`sms:${clients.find(c => c.id === nextJob.client_id)!.phone}`}
+                        onClick={() => setShowContactMenu(null)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                      >
+                        <MessageSquare className="w-4 h-4 text-blue-600" aria-hidden="true" />
+                        <span className="font-semibold text-gray-700 text-sm">Text</span>
+                      </a>
+                    )}
+                    <button
+                      onClick={() => { setShowAiSummary(nextJob.id); setShowContactMenu(null) }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-t border-gray-100 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                      <span className="font-semibold text-gray-700 text-sm">Client Notes</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Start / Finish */}
+              <button
+                onClick={() => handleStartFinishJob(nextJob)}
+                className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                  nextJob.status === '🟡 In Progress'
+                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                    : 'bg-amber-500 text-white hover:bg-amber-600'
+                }`}
+              >
+                {nextJob.status === '🟡 In Progress' ? (
+                  <><CheckCheck className="w-5 h-5" aria-hidden="true" />Finish Job</>
+                ) : (
+                  <><Zap className="w-5 h-5" aria-hidden="true" />Start Job</>
+                )}
+              </button>
+            </div>
+
+            {/* ETA SMS */}
+            {clients.find(c => c.id === nextJob.client_id)?.phone && (
+              <button
+                onClick={() => handleSendEta(nextJob)}
+                disabled={!!sendingEta}
+                className="w-full py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {sentEta === nextJob.id ? 'ETA Sent!' : sendingEta === nextJob.id ? 'Sending…' : '📍 Send ETA — "I\'m 15 min away"'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div>
         {jobs.length === 0 ? (
           <div className="text-center py-16">
@@ -1123,22 +1358,62 @@ export default function JobsPage() {
                 <div className="flex items-center gap-3 mb-3">
                   <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide">{label}</h3>
                   <div className="flex-1 h-px bg-gray-200" />
+                  {dateKey === todayStr && !rainCheckMode && groupedJobs[dateKey].some(j => j.status !== '🟢 Completed' && j.status !== '🔴 Cancelled') && (
+                    <button
+                      onClick={() => { setRainCheckMode(true); setSelectedRainCheck(new Set()) }}
+                      className="flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      <CloudRain className="w-3.5 h-3.5" aria-hidden="true" />
+                      Rain-Check
+                    </button>
+                  )}
+                  {dateKey === todayStr && rainCheckMode && (
+                    <button
+                      onClick={() => { setRainCheckMode(false); setSelectedRainCheck(new Set()); setShowRainCheckConfirm(false) }}
+                      className="text-xs font-bold text-red-500 hover:text-red-700 cursor-pointer whitespace-nowrap"
+                    >
+                      Cancel
+                    </button>
+                  )}
                   <span className="text-xs text-gray-400 font-semibold">{groupedJobs[dateKey].length} job{groupedJobs[dateKey].length !== 1 ? 's' : ''}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {groupedJobs[dateKey].map((job) => (
-            <div key={job.id} className={`bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4 ${
-              job.status === '🟢 Completed' ? 'border-green-500' :
-              job.status === '🟡 In Progress' ? 'border-yellow-500' :
-              job.status === '🔴 Cancelled' ? 'border-red-500' :
-              'border-blue-500'
-            }`}>
+            <div
+              key={job.id}
+              onClick={rainCheckMode && job.date === todayStr && job.status !== '🟢 Completed' && job.status !== '🔴 Cancelled' ? () => {
+                const n = new Set(selectedRainCheck)
+                if (n.has(job.id)) n.delete(job.id); else n.add(job.id)
+                setSelectedRainCheck(n)
+              } : undefined}
+              className={[
+                'bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4',
+                job.status === '🟢 Completed' ? 'border-green-500' :
+                job.status === '🟡 In Progress' ? 'border-yellow-500' :
+                job.status === '🔴 Cancelled' ? 'border-red-500' :
+                'border-blue-500',
+                rainCheckMode && job.date === todayStr && job.status !== '🟢 Completed' && job.status !== '🔴 Cancelled'
+                  ? selectedRainCheck.has(job.id)
+                    ? 'ring-2 ring-blue-500 cursor-pointer'
+                    : 'ring-2 ring-gray-200 cursor-pointer hover:ring-blue-300'
+                  : '',
+              ].join(' ')}
+            >
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-base font-bold text-gray-800">{job.title}</h3>
-                <div className="flex gap-2">
-                  <button onClick={() => handleEditJob(job)} aria-label="Edit job" className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
-                  <button onClick={() => handleDeleteJob(job.id)} aria-label="Delete job" className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
-                </div>
+                <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                  {rainCheckMode && job.date === todayStr && job.status !== '🟢 Completed' && job.status !== '🔴 Cancelled' && (
+                    <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${selectedRainCheck.has(job.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                      {selectedRainCheck.has(job.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                    </span>
+                  )}
+                  {job.title}
+                </h3>
+                {!rainCheckMode && (
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEditJob(job)} aria-label="Edit job" className="text-blue-400 hover:text-blue-600 transition-colors duration-200 cursor-pointer"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
+                    <button onClick={() => handleDeleteJob(job.id)} aria-label="Delete job" className="text-red-400 hover:text-red-600 transition-colors duration-200 cursor-pointer"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
+                  </div>
+                )}
               </div>
               <div className="space-y-1 mb-3">
                 <p className="text-gray-500 text-sm flex items-center gap-1"><User className="w-3.5 h-3.5" aria-hidden="true" /> {job.client_name}</p>
@@ -1258,6 +1533,65 @@ export default function JobsPage() {
             </div>
                   ))}
                 </div>
+
+                {/* Rain-Check confirmation panel */}
+                {dateKey === todayStr && rainCheckMode && (
+                  <div className="mt-4 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-blue-800">
+                        {selectedRainCheck.size} job{selectedRainCheck.size !== 1 ? 's' : ''} selected
+                      </span>
+                      <button
+                        onClick={() => {
+                          const selectable = groupedJobs[dateKey]
+                            .filter(j => j.status !== '🟢 Completed' && j.status !== '🔴 Cancelled')
+                            .map(j => j.id)
+                          setSelectedRainCheck(new Set(selectable))
+                        }}
+                        className="text-xs font-bold text-blue-700 hover:text-blue-900 cursor-pointer underline"
+                      >
+                        Select All Today
+                      </button>
+                    </div>
+                    {!showRainCheckConfirm ? (
+                      <button
+                        onClick={() => selectedRainCheck.size > 0 && setShowRainCheckConfirm(true)}
+                        disabled={selectedRainCheck.size === 0}
+                        className="w-full py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-700 transition-colors"
+                      >
+                        Move to Tomorrow →
+                      </button>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm font-bold text-gray-800 mb-1">
+                          Move {selectedRainCheck.size} job{selectedRainCheck.size !== 1 ? 's' : ''} to tomorrow?
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleRainCheck(true)}
+                            disabled={rescheduling}
+                            className="flex-1 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl disabled:opacity-50 cursor-pointer hover:bg-blue-700 transition-colors"
+                          >
+                            {rescheduling ? 'Moving…' : 'Yes + Send SMS'}
+                          </button>
+                          <button
+                            onClick={() => handleRainCheck(false)}
+                            disabled={rescheduling}
+                            className="flex-1 py-2.5 bg-white border-2 border-blue-300 text-blue-700 font-bold text-xs rounded-xl disabled:opacity-50 cursor-pointer hover:bg-blue-50 transition-colors"
+                          >
+                            {rescheduling ? 'Moving…' : 'Move, No SMS'}
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => setShowRainCheckConfirm(false)}
+                          className="w-full text-xs text-gray-500 hover:text-gray-700 cursor-pointer py-1"
+                        >
+                          Back
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )
           })
