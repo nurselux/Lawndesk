@@ -786,83 +786,86 @@ export default function QuotesPage() {
               </div>
 
               {/* Action bar */}
-              <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 flex items-center gap-2 flex-wrap rounded-b-2xl">
-                {/* Send email */}
-                <button
-                  onClick={() => sendQuoteEmail(quote)}
-                  disabled={sending === quote.id}
-                  className={`text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                    quote.client_email ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-400'
-                  }`}
-                  title={quote.client_email || 'No email on file'}
-                >
-                  <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
-                </button>
-
-                {/* Send SMS */}
-                <button
-                  onClick={() => sendQuoteSMS(quote)}
-                  className={`text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                    quote.client_phone ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-100 text-gray-400'
-                  }`}
-                  title={quote.client_phone || 'No phone on file'}
-                >
-                  <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
-                </button>
-
-                {/* Copy link */}
-                <button
-                  onClick={() => copyLink(quote.share_token)}
-                  className="text-xs font-bold py-2 px-3 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors cursor-pointer"
-                >
-                  <Link2 className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === quote.share_token ? 'Copied!' : 'Copy Link'}
-                </button>
-
-                {/* Status actions */}
+              <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 rounded-b-2xl">
+                {/* Primary action row (only for approved quotes) */}
                 {quote.status === 'approved' && (
-                  <>
-                    <button
-                      onClick={() => convertToJob(quote)}
-                      className="text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Convert to Job
-                    </button>
+                  <div className="flex gap-2 mb-2">
                     <button
                       onClick={() => convertToInvoice(quote)}
-                      className="text-xs font-bold py-2 px-3 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors cursor-pointer"
+                      className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
-                      <Receipt className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Convert to Invoice
+                      <Receipt className="w-3.5 h-3.5" aria-hidden="true" />Invoice
+                    </button>
+                    <button
+                      onClick={() => convertToJob(quote)}
+                      className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />Job
                     </button>
                     {!quote.client_id && (
                       <button
                         onClick={() => saveAsClient(quote)}
                         disabled={savedClientIds.has(quote.id)}
-                        className="text-xs font-bold py-2 px-3 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors cursor-pointer disabled:opacity-60"
+                        className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
                       >
                         {savedClientIds.has(quote.id)
-                          ? <><CheckCircle2 className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Saved</>
-                          : <><UserPlus className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Save as Client</>
+                          ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />Saved</>
+                          : <><UserPlus className="w-3.5 h-3.5" aria-hidden="true" />Client</>
                         }
                       </button>
                     )}
-                  </>
-                )}
-                {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
-                  <button
-                    onClick={() => updateStatus(quote.id, 'approved')}
-                    className="text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />Mark Approved
-                  </button>
+                  </div>
                 )}
 
-                <button
-                  onClick={() => deleteQuote(quote.id)}
-                  aria-label="Delete quote"
-                  className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400 transition-colors cursor-pointer ml-auto"
-                >
-                  <Trash2 className="w-4 h-4" aria-hidden="true" />
-                </button>
+                {/* Secondary / utility row */}
+                <div className="flex items-center gap-1.5">
+                  {/* Share actions — all same neutral gray */}
+                  <button
+                    onClick={() => sendQuoteEmail(quote)}
+                    disabled={sending === quote.id}
+                    title={quote.client_email || 'No email on file'}
+                    className={`text-xs font-semibold py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                      quote.client_email ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100' : 'bg-white border border-gray-100 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
+                  </button>
+
+                  <button
+                    onClick={() => sendQuoteSMS(quote)}
+                    title={quote.client_phone || 'No phone on file'}
+                    className={`text-xs font-semibold py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                      quote.client_phone ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100' : 'bg-white border border-gray-100 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
+                  </button>
+
+                  <button
+                    onClick={() => copyLink(quote.share_token)}
+                    className="text-xs font-semibold py-1.5 px-2.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <Link2 className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === quote.share_token ? 'Copied!' : 'Link'}
+                  </button>
+
+                  {/* Mark Approved — only for non-terminal statuses */}
+                  {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
+                    <button
+                      onClick={() => updateStatus(quote.id, 'approved')}
+                      className="text-xs font-bold py-1.5 px-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Approve
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => deleteQuote(quote.id)}
+                    aria-label="Delete quote"
+                    className="ml-auto text-xs font-bold py-1.5 px-2.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-400 hover:border-red-200 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
