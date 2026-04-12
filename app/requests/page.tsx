@@ -482,14 +482,7 @@ export default function RequestsPage() {
                               </button>
                             )
                           })}
-                          <button
-                            type="button"
-                            onClick={() => setVisitDate('')}
-                            className="flex flex-col items-center justify-center py-2.5 rounded-xl border border-dashed border-green-300 bg-white/40 text-green-600 hover:border-green-500 text-xs font-medium transition-all cursor-pointer"
-                          >
-                            <span className="text-base leading-none">+</span>
-                            <span>Other</span>
-                          </button>
+
                         </div>
                         <input
                           type="date"

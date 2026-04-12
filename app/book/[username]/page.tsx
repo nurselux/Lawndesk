@@ -534,15 +534,7 @@ export default function BookingPage() {
                               </button>
                             )
                           })}
-                          {/* 8th slot: manual picker toggle */}
-                          <button
-                            type="button"
-                            onClick={() => setPreferredDate('')}
-                            className="flex flex-col items-center justify-center py-3 rounded-xl border border-dashed border-gray-300 text-gray-400 hover:border-green-300 hover:text-green-700 text-xs font-medium transition-all cursor-pointer"
-                          >
-                            <span className="text-lg">+</span>
-                            <span>Other</span>
-                          </button>
+
                         </div>
                         {/* Manual input — always available, pre-filled when a quick button is selected */}
                         <input
