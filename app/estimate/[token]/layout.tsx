@@ -22,8 +22,8 @@ export async function generateMetadata({
 
     if (!quote) {
       return {
-        title: 'Quote - LawnDesk',
-        description: 'View this quote on LawnDesk',
+        title: 'Estimate - LawnDesk',
+        description: 'View this estimate on LawnDesk',
       }
     }
 
@@ -35,20 +35,20 @@ export async function generateMetadata({
     const statusEmoji = quote.status === 'approved' ? '✅' : quote.status === 'declined' ? '❌' : '📋'
 
     return {
-      title: `${quote.title} - Quote for ${quote.client_name}`,
-      description: `Quote for $${formattedAmount} prepared by LawnDesk. ${quote.description || 'View details and approve or decline this quote.'}`,
+      title: `${quote.title} - Estimate for ${quote.client_name}`,
+      description: `Estimate for $${formattedAmount} prepared by LawnDesk. ${quote.description || 'View details and approve or decline this estimate.'}`,
       openGraph: {
         type: 'website',
         locale: 'en_US',
-        url: `https://lawndesk.pro/quote/${token}`,
+        url: `https://lawndesk.pro/estimate/${token}`,
         title: `${statusEmoji} ${quote.title}`,
-        description: `Quote for ${quote.client_name} - ${formattedAmount}`,
+        description: `Estimate for ${quote.client_name} - ${formattedAmount}`,
         images: [
           {
             url: '/og-quote.png',
             width: 1200,
             height: 630,
-            alt: `${quote.title} - Quote from LawnDesk`,
+            alt: `${quote.title} - Estimate from LawnDesk`,
             type: 'image/png',
           },
         ],
@@ -56,20 +56,20 @@ export async function generateMetadata({
       twitter: {
         card: 'summary_large_image',
         title: `${statusEmoji} ${quote.title}`,
-        description: `Quote for ${quote.client_name} - ${formattedAmount}`,
+        description: `Estimate for ${quote.client_name} - ${formattedAmount}`,
         images: ['/og-quote.png'],
       },
     }
   } catch (error) {
-    console.error('Error generating quote metadata:', error)
+    console.error('Error generating estimate metadata:', error)
     return {
-      title: 'Quote - LawnDesk',
-      description: 'View this quote on LawnDesk',
+      title: 'Estimate - LawnDesk',
+      description: 'View this estimate on LawnDesk',
     }
   }
 }
 
-export default function QuoteLayout({
+export default function EstimateLayout({
   children,
 }: {
   children: React.ReactNode

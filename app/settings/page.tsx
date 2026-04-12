@@ -1114,9 +1114,9 @@ export default function SettingsPage() {
               {/* Quote Notifications */}
               <div className="bg-white rounded-xl p-6 shadow">
                 <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-green-700" aria-hidden="true" />Quote Approvals & Declines
+                  <FileText className="w-5 h-5 text-green-700" aria-hidden="true" />Estimate Approvals & Declines
                 </h3>
-                <p className="text-gray-500 text-sm mb-5">Alert me when a client approves or declines a quote.</p>
+                <p className="text-gray-500 text-sm mb-5">Alert me when a client approves or declines an estimate.</p>
                 <div className="space-y-4">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <div onClick={() => setQuoteNotifyEmail(!quoteNotifyEmail)} className={`w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${quoteNotifyEmail ? 'bg-green-500' : 'bg-gray-300'}`}>

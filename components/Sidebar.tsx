@@ -9,18 +9,6 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-const navItems = [
-  { label: 'Dashboard',  Icon: LayoutDashboard, href: '/dashboard',  proOnly: false },
-  { label: 'Clients',    Icon: Users,            href: '/clients',    proOnly: false },
-  { label: 'Jobs',       Icon: Leaf,             href: '/jobs',       proOnly: false },
-  { label: 'Calendar',   Icon: CalendarDays,     href: '/calendar',   proOnly: false },
-  { label: 'Quotes',     Icon: ClipboardList,    href: '/quotes',     proOnly: false },
-  { label: 'Invoices',   Icon: Receipt,          href: '/invoices',   proOnly: false },
-  { label: 'Requests',   Icon: Inbox,            href: '/requests',   proOnly: true  },
-  { label: 'Team',       Icon: HardHat,          href: '/team',       proOnly: true  },
-  { label: 'Settings',   Icon: Settings,         href: '/settings',   proOnly: false },
-]
-
 type NavItem = {
   label: string
   Icon: React.ComponentType<{ className?: string }>
@@ -28,6 +16,48 @@ type NavItem = {
   proOnly: boolean
   badge?: number
 }
+
+type NavGroup = {
+  label?: string
+  items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    items: [
+      { label: 'Dashboard',  Icon: LayoutDashboard, href: '/dashboard',  proOnly: false },
+    ],
+  },
+  {
+    label: 'Schedule',
+    items: [
+      { label: 'Jobs',      Icon: Leaf,        href: '/jobs',      proOnly: false },
+      { label: 'Calendar',  Icon: CalendarDays, href: '/calendar',  proOnly: false },
+    ],
+  },
+  {
+    label: 'Sales',
+    items: [
+      { label: 'Estimates', Icon: ClipboardList, href: '/estimates', proOnly: false },
+      { label: 'Requests',  Icon: Inbox,         href: '/requests',  proOnly: true  },
+      { label: 'Invoices',  Icon: Receipt,       href: '/invoices',  proOnly: false },
+    ],
+  },
+  {
+    label: 'CRM',
+    items: [
+      { label: 'Clients',   Icon: Users,    href: '/clients',   proOnly: false },
+      { label: 'Team',      Icon: HardHat,  href: '/team',      proOnly: true  },
+    ],
+  },
+  {
+    items: [
+      { label: 'Settings',  Icon: Settings, href: '/settings',  proOnly: false },
+    ],
+  },
+]
+
+const navItems = navGroups.flatMap(g => g.items)
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -99,14 +129,6 @@ export default function Sidebar() {
     router.push('/login')
   }
 
-  const navItemsWithBadges: NavItem[] = navItems.map((item) => ({
-    ...item,
-    badge:
-      item.href === '/invoices' && overdueCount > 0 ? overdueCount
-      : item.href === '/requests' && pendingRequestsCount > 0 ? pendingRequestsCount
-      : undefined,
-  }))
-
   const isActive = (href: string) =>
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
 
@@ -136,26 +158,42 @@ export default function Sidebar() {
           <p className="text-green-300 text-xs mt-1">Less paperwork, more yardwork</p>
         </div>
         <nav className="flex-1 p-4">
-          {navItemsWithBadges.map((item) => {
-            const locked = item.proOnly && !isPro
+          {navGroups.map((group, gi) => {
+            const groupItems = group.items.map(item => ({
+              ...item,
+              badge:
+                item.href === '/invoices' && overdueCount > 0 ? overdueCount
+                : item.href === '/requests' && pendingRequestsCount > 0 ? pendingRequestsCount
+                : undefined,
+            }))
             return (
-              <Link key={item.href} href={item.href}>
-                <div className={`p-3 rounded-lg mb-2 font-medium transition-colors duration-200 cursor-pointer hover:bg-green-700 flex items-center justify-between ${
-                  isActive(item.href) ? 'bg-green-600' : ''
-                } ${locked ? 'opacity-70' : ''}`}>
-                  <span className="flex items-center gap-3">
-                    <item.Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
-                    {item.label}
-                  </span>
-                  {locked ? (
-                    <Lock className="w-3.5 h-3.5 text-green-300 shrink-0" aria-label="Pro feature" />
-                  ) : item.badge ? (
-                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </div>
-              </Link>
+              <div key={gi}>
+                {group.label && (
+                  <p className="text-green-400 text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1">{group.label}</p>
+                )}
+                {groupItems.map((item) => {
+                  const locked = item.proOnly && !isPro
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <div className={`p-3 rounded-lg mb-1 font-medium transition-colors duration-200 cursor-pointer hover:bg-green-700 flex items-center justify-between ${
+                        isActive(item.href) ? 'bg-green-600' : ''
+                      } ${locked ? 'opacity-70' : ''}`}>
+                        <span className="flex items-center gap-3">
+                          <item.Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
+                          {item.label}
+                        </span>
+                        {locked ? (
+                          <Lock className="w-3.5 h-3.5 text-green-300 shrink-0" aria-label="Pro feature" />
+                        ) : item.badge ? (
+                          <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
             )
           })}
         </nav>
@@ -220,27 +258,43 @@ export default function Sidebar() {
           </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItemsWithBadges.map((item) => {
-            const locked = item.proOnly && !isPro
+        <nav className="flex-1 p-4 overflow-y-auto">
+          {navGroups.map((group, gi) => {
+            const groupItems = group.items.map(item => ({
+              ...item,
+              badge:
+                item.href === '/invoices' && overdueCount > 0 ? overdueCount
+                : item.href === '/requests' && pendingRequestsCount > 0 ? pendingRequestsCount
+                : undefined,
+            }))
             return (
-              <Link key={item.href} href={item.href}>
-                <div className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-base transition-colors duration-200 cursor-pointer ${
-                  isActive(item.href)
-                    ? 'bg-green-600 text-white'
-                    : 'hover:bg-green-700 text-green-100'
-                } ${locked ? 'opacity-70' : ''}`}>
-                  <item.Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
-                  <span className="flex-1">{item.label}</span>
-                  {locked ? (
-                    <Lock className="w-3.5 h-3.5 text-green-300 shrink-0" aria-label="Pro feature" />
-                  ) : item.badge ? (
-                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </div>
-              </Link>
+              <div key={gi} className="mb-1">
+                {group.label && (
+                  <p className="text-green-400 text-xs font-semibold uppercase tracking-wider px-4 pt-4 pb-1">{group.label}</p>
+                )}
+                {groupItems.map((item) => {
+                  const locked = item.proOnly && !isPro
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <div className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-base transition-colors duration-200 cursor-pointer ${
+                        isActive(item.href)
+                          ? 'bg-green-600 text-white'
+                          : 'hover:bg-green-700 text-green-100'
+                      } ${locked ? 'opacity-70' : ''}`}>
+                        <item.Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
+                        <span className="flex-1">{item.label}</span>
+                        {locked ? (
+                          <Lock className="w-3.5 h-3.5 text-green-300 shrink-0" aria-label="Pro feature" />
+                        ) : item.badge ? (
+                          <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                            {item.badge}
+                          </span>
+                        ) : null}
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
             )
           })}
         </nav>

@@ -3,6 +3,12 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
   compress: true,
+  async redirects() {
+    return [
+      { source: '/quotes', destination: '/estimates', permanent: true },
+      { source: '/quote/:token', destination: '/estimate/:token', permanent: true },
+    ]
+  },
   images: {
     remotePatterns: [
       {

@@ -114,7 +114,7 @@ export default function PortalDashboardPage() {
             {pendingQuotes.length > 0 && (
               <div className="bg-blue-600 rounded-2xl p-4 text-white text-center shadow">
                 <p className="text-blue-100 text-xs font-semibold mb-0.5">Awaiting Approval</p>
-                <p className="text-2xl font-bold">{pendingQuotes.length} quote{pendingQuotes.length !== 1 ? 's' : ''}</p>
+                <p className="text-2xl font-bold">{pendingQuotes.length} estimate{pendingQuotes.length !== 1 ? 's' : ''}</p>
               </div>
             )}
             {totalOwed > 0 && (
@@ -129,12 +129,12 @@ export default function PortalDashboardPage() {
         {/* Quotes */}
         <section>
           <h2 className="font-bold text-gray-800 text-lg mb-3">
-            Quotes {quotes.length > 0 && <span className="text-gray-400 font-normal text-sm">({quotes.length})</span>}
+            Estimates {quotes.length > 0 && <span className="text-gray-400 font-normal text-sm">({quotes.length})</span>}
           </h2>
           {quotes.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
               <p className="text-3xl mb-2">📋</p>
-              <p className="text-gray-400 text-sm">No quotes yet</p>
+              <p className="text-gray-400 text-sm">No estimates yet</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -157,9 +157,9 @@ export default function PortalDashboardPage() {
                   </div>
                   {(q.status === 'sent' || q.status === 'draft') && (
                     <div className="border-t border-gray-100 bg-blue-50 px-4 py-3 flex justify-between items-center">
-                      <p className="text-blue-700 text-sm font-semibold">Review and approve this quote</p>
+                      <p className="text-blue-700 text-sm font-semibold">Review and approve this estimate</p>
                       <a
-                        href={`/quote/${q.share_token}`}
+                        href={`/estimate/${q.share_token}`}
                         className="bg-green-700 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-green-800 transition"
                       >
                         Review →

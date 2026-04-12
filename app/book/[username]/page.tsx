@@ -653,7 +653,7 @@ export default function BookingPage() {
                         disabled={!firstName.trim() || !clientPhone.trim() || submitting}
                         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-4 rounded-2xl text-lg hover:scale-[1.02] transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                       >
-                        {submitting ? 'Sending...' : customQuoteMode ? 'Request Custom Quote' : 'Send Request'}
+                        {submitting ? 'Sending...' : customQuoteMode ? 'Request Custom Estimate' : 'Send Request'}
                       </button>
                     </div>
                   </>

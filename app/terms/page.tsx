@@ -54,7 +54,7 @@ export default function TermsPage() {
               <strong>Program name: LawnDesk SMS Notifications.</strong> By providing your phone
               number and opting into SMS notifications, you agree to receive automated service-related
               text messages from LawnDesk, including appointment reminders, job status updates,
-              invoice links, and quote notifications.
+              invoice links, and estimate notifications.
             </p>
             <p className="mb-3">Message frequency varies based on your service schedule. Msg &amp; data rates may apply based on your carrier plan.</p>
             <p className="mb-2">To opt out of SMS messages at any time:</p>

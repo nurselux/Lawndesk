@@ -229,7 +229,7 @@ export default function RequestsPage() {
       ...(req.client_email ? { from_req_email: req.client_email } : {}),
       from_req_service: req.service_type,
     })
-    router.push(`/quotes?${params.toString()}`)
+    router.push(`/estimates?${params.toString()}`)
   }
 
   // Split active vs deleted
@@ -421,7 +421,7 @@ export default function RequestsPage() {
                           onClick={() => goToCreateQuote(req)}
                           className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
                         >
-                          <ClipboardList className="w-4 h-4 inline mr-1" aria-hidden="true" />Create Quote
+                          <ClipboardList className="w-4 h-4 inline mr-1" aria-hidden="true" />Create Estimate
                         </button>
                       </div>
                       <div className="flex gap-2">
@@ -526,14 +526,14 @@ export default function RequestsPage() {
                           <Calendar className="w-4 h-4 inline mr-1" aria-hidden="true" />Estimate visit scheduled
                           {req.scheduled_date && ` — ${formatDate(req.scheduled_date)}${req.scheduled_time ? ` at ${formatTime(req.scheduled_time)}` : ''}`}
                         </p>
-                        <p className="text-xs text-green-600">Shows on your calendar. Create a quote when ready.</p>
+                        <p className="text-xs text-green-600">Shows on your calendar. Create an estimate when ready.</p>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => goToCreateQuote(req)}
                           className="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-sm cursor-pointer"
                         >
-                          <ClipboardList className="w-4 h-4 inline mr-1" aria-hidden="true" />Create Quote
+                          <ClipboardList className="w-4 h-4 inline mr-1" aria-hidden="true" />Create Estimate
                         </button>
                         <button
                           onClick={() => saveAsClient(req)}

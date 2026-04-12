@@ -325,9 +325,9 @@ export default function CalendarPage() {
                     <p className="text-xs opacity-75">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
                     {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
                   </div>
-                  <Link href={`/quotes?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
+                  <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
                     <button className="text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded-lg cursor-pointer shrink-0 transition">
-                      {visit.quote_id ? '📋 View Quote' : '+ Quote'}
+                      {visit.quote_id ? '📋 View Estimate' : '+ Estimate'}
                     </button>
                   </Link>
                 </div>
@@ -386,7 +386,7 @@ export default function CalendarPage() {
                   <span className="text-sm font-bold text-purple-600">{monthVisits.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Awaiting quote</span>
+                  <span className="text-xs text-gray-500">Awaiting estimate</span>
                   <span className="text-sm font-bold text-amber-600">{monthVisits.filter(v => !v.quote_id).length}</span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -425,9 +425,9 @@ export default function CalendarPage() {
                         <p className="text-xs text-gray-500 truncate">{visit.service_type}{date ? ` · ${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}{(visit.scheduled_time || visit.preferred_time) ? ` · ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
                         {visit.address && <p className="text-xs text-gray-400 truncate">📍 {visit.address}</p>}
                       </div>
-                      <Link href={`/quotes?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
+                      <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
                         <button className={`text-xs font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition ${visit.quote_id ? 'bg-gray-100 text-gray-500' : 'bg-purple-100 hover:bg-purple-200 text-purple-700'}`}>
-                          {visit.quote_id ? '📋 Quoted' : '+ Quote'}
+                          {visit.quote_id ? '📋 Estimated' : '+ Estimate'}
                         </button>
                       </Link>
                     </div>
@@ -461,11 +461,11 @@ export default function CalendarPage() {
             <div className="flex items-center gap-2">
               <span className="text-lg">📋</span>
               <div>
-                <p className="font-bold text-amber-800 text-sm">Quote Pipeline</p>
+                <p className="font-bold text-amber-800 text-sm">Estimate Pipeline</p>
                 <p className="text-xs text-amber-600">Potential revenue — not yet confirmed</p>
               </div>
             </div>
-            <Link href="/quotes">
+            <Link href="/estimates">
               <span className="text-xs font-bold text-amber-600 hover:text-amber-800 cursor-pointer">View all →</span>
             </Link>
           </div>

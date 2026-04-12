@@ -306,13 +306,13 @@ export default function ClientDetailPage() {
         {/* Quotes */}
         <div className="bg-white rounded-xl p-6 shadow">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">Quotes ({quotes.length})</h3>
-            <Link href="/quotes" className="text-sm text-blue-600 hover:underline">+ New Quote</Link>
+            <h3 className="text-lg font-bold text-gray-800">Estimates ({quotes.length})</h3>
+            <Link href="/estimates" className="text-sm text-blue-600 hover:underline">+ New Estimate</Link>
           </div>
           {quotes.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-3xl mb-2">📋</p>
-              <p className="text-gray-400 text-sm">No quotes yet</p>
+              <p className="text-gray-400 text-sm">No estimates yet</p>
             </div>
           ) : (
             <div className="space-y-3">

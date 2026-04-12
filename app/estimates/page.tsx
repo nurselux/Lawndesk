@@ -138,7 +138,7 @@ export default function QuotesPage() {
   const addItem = () => setLineItems(prev => [...prev, emptyItem()])
   const removeItem = (idx: number) => setLineItems(prev => prev.filter((_, i) => i !== idx))
 
-  const getQuoteLink = (token: string) => `${window.location.origin}/quote/${token}`
+  const getQuoteLink = (token: string) => `${window.location.origin}/estimate/${token}`
   const getPortalLink = () => `${window.location.origin}/portal`
 
   const handleCreate = async () => {
@@ -412,14 +412,14 @@ export default function QuotesPage() {
       <div className="px-4 pt-4 pb-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-6 h-6 text-blue-600" aria-hidden="true" />Quotes</h2>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-6 h-6 text-blue-600" aria-hidden="true" />Estimates</h2>
             <p className="text-gray-400 text-sm mt-0.5">Send estimates, win more work</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
             className="shrink-0 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl cursor-pointer shadow text-sm"
           >
-            + New Quote
+            + New Estimate
           </button>
         </div>
       </div>
@@ -453,7 +453,7 @@ export default function QuotesPage() {
       {/* Create form */}
       {showForm && (
         <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
-          <h3 className="font-bold text-gray-800 text-base flex items-center gap-2"><ClipboardList className="w-4 h-4" aria-hidden="true" />New Quote</h3>
+          <h3 className="font-bold text-gray-800 text-base flex items-center gap-2"><ClipboardList className="w-4 h-4" aria-hidden="true" />New Estimate</h3>
 
           {/* Client section */}
           <div className="space-y-3">
@@ -505,7 +505,7 @@ export default function QuotesPage() {
             />
             <input
               type="email"
-              placeholder="Email (to send quote)"
+              placeholder="Email (to send estimate)"
               value={clientEmail}
               onChange={e => setClientEmail(e.target.value)}
               className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800"
@@ -515,7 +515,7 @@ export default function QuotesPage() {
           {/* Quote details */}
           <div className="space-y-3">
             <input
-              placeholder="Quote Title *  e.g. Spring Lawn Cleanup"
+              placeholder="Estimate Title *  e.g. Spring Lawn Cleanup"
               value={title}
               onChange={e => setTitle(e.target.value)}
               className="w-full border border-gray-200 rounded-xl p-3.5 text-gray-800 font-medium"
@@ -694,7 +694,7 @@ export default function QuotesPage() {
               disabled={saving}
               className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-4 rounded-xl text-base cursor-pointer shadow disabled:opacity-50"
             >
-              {saving ? 'Saving…' : clientEmail ? <span className="flex items-center justify-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Save & Send</span> : 'Save Quote'}
+              {saving ? 'Saving…' : clientEmail ? <span className="flex items-center justify-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Save & Send</span> : 'Save Estimate'}
             </button>
             <button
               onClick={resetForm}
@@ -710,8 +710,8 @@ export default function QuotesPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-16">
           <ClipboardList className="w-14 h-14 mx-auto text-gray-300 mb-3" aria-hidden="true" />
-          <p className="text-gray-700 font-bold mb-1">No quotes yet</p>
-          <p className="text-gray-400 text-sm">Create your first quote above.</p>
+          <p className="text-gray-700 font-bold mb-1">No estimates yet</p>
+          <p className="text-gray-400 text-sm">Create your first estimate above.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -860,7 +860,7 @@ export default function QuotesPage() {
 
                   <button
                     onClick={() => deleteQuote(quote.id)}
-                    aria-label="Delete quote"
+                    aria-label="Delete estimate"
                     className="ml-auto text-xs font-bold py-1.5 px-2.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-400 hover:border-red-200 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />

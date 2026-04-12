@@ -108,7 +108,7 @@ export default function PublicQuotePage() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-dvh bg-gray-50">
-      <p className="text-green-700 text-xl font-bold">Loading quote…</p>
+      <p className="text-green-700 text-xl font-bold">Loading estimate…</p>
     </div>
   )
 
@@ -116,7 +116,7 @@ export default function PublicQuotePage() {
     <div className="flex items-center justify-center min-h-dvh bg-gray-50">
       <div className="text-center">
         <Search className="w-14 h-14 text-gray-300 mx-auto mb-4" aria-hidden="true" />
-        <p className="text-gray-700 font-bold text-xl">Quote not found</p>
+        <p className="text-gray-700 font-bold text-xl">Estimate not found</p>
         <p className="text-gray-400 mt-2">This link may have expired or been removed.</p>
       </div>
     </div>
@@ -135,7 +135,7 @@ export default function PublicQuotePage() {
           <p className="text-gray-500 mt-1">Prepared for {quote.client_name}</p>
           {quote.expires_at && (
             <p className={`text-sm mt-2 font-semibold ${isExpired ? 'text-red-500' : 'text-gray-400'}`}>
-              {isExpired ? <><AlertTriangle className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />This quote has expired</> : `Valid until ${new Date(quote.expires_at).toLocaleDateString()}`}
+              {isExpired ? <><AlertTriangle className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />This estimate has expired</> : `Valid until ${new Date(quote.expires_at).toLocaleDateString()}`}
             </p>
           )}
         </div>
@@ -144,7 +144,7 @@ export default function PublicQuotePage() {
         {justPaid && (
           <div className="bg-green-100 border border-green-300 text-green-800 font-bold text-center py-4 px-5 rounded-2xl mb-6 flex items-center justify-center gap-2">
             <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
-            Payment received! Your quote has been approved.
+            Payment received! Your estimate has been approved.
           </div>
         )}
 
@@ -208,19 +208,19 @@ export default function PublicQuotePage() {
         {/* Status / Action */}
         {actionDone === 'approved' || quote.status === 'approved' ? (
           <div className="bg-green-100 border border-green-300 text-green-800 font-bold text-center py-5 rounded-2xl text-lg">
-            <CheckCircle2 className="w-5 h-5 inline mr-2" aria-hidden="true" />You approved this quote! We&apos;ll be in touch soon to schedule.
+            <CheckCircle2 className="w-5 h-5 inline mr-2" aria-hidden="true" />You approved this estimate! We&apos;ll be in touch soon to schedule.
           </div>
         ) : actionDone === 'declined' || quote.status === 'declined' ? (
           <div className="bg-gray-100 border border-gray-200 text-gray-600 font-bold text-center py-5 rounded-2xl text-lg">
-            You declined this quote. Feel free to reach out if you change your mind.
+            You declined this estimate. Feel free to reach out if you change your mind.
           </div>
         ) : quote.status === 'converted' ? (
           <div className="bg-purple-100 border border-purple-200 text-purple-700 font-bold text-center py-5 rounded-2xl text-lg">
-            <RefreshCw className="w-5 h-5 inline mr-2" aria-hidden="true" />This quote has been converted to a job. We&apos;re already working on it!
+            <RefreshCw className="w-5 h-5 inline mr-2" aria-hidden="true" />This estimate has been converted to a job. We&apos;re already working on it!
           </div>
         ) : isExpired ? (
           <div className="bg-red-50 border border-red-200 text-red-600 font-bold text-center py-5 rounded-2xl">
-            <AlertTriangle className="w-5 h-5 inline mr-2" aria-hidden="true" />This quote has expired. Please contact us for an updated estimate.
+            <AlertTriangle className="w-5 h-5 inline mr-2" aria-hidden="true" />This estimate has expired. Please contact us for an updated one.
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-md p-6 text-center">
@@ -229,7 +229,7 @@ export default function PublicQuotePage() {
                 <p className="text-gray-600 mb-2">
                   {isDeposit
                     ? `A deposit of $${chargeAmount.toFixed(2)} is required to confirm your booking.`
-                    : `Full payment of $${chargeAmount.toFixed(2)} is required to approve this quote.`}
+                    : `Full payment of $${chargeAmount.toFixed(2)} is required to approve this estimate.`}
                 </p>
                 <p className="text-gray-400 text-xs mb-5">Secure payment powered by Stripe</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -259,7 +259,7 @@ export default function PublicQuotePage() {
                     disabled={working}
                     className="bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 px-8 rounded-xl hover:scale-105 transition-all duration-200 cursor-pointer shadow disabled:opacity-50"
                   >
-                    {working ? '…' : <><CheckCircle2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Approve Quote</>}
+                    {working ? '…' : <><CheckCircle2 className="w-4 h-4 inline mr-1" aria-hidden="true" />Approve Estimate</>}
                   </button>
                   <button
                     onClick={handleDecline}

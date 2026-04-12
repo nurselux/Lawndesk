@@ -140,7 +140,7 @@ export default function OnboardingPage() {
               <div>
                 <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 1 of 3</p>
                 <h2 className="text-xl font-bold text-gray-800">What's your business called?</h2>
-                <p className="text-gray-400 text-sm mt-1">This will show on your invoices, quotes, and booking page.</p>
+                <p className="text-gray-400 text-sm mt-1">This will show on your invoices, estimates, and booking page.</p>
               </div>
               <div className="space-y-3">
                 <input
