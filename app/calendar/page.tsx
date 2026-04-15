@@ -6,7 +6,7 @@ import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import Link from 'next/link'
 import { RECURRING_CONFIG, JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
-import { CalendarDays } from 'lucide-react'
+import { CalendarDays, ChevronDown } from 'lucide-react'
 
 interface Job {
   id: string
@@ -23,6 +23,7 @@ interface Client {
   id: string
   name: string
   address: string
+  phone: string | null
 }
 
 interface EstimateVisit {
@@ -45,13 +46,6 @@ interface Quote {
   status: string
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  completed:   'bg-green-100 text-green-700 border-green-200',
-  in_progress: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  cancelled:   'bg-red-100 text-red-700 border-red-200',
-  scheduled:   'bg-blue-100 text-blue-700 border-blue-200',
-}
-
 export default function CalendarPage() {
   const { user, loading } = useAuth()
   const { checking } = useSubscriptionGate()
@@ -64,6 +58,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [showEstimatesList, setShowEstimatesList] = useState(false)
+  const [showJobsList, setShowJobsList] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -86,7 +81,7 @@ export default function CalendarPage() {
   const fetchClients = async () => {
     const { data } = await supabase
       .from('Clients')
-      .select('id, name, address')
+      .select('id, name, address, phone')
       .eq('user_id', user?.id)
     if (data) setClients(data as Client[])
   }
@@ -187,84 +182,93 @@ export default function CalendarPage() {
 
       {/* Month navigation */}
       <div className="flex items-center justify-between mb-4">
-        <button onClick={prevMonth} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold cursor-pointer transition">‹</button>
+        <button onClick={prevMonth} className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xl font-bold cursor-pointer transition">‹</button>
         <h3 className="text-lg font-bold text-gray-800">{monthLabel}</h3>
-        <button onClick={nextMonth} className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold cursor-pointer transition">›</button>
+        <button onClick={nextMonth} className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xl font-bold cursor-pointer transition">›</button>
       </div>
 
-      {/* Day labels */}
-      <div className="grid grid-cols-7 mb-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-          <div key={d} className="text-center text-xs font-bold text-gray-400 py-2">{d}</div>
-        ))}
+      {/* Calendar grid — wrapped in bordered container */}
+      <div className="border border-gray-200 shadow-sm rounded-2xl overflow-hidden mb-6">
+        {/* Day labels */}
+        <div className="grid grid-cols-7 bg-white border-b border-gray-100">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+            <div key={d} className="text-center text-xs font-bold text-gray-400 py-2">{d}</div>
+          ))}
+        </div>
+
+        {/* Grid cells — gap-px with bg-gray-200 creates hairline grid lines */}
+        <div className="grid grid-cols-7 gap-px bg-gray-200">
+          {Array.from({ length: firstDay }).map((_, i) => (
+            <div key={`empty-${i}`} className="bg-gray-50 min-h-[52px] md:min-h-[72px]" />
+          ))}
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+            const dayJobs = jobsByDate[dateStr] || []
+            const dayVisits = visitsByDate[dateStr] || []
+            const isToday = dateStr === today
+            const isSelected = dateStr === selectedDate
+            const totalItems = dayJobs.length + dayVisits.length
+
+            return (
+              <button
+                key={dateStr}
+                onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                className={`relative min-h-[52px] md:min-h-[72px] p-1.5 text-left transition-all duration-150 cursor-pointer ${
+                  isSelected
+                    ? 'bg-indigo-500 text-white'
+                    : isToday
+                    ? 'bg-indigo-50'
+                    : 'bg-white hover:bg-indigo-50'
+                }`}
+              >
+                <span className={`text-xs font-bold ${isSelected ? 'text-white' : isToday ? 'text-indigo-600' : 'text-gray-600'}`}>
+                  {day}
+                </span>
+                <div className="flex flex-col gap-0.5 mt-0.5">
+                  {dayJobs.slice(0, 2).map((job) => (
+                    <div
+                      key={job.id}
+                      className={`w-full text-xs leading-tight rounded overflow-hidden ${
+                        isSelected ? 'bg-white/25 text-white' : 'bg-green-500 text-white'
+                      }`}
+                      title={`${job.title} — ${job.client_name}`}
+                    >
+                      {/* Mobile: colored dot only */}
+                      <span className="md:hidden flex items-center justify-center h-3">
+                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-white'}`} />
+                      </span>
+                      {/* Desktop: truncated name */}
+                      <span className="hidden md:block px-1 py-0.5 truncate">{job.client_name}</span>
+                    </div>
+                  ))}
+                  {dayVisits.slice(0, 1).map((visit) => (
+                    <div
+                      key={visit.id}
+                      className={`w-full text-xs leading-tight rounded overflow-hidden ${
+                        isSelected ? 'bg-white/25 text-white' : 'bg-purple-500 text-white'
+                      }`}
+                      title={`Estimate: ${visit.client_name} — ${visit.service_type}`}
+                    >
+                      <span className="md:hidden flex items-center justify-center h-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                      </span>
+                      <span className="hidden md:block px-1 py-0.5 truncate">📐 {visit.client_name}</span>
+                    </div>
+                  ))}
+                  {totalItems > 3 && (
+                    <div className={`text-xs font-bold leading-none pl-0.5 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{totalItems - 3}</div>
+                  )}
+                </div>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 mb-6">
-        {Array.from({ length: firstDay }).map((_, i) => (
-          <div key={`empty-${i}`} />
-        ))}
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const day = i + 1
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-          const dayJobs = jobsByDate[dateStr] || []
-          const dayVisits = visitsByDate[dateStr] || []
-          const isToday = dateStr === today
-          const isSelected = dateStr === selectedDate
-          const totalItems = dayJobs.length + dayVisits.length
-
-          return (
-            <button
-              key={dateStr}
-              onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-              className={`relative min-h-[52px] md:min-h-[72px] rounded-xl p-1.5 text-left transition-all duration-150 cursor-pointer border ${
-                isSelected
-                  ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
-                  : isToday
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                  : 'bg-white border-gray-100 hover:border-indigo-200 hover:bg-indigo-50'
-              }`}
-            >
-              <span className={`text-xs font-bold ${isSelected ? 'text-white' : isToday ? 'text-indigo-600' : 'text-gray-600'}`}>
-                {day}
-              </span>
-              <div className="flex flex-wrap gap-0.5 mt-0.5">
-                {dayJobs.slice(0, 2).map((job) => (
-                  <div
-                    key={job.id}
-                    className={`w-full text-xs leading-tight px-1 py-0.5 rounded truncate border ${
-                      isSelected ? 'bg-white/20 text-white border-white/30' : STATUS_COLOR[job.status] || STATUS_COLOR['scheduled']
-                    }`}
-                    title={`${job.title} — ${job.client_name}`}
-                  >
-                    <span className="hidden md:inline">{job.client_name}</span>
-                    <span className="md:hidden">•</span>
-                  </div>
-                ))}
-                {dayVisits.slice(0, 1).map((visit) => (
-                  <div
-                    key={visit.id}
-                    className={`w-full text-xs leading-tight px-1 py-0.5 rounded truncate border ${
-                      isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 text-purple-700 border-purple-200'
-                    }`}
-                    title={`Estimate: ${visit.client_name} — ${visit.service_type}`}
-                  >
-                    <span className="hidden md:inline">📐 {visit.client_name}</span>
-                    <span className="md:hidden">📐</span>
-                  </div>
-                ))}
-                {totalItems > 3 && (
-                  <div className={`text-xs font-bold ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>+{totalItems - 3}</div>
-                )}
-              </div>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Selected day detail */}
+      {/* Selected day detail — Daily Agenda */}
       {selectedDate && (
-        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100 mb-4">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-bold text-gray-800">
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -280,20 +284,13 @@ export default function CalendarPage() {
               const url = allAddrs.length >= 2
                 ? `https://maps.google.com/maps?saddr=${encodeURIComponent(allAddrs[0])}&daddr=${allAddrs.slice(1).map(a => encodeURIComponent(a)).join('+to:')}`
                 : null
-              return (
-                <div className="flex flex-col items-end gap-1">
-                  {url && (
-                    <a href={url} target="_blank" rel="noopener noreferrer">
-                      <button className="text-xs font-bold py-1.5 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">
-                        🗺️ Route ({allAddrs.length} stops)
-                      </button>
-                    </a>
-                  )}
-                  {allAddrs.map((a, idx) => (
-                    <p key={idx} className="text-xs text-gray-400 text-right">{idx + 1}. {a}</p>
-                  ))}
-                </div>
-              )
+              return url ? (
+                <a href={url} target="_blank" rel="noopener noreferrer">
+                  <button className="text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer">
+                    🗺️ Route ({allAddrs.length} stops)
+                  </button>
+                </a>
+              ) : null
             })()}
           </div>
 
@@ -306,137 +303,199 @@ export default function CalendarPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {selectedJobs.map((job) => (
-                <div key={job.id} className={`flex items-start gap-3 p-3 rounded-xl border ${STATUS_COLOR[job.status] || STATUS_COLOR['scheduled']}`}>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm truncate">{job.title}</p>
-                    <p className="text-xs opacity-75">👤 {job.client_name}{job.time ? ` · 🕐 ${job.time}` : ''}</p>
-                    {job.recurring && job.recurring !== 'one_time' && (
-                      <p className="text-xs opacity-60">🔄 {(RECURRING_CONFIG as any)[job.recurring]?.label ?? job.recurring}</p>
-                    )}
+              {selectedJobs.map((job) => {
+                const client = clients.find(c => c.id === job.client_id)
+                const address = client?.address
+                const phone = client?.phone
+                const mapsUrl = address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}` : null
+                const callUrl = phone ? `tel:${phone}` : null
+                const statusCfg = JOB_STATUS_CONFIG[job.status as JobStatus]
+                return (
+                  <div key={job.id} className="w-full flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-gray-800 truncate">{job.title}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">👤 {job.client_name}{job.time ? ` · 🕐 ${job.time}` : ''}</p>
+                      {job.recurring && job.recurring !== 'one_time' && (
+                        <p className="text-xs text-gray-400 mt-0.5">🔄 {(RECURRING_CONFIG as any)[job.recurring]?.label ?? job.recurring}</p>
+                      )}
+                      {statusCfg && (
+                        <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.bgColor} ${statusCfg.color}`}>
+                          {statusCfg.label}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      {mapsUrl && (
+                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                          <button className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer whitespace-nowrap">
+                            🗺️ Navigate
+                          </button>
+                        </a>
+                      )}
+                      {callUrl && (
+                        <a href={callUrl}>
+                          <button className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer whitespace-nowrap">
+                            📞 Call
+                          </button>
+                        </a>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs font-bold opacity-75 shrink-0">{JOB_STATUS_CONFIG[job.status as JobStatus]?.label ?? job.status}</span>
-                </div>
-              ))}
-              {selectedVisits.map((visit) => (
-                <div key={visit.id} className="flex items-start gap-3 p-3 rounded-xl border bg-purple-50 border-purple-200 text-purple-800">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm truncate">📐 Estimate Visit — {visit.service_type}</p>
-                    <p className="text-xs opacity-75">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
-                    {visit.address && <p className="text-xs opacity-60">📍 {visit.address}</p>}
-                  </div>
-                  <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
-                    <button className="text-xs font-bold bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded-lg cursor-pointer shrink-0 transition">
-                      {visit.quote_id ? '📋 View Estimate' : '+ Estimate'}
-                    </button>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Month overview — Jobs + Estimates side by side */}
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        {/* Jobs this month */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Jobs</p>
-            <Link href="/jobs"><span className="text-xs text-indigo-500 font-semibold cursor-pointer">View →</span></Link>
-          </div>
-          <div className="space-y-1.5">
-            {[
-              { label: 'Scheduled', color: 'text-blue-600', status: 'scheduled' },
-              { label: 'In Progress', color: 'text-yellow-600', status: 'in_progress' },
-              { label: 'Completed', color: 'text-green-600', status: 'completed' },
-              { label: 'Cancelled', color: 'text-red-400', status: 'cancelled' },
-            ].map(({ label, color, status }) => {
-              const count = jobs.filter(j => {
-                const d = new Date(j.date + 'T00:00:00')
-                return d.getMonth() === month && d.getFullYear() === year && j.status === status
-              }).length
-              return (
-                <div key={label} className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">{label}</span>
-                  <span className={`text-sm font-bold ${color}`}>{count}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Estimate visits this month */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Estimates</p>
-            <button onClick={() => setShowEstimatesList(v => !v)} className="text-xs text-purple-500 font-semibold cursor-pointer">{showEstimatesList ? 'Hide ↑' : 'View →'}</button>
-          </div>
-          {(() => {
-            const monthVisits = estimateVisits.filter(v => {
-              const date = v.scheduled_date || v.preferred_date
-              if (!date) return false
-              const d = new Date(date + 'T00:00:00')
-              return d.getMonth() === month && d.getFullYear() === year
-            })
-            return (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Visits scheduled</span>
-                  <span className="text-sm font-bold text-purple-600">{monthVisits.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">Awaiting estimate</span>
-                  <span className="text-sm font-bold text-amber-600">{monthVisits.filter(v => !v.quote_id).length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">New requests</span>
-                  <span className={`text-sm font-bold ${pendingRequestCount > 0 ? 'text-red-500' : 'text-gray-400'}`}>{pendingRequestCount}</span>
-                </div>
-              </div>
-            )
-          })()}
-        </div>
-      </div>
-
-      {/* Estimates list — expanded when "View" is clicked */}
-      {showEstimatesList && (
-        <div className="mt-3 bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-purple-50 flex items-center justify-between">
-            <p className="text-sm font-bold text-purple-700">Scheduled Estimate Visits</p>
-            <Link href="/requests"><span className="text-xs text-purple-400 font-semibold cursor-pointer">Manage requests →</span></Link>
-          </div>
-          {estimateVisits.length === 0 ? (
-            <p className="text-gray-400 text-sm text-center py-6">No estimate visits scheduled</p>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {[...estimateVisits]
-                .sort((a, b) => {
-                  const da = a.scheduled_date || a.preferred_date || ''
-                  const db = b.scheduled_date || b.preferred_date || ''
-                  return da.localeCompare(db)
-                })
-                .map(visit => {
-                  const date = visit.scheduled_date || visit.preferred_date
-                  return (
-                    <div key={visit.id} className="flex items-center gap-3 px-4 py-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800 truncate">{visit.client_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{visit.service_type}{date ? ` · ${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}{(visit.scheduled_time || visit.preferred_time) ? ` · ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
-                        {visit.address && <p className="text-xs text-gray-400 truncate">📍 {visit.address}</p>}
-                      </div>
+                )
+              })}
+              {selectedVisits.map((visit) => {
+                const mapsUrl = visit.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(visit.address)}` : null
+                const callUrl = visit.client_phone ? `tel:${visit.client_phone}` : null
+                return (
+                  <div key={visit.id} className="w-full flex items-center gap-3 p-4 rounded-xl border border-purple-100 bg-purple-50">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-purple-800 truncate">📐 Estimate — {visit.service_type}</p>
+                      <p className="text-xs text-purple-600 mt-0.5">👤 {visit.client_name}{(visit.scheduled_time || visit.preferred_time) ? ` · 🕐 ${visit.scheduled_time || visit.preferred_time}` : ''}</p>
+                      {visit.address && <p className="text-xs text-purple-500 mt-0.5 truncate">📍 {visit.address}</p>}
+                    </div>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      {mapsUrl && (
+                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                          <button className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 transition cursor-pointer whitespace-nowrap">
+                            🗺️ Navigate
+                          </button>
+                        </a>
+                      )}
+                      {callUrl && (
+                        <a href={callUrl}>
+                          <button className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition cursor-pointer whitespace-nowrap">
+                            📞 Call
+                          </button>
+                        </a>
+                      )}
                       <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
-                        <button className={`text-xs font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition ${visit.quote_id ? 'bg-gray-100 text-gray-500' : 'bg-purple-100 hover:bg-purple-200 text-purple-700'}`}>
-                          {visit.quote_id ? '📋 Estimated' : '+ Estimate'}
+                        <button className="w-full text-xs font-bold py-2 px-3 rounded-lg bg-purple-200 text-purple-800 hover:bg-purple-300 transition cursor-pointer whitespace-nowrap">
+                          {visit.quote_id ? '📋 View' : '+ Estimate'}
                         </button>
                       </Link>
                     </div>
-                  )
-                })}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
       )}
+
+      {/* Month overview — Jobs + Estimates as collapsible cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Jobs this month */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => setShowJobsList(v => !v)}
+            className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-gray-50 transition"
+          >
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Jobs</p>
+              <p className="text-sm font-bold text-gray-800">
+                {jobs.filter(j => { const d = new Date(j.date + 'T00:00:00'); return d.getMonth() === month && d.getFullYear() === year }).length} this month
+              </p>
+            </div>
+            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showJobsList ? 'rotate-180' : ''}`} />
+          </button>
+          {showJobsList && (
+            <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-1.5">
+              {[
+                { label: 'Scheduled', color: 'text-blue-600', status: 'scheduled' },
+                { label: 'Completed', color: 'text-green-600', status: 'completed' },
+                { label: 'Cancelled', color: 'text-red-400', status: 'cancelled' },
+              ].map(({ label, color, status }) => {
+                const count = jobs.filter(j => {
+                  const d = new Date(j.date + 'T00:00:00')
+                  return d.getMonth() === month && d.getFullYear() === year && j.status === status
+                }).length
+                return (
+                  <div key={label} className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500">{label}</span>
+                    <span className={`text-sm font-bold ${color}`}>{count}</span>
+                  </div>
+                )
+              })}
+              <div className="pt-1">
+                <Link href="/jobs"><span className="text-xs text-indigo-500 font-semibold cursor-pointer">View all jobs →</span></Link>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Estimate visits this month */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => setShowEstimatesList(v => !v)}
+            className="w-full flex items-center justify-between p-4 text-left cursor-pointer hover:bg-gray-50 transition"
+          >
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Estimates</p>
+              <p className="text-sm font-bold text-gray-800">
+                {estimateVisits.filter(v => { const date = v.scheduled_date || v.preferred_date; if (!date) return false; const d = new Date(date + 'T00:00:00'); return d.getMonth() === month && d.getFullYear() === year }).length} this month
+              </p>
+            </div>
+            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showEstimatesList ? 'rotate-180' : ''}`} />
+          </button>
+          {showEstimatesList && (
+            <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-1.5">
+              {(() => {
+                const monthVisits = estimateVisits.filter(v => {
+                  const date = v.scheduled_date || v.preferred_date
+                  if (!date) return false
+                  const d = new Date(date + 'T00:00:00')
+                  return d.getMonth() === month && d.getFullYear() === year
+                })
+                return (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">Visits scheduled</span>
+                      <span className="text-sm font-bold text-purple-600">{monthVisits.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">Awaiting estimate</span>
+                      <span className="text-sm font-bold text-amber-600">{monthVisits.filter(v => !v.quote_id).length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">New requests</span>
+                      <span className={`text-sm font-bold ${pendingRequestCount > 0 ? 'text-red-500' : 'text-gray-400'}`}>{pendingRequestCount}</span>
+                    </div>
+                    {monthVisits.length > 0 && (
+                      <div className="pt-2 divide-y divide-gray-50">
+                        {[...monthVisits]
+                          .sort((a, b) => {
+                            const da = a.scheduled_date || a.preferred_date || ''
+                            const db = b.scheduled_date || b.preferred_date || ''
+                            return da.localeCompare(db)
+                          })
+                          .map(visit => {
+                            const date = visit.scheduled_date || visit.preferred_date
+                            return (
+                              <div key={visit.id} className="flex items-center gap-3 py-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-gray-800 truncate">{visit.client_name}</p>
+                                  <p className="text-xs text-gray-500 truncate">{visit.service_type}{date ? ` · ${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}</p>
+                                </div>
+                                <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
+                                  <button className={`text-xs font-bold px-2 py-1 rounded-lg cursor-pointer shrink-0 transition ${visit.quote_id ? 'bg-gray-100 text-gray-500' : 'bg-purple-100 hover:bg-purple-200 text-purple-700'}`}>
+                                    {visit.quote_id ? '📋' : '+'}
+                                  </button>
+                                </Link>
+                              </div>
+                            )
+                          })}
+                      </div>
+                    )}
+                    <div className="pt-1">
+                      <Link href="/requests"><span className="text-xs text-purple-500 font-semibold cursor-pointer">Manage requests →</span></Link>
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Pending requests action banner */}
       {pendingRequestCount > 0 && (
