@@ -1210,7 +1210,9 @@ export default function JobsPage() {
               {nextJob.time && <span className="text-sm font-bold text-gray-500">{nextJob.time}</span>}
             </div>
 
-            <h3 className="text-xl font-black text-gray-900 mb-0.5">{nextJob.title}</h3>
+            <h3 className="text-xl font-black text-gray-900 mb-0.5 flex items-center gap-2">
+              {(() => { const Icon = JOB_TYPE_ICONS[nextJob.title]; const color = JOB_TYPE_COLORS[nextJob.title] || 'text-gray-400'; return Icon ? <><Icon className={`w-5 h-5 shrink-0 ${color}`} aria-hidden="true" />{stripEmoji(nextJob.title)}</> : stripEmoji(nextJob.title) })()}
+            </h3>
             <p className="text-gray-500 font-semibold mb-1 flex items-center gap-1.5 text-sm"><User className="w-3.5 h-3.5" aria-hidden="true" />{nextJob.client_name}</p>
             {(() => {
               const addr = clients.find(c => c.id === nextJob.client_id)?.address
@@ -1390,7 +1392,7 @@ export default function JobsPage() {
                       {selectedRainCheck.has(job.id) && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                     </span>
                   )}
-                  {job.title}
+                  {(() => { const Icon = JOB_TYPE_ICONS[job.title]; const color = JOB_TYPE_COLORS[job.title] || 'text-gray-400'; return Icon ? <><Icon className={`w-4 h-4 shrink-0 ${color}`} aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
                 </h3>
                 {!rainCheckMode && (
                   <div className="flex gap-2">

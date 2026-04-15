@@ -8,6 +8,52 @@ import { useProfile } from '../../lib/useProfile'
 import JobPhotoUpload from '../../components/JobPhotoUpload'
 import JobPhotoGallery from '../../components/JobPhotoGallery'
 import AdminViewBanner from '../../components/AdminViewBanner'
+import { User, Clock, Scissors, Wind, TreePine, Axe, Layers, Sprout, Ban, Circle, Wheat, Grid3x3, Flower2, Droplets, Zap, Snowflake, Pipette, Trash2, Pencil, Minus, type LucideIcon } from 'lucide-react'
+import { stripEmoji } from '../../lib/statusIcons'
+
+const WORKER_JOB_ICONS: Record<string, LucideIcon> = {
+  '✏️ Custom':                 Pencil,
+  '🌿 Lawn Mowing':            Scissors,
+  '✂️ Hedge Trimming':         Scissors,
+  '💨 Leaf Blowing':           Wind,
+  '🍂 Leaf Removal':           Wind,
+  '🌳 Bush Trimming':          TreePine,
+  '🪓 Tree Trimming':          TreePine,
+  '🪵 Stump Removal':          Axe,
+  '🪴 Mulching':               Layers,
+  '🌱 Fertilizing':            Sprout,
+  '🌾 Weed Control':           Ban,
+  '🕳️ Aeration':              Circle,
+  '🌻 Overseeding':            Wheat,
+  '🟩 Sod Installation':       Grid3x3,
+  '🌺 Garden Bed Maintenance': Flower2,
+  '💧 Irrigation System Check':Droplets,
+  '🚿 Pressure Washing':       Zap,
+  '❄️ Snow Removal':           Snowflake,
+  '🍃 Gutter Cleaning':        Pipette,
+  '🧹 General Cleanup':        Trash2,
+}
+
+const WORKER_JOB_COLORS: Record<string, string> = {
+  '🌿 Lawn Mowing':            'text-emerald-500',
+  '✂️ Hedge Trimming':         'text-green-600',
+  '💨 Leaf Blowing':           'text-sky-400',
+  '🍂 Leaf Removal':           'text-orange-400',
+  '🌳 Bush Trimming':          'text-green-700',
+  '🪓 Tree Trimming':          'text-lime-600',
+  '🪵 Stump Removal':          'text-amber-700',
+  '🪴 Mulching':               'text-yellow-600',
+  '🌱 Fertilizing':            'text-teal-500',
+  '🌾 Weed Control':           'text-red-400',
+  '🕳️ Aeration':              'text-stone-500',
+  '🌻 Overseeding':            'text-yellow-500',
+  '🌺 Garden Bed Maintenance': 'text-pink-500',
+  '💧 Irrigation System Check':'text-blue-400',
+  '🚿 Pressure Washing':       'text-cyan-500',
+  '❄️ Snow Removal':           'text-blue-300',
+  '🍃 Gutter Cleaning':        'text-lime-500',
+  '🧹 General Cleanup':        'text-gray-500',
+}
 
 interface Job {
   id: string
@@ -394,9 +440,11 @@ export default function WorkerPage() {
         <div className="p-4">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="min-w-0">
-              <h3 className="font-bold text-gray-800 text-base leading-tight">{job.title}</h3>
-              <p className="text-gray-500 text-sm">👤 {job.client_name}</p>
-              {job.time && <p className="text-purple-600 text-xs font-semibold mt-0.5">🕐 {job.time}</p>}
+              <h3 className="font-bold text-gray-800 text-base leading-tight flex items-center gap-1.5">
+                {(() => { const Icon = WORKER_JOB_ICONS[job.title]; const color = WORKER_JOB_COLORS[job.title] || 'text-gray-400'; return Icon ? <><Icon className={`w-4 h-4 shrink-0 ${color}`} aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
+              </h3>
+              <p className="text-gray-500 text-sm flex items-center gap-1"><User className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{job.client_name}</p>
+              {job.time && <p className="text-purple-600 text-xs font-semibold mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3 shrink-0" aria-hidden="true" />{job.time}</p>}
             </div>
             <select
               value={job.status}
