@@ -10,6 +10,11 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* LawnDesk brand colors */
+  --color-brand-jobs: #059669;       /* emerald-600 */
+  --color-brand-estimates: #7c3aed;  /* violet-600  */
+  --color-brand-primary: #2563eb;    /* blue-600    */
 }
 
 @media (prefers-color-scheme: dark) {

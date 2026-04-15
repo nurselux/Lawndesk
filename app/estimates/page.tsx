@@ -412,12 +412,12 @@ export default function QuotesPage() {
       <div className="px-4 pt-4 pb-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-6 h-6 text-blue-600" aria-hidden="true" />Estimates</h2>
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><ClipboardList className="w-6 h-6 text-violet-600" aria-hidden="true" />Estimates</h2>
             <p className="text-gray-400 text-sm mt-0.5">Send estimates, win more work</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="shrink-0 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl cursor-pointer shadow text-sm"
+            className="shrink-0 bg-gradient-to-r from-violet-600 to-violet-500 text-white font-bold py-2.5 px-4 rounded-xl cursor-pointer shadow text-sm"
           >
             + New Estimate
           </button>
@@ -433,7 +433,7 @@ export default function QuotesPage() {
               onClick={() => setFilterStatus(s)}
               className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                 filterStatus === s
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-violet-600 text-white shadow-sm'
                   : 'bg-white text-gray-500 border border-gray-200'
               }`}
             >
@@ -452,7 +452,7 @@ export default function QuotesPage() {
 
       {/* Create form */}
       {showForm && (
-        <div className="bg-white border border-blue-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
+        <div className="bg-white border border-violet-200 rounded-2xl p-5 mb-5 shadow-sm space-y-5">
           <h3 className="font-bold text-gray-800 text-base flex items-center gap-2"><ClipboardList className="w-4 h-4" aria-hidden="true" />New Estimate</h3>
 
           {/* Client section */}
@@ -461,7 +461,7 @@ export default function QuotesPage() {
               <button
                 onClick={() => { setUseExistingClient(false); setClientId(''); setClientName(''); setClientEmail(''); setClientPhone('') }}
                 className={`flex-1 text-sm font-semibold py-2.5 transition-all cursor-pointer ${
-                  !useExistingClient ? 'bg-blue-600 text-white' : 'bg-white text-gray-500'
+                  !useExistingClient ? 'bg-violet-600 text-white' : 'bg-white text-gray-500'
                 }`}
               >
                 New / Walk-in
@@ -469,7 +469,7 @@ export default function QuotesPage() {
               <button
                 onClick={() => setUseExistingClient(true)}
                 className={`flex-1 text-sm font-semibold py-2.5 transition-all cursor-pointer ${
-                  useExistingClient ? 'bg-blue-600 text-white' : 'bg-white text-gray-500'
+                  useExistingClient ? 'bg-violet-600 text-white' : 'bg-white text-gray-500'
                 }`}
               >
                 Existing Client
@@ -613,11 +613,11 @@ export default function QuotesPage() {
             </div>
 
             <div className="flex items-center justify-between mt-3">
-              <button onClick={addItem} className="text-sm text-blue-600 font-bold cursor-pointer">
+              <button onClick={addItem} className="text-sm text-violet-600 font-bold cursor-pointer">
                 + Add line
               </button>
               {total > 0 && (
-                <p className="text-base font-bold text-gray-800 bg-blue-50 px-3 py-1 rounded-lg">
+                <p className="text-base font-bold text-gray-800 bg-violet-50 px-3 py-1 rounded-lg">
                   Total: ${total.toFixed(2)}
                 </p>
               )}
@@ -631,7 +631,7 @@ export default function QuotesPage() {
                 type="checkbox"
                 checked={requirePayment}
                 onChange={e => { setRequirePayment(e.target.checked); if (!e.target.checked) setDepositAmount('') }}
-                className="w-4 h-4 accent-blue-600 cursor-pointer"
+                className="w-4 h-4 accent-violet-600 cursor-pointer"
               />
               <span className="text-sm font-bold text-gray-700">Require payment to approve</span>
             </label>
@@ -683,7 +683,7 @@ export default function QuotesPage() {
           </div>
 
           {clientEmail && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-semibold">
+            <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 text-sm text-violet-700 font-semibold">
               <Mail className="w-4 h-4 inline mr-1" aria-hidden="true" />Quote will be emailed to {clientEmail} on save
             </div>
           )}
@@ -692,7 +692,7 @@ export default function QuotesPage() {
             <button
               onClick={handleCreate}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-bold py-4 rounded-xl text-base cursor-pointer shadow disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-violet-600 to-violet-500 text-white font-bold py-4 rounded-xl text-base cursor-pointer shadow disabled:opacity-50"
             >
               {saving ? 'Saving…' : clientEmail ? <span className="flex items-center justify-center gap-1.5"><Mail className="w-4 h-4" aria-hidden="true" />Save & Send</span> : 'Save Estimate'}
             </button>
@@ -716,14 +716,14 @@ export default function QuotesPage() {
       ) : (
         <div className="space-y-4">
           {filtered.map(quote => (
-            <div key={quote.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+            <div key={quote.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-violet-600 hover:bg-slate-50 hover:shadow-md transition-all duration-200">
               <div className="p-4">
                 <div className="flex justify-between items-start gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <QuoteStatusBadge status={quote.status} />
                       {quote.require_payment && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold py-1 px-2.5 rounded-full bg-blue-100 text-blue-700">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold py-1 px-2.5 rounded-full bg-violet-100 text-violet-700">
                           <CreditCard className="w-3 h-3" aria-hidden="true" />
                           {quote.deposit_amount ? `$${quote.deposit_amount.toFixed(2)} deposit` : 'Full payment req.'}
                         </span>
@@ -768,7 +768,7 @@ export default function QuotesPage() {
                     )}
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-2xl font-bold text-blue-700">${quote.amount.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-violet-700">${quote.amount.toFixed(2)}</p>
                     <p className="text-gray-400 text-xs">{new Date(quote.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>

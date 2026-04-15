@@ -32,24 +32,6 @@ const CAL_JOB_ICONS: Record<string, LucideIcon> = {
   '🧹 General Cleanup':        Trash2,
 }
 
-const CAL_JOB_COLORS: Record<string, string> = {
-  '🌿 Lawn Mowing':            'text-emerald-500',
-  '✂️ Hedge Trimming':         'text-green-600',
-  '💨 Leaf Blowing':           'text-sky-400',
-  '🍂 Leaf Removal':           'text-orange-400',
-  '🌳 Bush Trimming':          'text-green-700',
-  '🪓 Tree Trimming':          'text-lime-600',
-  '🪵 Stump Removal':          'text-amber-700',
-  '🪴 Mulching':               'text-yellow-600',
-  '🌱 Fertilizing':            'text-teal-500',
-  '🌾 Weed Control':           'text-red-400',
-  '🌺 Garden Bed Maintenance': 'text-pink-500',
-  '💧 Irrigation System Check':'text-blue-400',
-  '🚿 Pressure Washing':       'text-cyan-500',
-  '❄️ Snow Removal':           'text-blue-300',
-  '🍃 Gutter Cleaning':        'text-lime-500',
-  '🧹 General Cleanup':        'text-gray-500',
-}
 
 type ViewMode = 'month' | 'week'
 
@@ -237,7 +219,7 @@ export default function CalendarPage() {
               <div
                 key={job.id}
                 className={`w-full text-xs leading-tight rounded overflow-hidden font-medium ${
-                  isSelected ? 'bg-white/30 text-white' : 'bg-green-600 text-white'
+                  isSelected ? 'bg-white/30 text-white' : 'bg-emerald-600 text-white'
                 }`}
                 title={`${job.title} — ${job.client_name}`}
               >
@@ -253,7 +235,7 @@ export default function CalendarPage() {
               <div
                 key={visit.id}
                 className={`w-full text-xs leading-tight rounded overflow-hidden font-medium ${
-                  isSelected ? 'bg-white/30 text-white' : 'bg-purple-600 text-white'
+                  isSelected ? 'bg-white/30 text-white' : 'bg-violet-600 text-white'
                 }`}
                 title={`Estimate: ${visit.client_name} — ${visit.service_type}`}
               >
@@ -342,11 +324,11 @@ export default function CalendarPage() {
       {/* Color legend */}
       <div className="flex items-center gap-4 mb-3 px-1">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-green-600 shrink-0" aria-hidden="true" />
+          <span className="w-3 h-3 rounded-sm bg-emerald-600 shrink-0" aria-hidden="true" />
           <span className="text-xs font-medium text-gray-600">Jobs</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-purple-600 shrink-0" aria-hidden="true" />
+          <span className="w-3 h-3 rounded-sm bg-violet-600 shrink-0" aria-hidden="true" />
           <span className="text-xs font-medium text-gray-600">Estimates</span>
         </div>
       </div>
@@ -499,10 +481,10 @@ export default function CalendarPage() {
                 const callUrl = phone ? `tel:${phone}` : null
                 const statusCfg = JOB_STATUS_CONFIG[job.status as JobStatus]
                 return (
-                  <div key={job.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border-l-4 border-blue-400 hover:bg-gray-50 transition-colors">
+                  <div key={job.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border border-gray-100 border-l-4 border-l-emerald-600 hover:bg-slate-50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm text-gray-800 truncate flex items-center gap-1.5">
-                        {(() => { const Icon = CAL_JOB_ICONS[job.title]; const color = CAL_JOB_COLORS[job.title] || 'text-gray-400'; return Icon ? <><Icon className={`w-4 h-4 shrink-0 ${color}`} aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
+                        {(() => { const Icon = CAL_JOB_ICONS[job.title]; return Icon ? <><Icon className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
                       </p>
                       <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
                         <User className="w-3 h-3 shrink-0" />{job.client_name}
@@ -542,17 +524,17 @@ export default function CalendarPage() {
                 const mapsUrl = visit.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(visit.address)}` : null
                 const callUrl = visit.client_phone ? `tel:${visit.client_phone}` : null
                 return (
-                  <div key={visit.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border-l-4 border-purple-400 hover:bg-purple-50/40 transition-colors">
+                  <div key={visit.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border border-gray-100 border-l-4 border-l-violet-600 hover:bg-slate-50 transition-colors">
                     <div className="flex-1 min-w-0">
-                      <p className="flex items-center gap-1 font-bold text-sm text-purple-900 truncate">
-                        <Ruler className="w-4 h-4 shrink-0" /> Estimate — {visit.service_type}
+                      <p className="flex items-center gap-1 font-bold text-sm text-gray-800 truncate">
+                        <Ruler className="w-4 h-4 shrink-0 text-violet-600" /> Estimate — {visit.service_type}
                       </p>
-                      <p className="flex items-center gap-1 text-xs text-purple-700 mt-0.5">
+                      <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
                         <User className="w-3 h-3 shrink-0" />{visit.client_name}
                         {(visit.scheduled_time || visit.preferred_time) && <><Clock className="w-3 h-3 shrink-0 ml-1" />{visit.scheduled_time || visit.preferred_time}</>}
                       </p>
                       {visit.address && (
-                        <p className="flex items-center gap-1 text-xs text-purple-600 mt-0.5 truncate">
+                        <p className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 truncate">
                           <MapPin className="w-3 h-3 shrink-0" />{visit.address}
                         </p>
                       )}

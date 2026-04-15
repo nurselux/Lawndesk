@@ -723,8 +723,8 @@ export default function JobsPage() {
             onClick={() => setFilterPeriod(p)}
             className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-150 cursor-pointer ${
               filterPeriod === p
-                ? 'bg-blue-500 text-white shadow'
-                : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-500'
+                ? 'bg-emerald-600 text-white shadow'
+                : 'bg-white text-gray-500 border border-gray-200 hover:border-emerald-300 hover:text-emerald-600'
             }`}
           >
             {p}
@@ -1374,10 +1374,8 @@ export default function JobsPage() {
                 setSelectedRainCheck(n)
               } : undefined}
               className={[
-                'bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4',
-                job.status === '🟢 Completed' ? 'border-green-500' :
-                job.status === '🔴 Cancelled' ? 'border-red-500' :
-                'border-blue-500',
+                'bg-white rounded-2xl p-5 shadow-sm border border-gray-100 border-l-4 hover:bg-slate-50 hover:shadow-md transition-all duration-200',
+                job.status === '🔴 Cancelled' ? 'border-l-red-500' : 'border-l-emerald-600',
                 rainCheckMode && job.date === todayStr && job.status !== '🟢 Completed' && job.status !== '🔴 Cancelled'
                   ? selectedRainCheck.has(job.id)
                     ? 'ring-2 ring-blue-500 cursor-pointer'
@@ -1459,9 +1457,9 @@ export default function JobsPage() {
                 value={job.status}
                 onChange={(e) => handleStatusChange(job.id, e.target.value)}
                 className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer w-full ${
-                  job.status === '🟢 Completed' ? 'bg-green-100 text-green-700' :
+                  job.status === '🟢 Completed' ? 'bg-emerald-100 text-emerald-700' :
                   job.status === '🔴 Cancelled' ? 'bg-red-100 text-red-700' :
-                  'bg-blue-100 text-blue-700'
+                  'bg-emerald-100 text-emerald-700'
                 }`}
               >
                 <option value="🔵 Scheduled">Scheduled</option>
