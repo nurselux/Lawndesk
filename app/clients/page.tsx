@@ -37,11 +37,17 @@ export default function ClientsPage() {
   const [editNotes, setEditNotes] = useState('')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
+  const [sortBy, setSortBy] = useState('name-asc')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [lastServicedMap, setLastServicedMap] = useState<Record<string, string>>({})
+  const [lastServicedLoaded, setLastServicedLoaded] = useState(false)
 
   useEffect(() => {
-    if (user) fetchClients()
+    if (user) {
+      fetchClients()
+      fetchLastServiced()
+    }
   }, [user])
 
   const fetchClients = async () => {
@@ -51,6 +57,25 @@ export default function ClientsPage() {
       .eq('user_id', user?.id)
       .order('created_at', { ascending: false })
     if (data) setClients(data as Client[])
+  }
+
+  const fetchLastServiced = async () => {
+    const { data } = await supabase
+      .from('Jobs')
+      .select('client_id, date')
+      .eq('user_id', user?.id)
+      .eq('status', '🟢 Completed')
+      .order('date', { ascending: false })
+    if (data) {
+      const map: Record<string, string> = {}
+      for (const job of data) {
+        if (job.client_id && !map[job.client_id]) {
+          map[job.client_id] = job.date
+        }
+      }
+      setLastServicedMap(map)
+    }
+    setLastServicedLoaded(true)
   }
 
   const handleAddClient = async () => {
@@ -78,6 +103,7 @@ export default function ClientsPage() {
       setSuccessMessage('Client added successfully!')
       setTimeout(() => setSuccessMessage(''), 3000)
       fetchClients()
+      fetchLastServiced()
     } else {
       setErrorMessage(`Failed to save: ${error.message}`)
       setTimeout(() => setErrorMessage(''), 3000)
@@ -138,6 +164,20 @@ export default function ClientsPage() {
     return matchesSearch && matchesFilter
   })
 
+  const DAY_MS = 86400000
+  const nowMs = Date.now()
+
+  const sortedClients = [...filteredClients].sort((a, b) => {
+    if (sortBy === 'name-asc') return a.name.localeCompare(b.name)
+    if (sortBy === 'name-desc') return b.name.localeCompare(a.name)
+    if (sortBy === 'stale-first') {
+      const aMs = lastServicedMap[a.id] ? new Date(lastServicedMap[a.id] + 'T00:00:00').getTime() : 0
+      const bMs = lastServicedMap[b.id] ? new Date(lastServicedMap[b.id] + 'T00:00:00').getTime() : 0
+      return aMs - bMs
+    }
+    return 0 // 'recent' = keep fetch order (newest added first)
+  })
+
   if (checking) return (
     <div className="p-6 bg-slate-50 min-h-dvh">
       <div className="flex justify-between items-center mb-8">
@@ -177,19 +217,31 @@ export default function ClientsPage() {
             placeholder="Search by name, email, phone, address..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+            className="w-full border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
           />
         </div>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full sm:w-auto"
-        >
-          <option>All</option>
-          <option>Has Email</option>
-          <option>Has Phone</option>
-          <option>Has Address</option>
-        </select>
+        <div className="flex gap-2">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="flex-1 sm:flex-none border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none min-h-[48px]"
+          >
+            <option>All</option>
+            <option>Has Email</option>
+            <option>Has Phone</option>
+            <option>Has Address</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="flex-1 sm:flex-none border border-slate-200 rounded-xl p-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none min-h-[48px]"
+          >
+            <option value="name-asc">A–Z</option>
+            <option value="name-desc">Z–A</option>
+            <option value="recent">Recently Added</option>
+            <option value="stale-first">Needs Attention</option>
+          </select>
+        </div>
       </div>
 
       {successMessage && (
@@ -216,7 +268,7 @@ export default function ClientsPage() {
                 placeholder="Full Name *"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -225,7 +277,7 @@ export default function ClientsPage() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -234,7 +286,7 @@ export default function ClientsPage() {
                 placeholder="Phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -243,16 +295,16 @@ export default function ClientsPage() {
                 value={address}
                 onChange={setAddress}
                 placeholder="Address"
-                className="border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
+                className="border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none w-full"
               />
             </div>
             <div className="relative sm:col-span-2">
-              <StickyNote className="absolute left-3 top-3.5 w-4 h-4 text-amber-400 pointer-events-none" aria-hidden="true" />
+              <StickyNote className="absolute left-3 top-3.5 w-4 h-4 text-emerald-600 pointer-events-none" aria-hidden="true" />
               <textarea
                 placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full border border-amber-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
+                className="w-full border border-emerald-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-emerald-50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none resize-none"
                 rows={3}
               />
             </div>
@@ -286,7 +338,7 @@ export default function ClientsPage() {
                 placeholder="Full Name *"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -295,7 +347,7 @@ export default function ClientsPage() {
                 placeholder="Email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -304,7 +356,7 @@ export default function ClientsPage() {
                 placeholder="Phone"
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                className="w-full border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -313,16 +365,16 @@ export default function ClientsPage() {
                 value={editAddress}
                 onChange={setEditAddress}
                 placeholder="Address"
-                className="border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all outline-none w-full"
+                className="border border-slate-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none w-full"
               />
             </div>
             <div className="relative sm:col-span-2">
-              <StickyNote className="absolute left-3 top-3.5 w-4 h-4 text-amber-400 pointer-events-none" aria-hidden="true" />
+              <StickyNote className="absolute left-3 top-3.5 w-4 h-4 text-emerald-600 pointer-events-none" aria-hidden="true" />
               <textarea
                 placeholder="Property Notes — gate code, dog in yard, where to park, special instructions..."
                 value={editNotes}
                 onChange={(e) => setEditNotes(e.target.value)}
-                className="w-full border border-amber-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-amber-50 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all outline-none resize-none"
+                className="w-full border border-emerald-200 rounded-xl py-3 pl-9 pr-3 text-slate-800 bg-emerald-50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all outline-none resize-none"
                 rows={3}
               />
             </div>
@@ -355,7 +407,7 @@ export default function ClientsPage() {
             <p className="text-slate-900 text-lg font-bold mb-1">No clients yet</p>
             <p className="text-slate-500">Click Add Client to get started!</p>
           </div>
-        ) : filteredClients.length === 0 ? (
+        ) : sortedClients.length === 0 ? (
           <div className="col-span-3 text-center py-16">
             <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-slate-400" aria-hidden="true" />
@@ -364,47 +416,72 @@ export default function ClientsPage() {
             <p className="text-slate-500">Try a different name or filter.</p>
           </div>
         ) : (
-          filteredClients.map((client) => (
-            <div key={client.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-lg hover:border-green-200 hover:-translate-y-0.5 transition-all duration-200 group">
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-green-600 to-emerald-600 text-white font-bold text-lg w-11 h-11 rounded-xl flex items-center justify-center shadow-md shadow-green-100 shrink-0 group-hover:scale-105 transition-transform duration-200">
-                    {client.name.charAt(0).toUpperCase()}
+          sortedClients.map((client) => {
+            const lastServiced = lastServicedMap[client.id]
+            const isStale = lastServiced
+              ? (nowMs - new Date(lastServiced + 'T00:00:00').getTime()) > 21 * DAY_MS
+              : false
+            const lastServicedLabel = lastServiced
+              ? new Date(lastServiced + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : null
+
+            return (
+              <div key={client.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-emerald-600 hover:shadow-md transition-all duration-200">
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0 mr-2">
+                      <Link href={`/clients/${client.id}`} className="font-bold text-slate-900 hover:text-emerald-600 transition-colors leading-tight">{client.name}</Link>
+                      {lastServicedLabel ? (
+                        <p className={`text-xs mt-0.5 ${isStale ? 'text-amber-600 font-medium' : 'text-slate-400'}`}>
+                          Last Serviced: {lastServicedLabel}
+                        </p>
+                      ) : lastServicedLoaded ? (
+                        <p className="text-xs mt-0.5 text-slate-400">Never serviced</p>
+                      ) : null}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-slate-400 hover:text-blue-500 transition-colors duration-200 cursor-pointer hover:bg-blue-50 p-1.5 rounded-lg"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
+                      <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-slate-400 hover:text-red-500 transition-colors duration-200 cursor-pointer hover:bg-red-50 p-1.5 rounded-lg"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
+                    </div>
                   </div>
-                  <Link href={`/clients/${client.id}`} className="text-lg font-bold text-slate-900 hover:text-green-600 transition-colors">{client.name}</Link>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleEditClient(client)} aria-label={`Edit ${client.name}`} className="text-slate-400 hover:text-blue-500 transition-colors duration-200 cursor-pointer hover:bg-blue-50 p-1.5 rounded-lg"><Pencil className="w-4 h-4" aria-hidden="true" /></button>
-                  <button onClick={() => handleDeleteClient(client.id)} aria-label={`Delete ${client.name}`} className="text-slate-400 hover:text-red-500 transition-colors duration-200 cursor-pointer hover:bg-red-50 p-1.5 rounded-lg"><Trash2 className="w-4 h-4" aria-hidden="true" /></button>
+                  <div className="space-y-0.5 min-w-0">
+                    {client.phone && (
+                      <a
+                        href={`tel:${client.phone}`}
+                        className="flex items-center gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-slate-600 text-sm"
+                      >
+                        <Phone className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                        <span>{client.phone}</span>
+                      </a>
+                    )}
+                    {client.address && (
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-slate-600 text-sm"
+                      >
+                        <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" aria-hidden="true" />
+                        <span className="break-words">{client.address}</span>
+                      </a>
+                    )}
+                    {client.email && (
+                      <a
+                        href={`mailto:${client.email}`}
+                        className="flex items-center gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-slate-600 text-sm min-w-0"
+                      >
+                        <Mail className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                        <span className="truncate">{client.email}</span>
+                      </a>
+                    )}
+                    {client.notes && (
+                      <p className="text-emerald-900 text-xs mt-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 font-medium leading-relaxed break-words">{client.notes}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1.5 pl-14 min-w-0">
-                {client.email && <a href={`mailto:${client.email}`} className="text-slate-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-blue-500 hover:underline transition-colors"><Mail className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.email}</span></a>}
-                {client.phone && <a href={`tel:${client.phone}`} className="text-slate-500 text-sm flex items-center gap-1.5 hover:text-green-500 hover:underline transition-colors"><Phone className="w-4 h-4" aria-hidden="true" /> {client.phone}</a>}
-                {client.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="text-slate-500 text-sm flex items-center gap-1.5 min-w-0 hover:text-orange-500 hover:underline transition-colors"><MapPin className="w-4 h-4 shrink-0" aria-hidden="true" /> <span className="truncate">{client.address}</span></a>}
-                {client.notes && <p className="text-amber-800 text-xs mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 font-medium leading-relaxed">{client.notes}</p>}
-              </div>
-              {(client.phone || client.address || client.email) && (
-                <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 pl-14">
-                  {client.phone && (
-                    <a href={`tel:${client.phone}`} className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
-                      <Phone className="w-3.5 h-3.5" aria-hidden="true" /> Call
-                    </a>
-                  )}
-                  {client.address && (
-                    <a href={`https://maps.google.com/?q=${encodeURIComponent(client.address)}`} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-lg bg-orange-50 text-orange-700 hover:bg-orange-100 transition-colors">
-                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Map
-                    </a>
-                  )}
-                  {client.email && (
-                    <a href={`mailto:${client.email}`} className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
-                      <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
+            )
+          })
         )}
       </div>
     </div>

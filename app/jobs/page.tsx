@@ -1425,7 +1425,7 @@ export default function JobsPage() {
                     </span>
                   </div>
                 )}
-                {job.notes && <p className="text-gray-400 text-xs mt-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 flex items-start gap-1.5"><FileText className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />{job.notes}</p>}
+                {job.notes && <p className="text-emerald-900 text-xs mt-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 flex items-start gap-1.5"><FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" aria-hidden="true" />{job.notes}</p>}
                 {job.worker_notes && <p className="text-gray-500 text-xs mt-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2"><span className="font-semibold">Worker:</span> {job.worker_notes}</p>}
                 {job.clocked_in_at && (
                   <div className="mt-2 flex items-center gap-2 flex-wrap">

@@ -472,7 +472,7 @@ export default function CalendarPage() {
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="py-2 space-y-1">
               {selectedJobs.map((job) => {
                 const client = clients.find(c => c.id === job.client_id)
                 const address = client?.address
@@ -481,39 +481,35 @@ export default function CalendarPage() {
                 const callUrl = phone ? `tel:${phone}` : null
                 const statusCfg = JOB_STATUS_CONFIG[job.status as JobStatus]
                 return (
-                  <div key={job.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border border-gray-100 border-l-4 border-l-emerald-600 hover:bg-slate-50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-gray-800 truncate flex items-center gap-1.5">
-                        {(() => { const Icon = CAL_JOB_ICONS[job.title]; return Icon ? <><Icon className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
+                  <div key={job.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-emerald-600 mx-3 my-2 p-4 hover:shadow-md transition-all duration-200">
+                    <p className="font-bold text-sm text-gray-800 flex items-center gap-1.5 mb-1">
+                      {(() => { const Icon = CAL_JOB_ICONS[job.title]; return Icon ? <><Icon className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                      <User className="w-3 h-3 shrink-0" />{job.client_name}
+                      {job.time && <><Clock className="w-3 h-3 shrink-0 ml-1" />{job.time}</>}
+                    </p>
+                    {job.recurring && !job.recurring.toLowerCase().includes('one') && (
+                      <p className="flex items-center gap-1 text-xs text-gray-400 mb-1">
+                        <RefreshCw className="w-3 h-3 shrink-0" />{recurringConfig[job.recurring]?.label ?? stripEmoji(job.recurring)}
                       </p>
-                      <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                        <User className="w-3 h-3 shrink-0" />{job.client_name}
-                        {job.time && <><Clock className="w-3 h-3 shrink-0 ml-1" />{job.time}</>}
-                      </p>
-                      {job.recurring && !job.recurring.toLowerCase().includes('one') && (
-                        <p className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-                          <RefreshCw className="w-3 h-3 shrink-0" />{recurringConfig[job.recurring]?.label ?? stripEmoji(job.recurring)}
-                        </p>
-                      )}
-                      {statusCfg && (
-                        <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.bgColor} ${statusCfg.color}`}>
-                          {statusCfg.label}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2 shrink-0">
-                      {mapsUrl && (
-                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                          <button className="flex items-center gap-1 w-full text-xs font-bold py-2 px-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition cursor-pointer whitespace-nowrap">
-                            <Navigation className="w-3.5 h-3.5" /> Navigate
-                          </button>
+                    )}
+                    {statusCfg && (
+                      <span className={`inline-block mb-1 text-xs font-semibold px-2 py-0.5 rounded-full ${statusCfg.bgColor} ${statusCfg.color}`}>
+                        {statusCfg.label}
+                      </span>
+                    )}
+                    <div className="space-y-0.5 mt-1">
+                      {callUrl && (
+                        <a href={callUrl} className="flex items-center gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-xs">
+                          <Phone className="w-3.5 h-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
+                          <span>{phone}</span>
                         </a>
                       )}
-                      {callUrl && (
-                        <a href={callUrl}>
-                          <button className="flex items-center gap-1 w-full text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition cursor-pointer whitespace-nowrap">
-                            <Phone className="w-3.5 h-3.5" /> Call
-                          </button>
+                      {mapsUrl && (
+                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-xs">
+                          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" aria-hidden="true" />
+                          <span className="break-words">{address}</span>
                         </a>
                       )}
                     </div>
@@ -524,42 +520,31 @@ export default function CalendarPage() {
                 const mapsUrl = visit.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(visit.address)}` : null
                 const callUrl = visit.client_phone ? `tel:${visit.client_phone}` : null
                 return (
-                  <div key={visit.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border border-gray-100 border-l-4 border-l-violet-600 hover:bg-slate-50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="flex items-center gap-1 font-bold text-sm text-gray-800 truncate">
-                        <Ruler className="w-4 h-4 shrink-0 text-violet-600" /> Estimate — {visit.service_type}
-                      </p>
-                      <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
-                        <User className="w-3 h-3 shrink-0" />{visit.client_name}
-                        {(visit.scheduled_time || visit.preferred_time) && <><Clock className="w-3 h-3 shrink-0 ml-1" />{visit.scheduled_time || visit.preferred_time}</>}
-                      </p>
-                      {visit.address && (
-                        <p className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 truncate">
-                          <MapPin className="w-3 h-3 shrink-0" />{visit.address}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2 shrink-0">
-                      {mapsUrl && (
-                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                          <button className="flex items-center gap-1 w-full text-xs font-bold py-2 px-3 rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 transition cursor-pointer whitespace-nowrap">
-                            <Navigation className="w-3.5 h-3.5" /> Navigate
-                          </button>
-                        </a>
-                      )}
+                  <div key={visit.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-violet-600 mx-3 my-2 p-4 hover:shadow-md transition-all duration-200">
+                    <p className="flex items-center gap-1.5 font-bold text-sm text-gray-800 mb-1">
+                      <Ruler className="w-4 h-4 shrink-0 text-violet-600" aria-hidden="true" /> Estimate — {visit.service_type}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                      <User className="w-3 h-3 shrink-0" />{visit.client_name}
+                      {(visit.scheduled_time || visit.preferred_time) && <><Clock className="w-3 h-3 shrink-0 ml-1" />{visit.scheduled_time || visit.preferred_time}</>}
+                    </p>
+                    <div className="space-y-0.5 mt-1">
                       {callUrl && (
-                        <a href={callUrl}>
-                          <button className="flex items-center gap-1 w-full text-xs font-bold py-2 px-3 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition cursor-pointer whitespace-nowrap">
-                            <Phone className="w-3.5 h-3.5" /> Call
-                          </button>
+                        <a href={callUrl} className="flex items-center gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-xs">
+                          <Phone className="w-3.5 h-3.5 shrink-0 text-violet-600" aria-hidden="true" />
+                          <span>{visit.client_phone}</span>
                         </a>
                       )}
-                      <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`}>
-                        <button className="flex items-center gap-1 w-full text-xs font-bold py-2 px-3 rounded-lg bg-purple-200 text-purple-900 hover:bg-purple-300 transition cursor-pointer whitespace-nowrap">
-                          <FileText className="w-3.5 h-3.5" />{visit.quote_id ? 'View' : 'Estimate'}
-                        </button>
-                      </Link>
+                      {mapsUrl && (
+                        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-xs">
+                          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-violet-600" aria-hidden="true" />
+                          <span className="break-words">{visit.address}</span>
+                        </a>
+                      )}
                     </div>
+                    <Link href={`/estimates?from_req_id=${visit.id}&from_req_name=${encodeURIComponent(visit.client_name)}&from_req_service=${encodeURIComponent(visit.service_type)}${visit.client_phone ? `&from_req_phone=${encodeURIComponent(visit.client_phone)}` : ''}${visit.client_email ? `&from_req_email=${encodeURIComponent(visit.client_email)}` : ''}`} className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold py-2 px-3 rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 active:bg-violet-200 transition-colors">
+                      <FileText className="w-3.5 h-3.5" aria-hidden="true" />{visit.quote_id ? 'View Quote' : 'Create Estimate'}
+                    </Link>
                   </div>
                 )
               })}
