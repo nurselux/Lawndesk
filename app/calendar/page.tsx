@@ -5,8 +5,51 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import Link from 'next/link'
-import { RECURRING_CONFIG, JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
-import { CalendarDays, ChevronDown, LayoutGrid, Columns, Map, Phone, Navigation, Ruler, RefreshCw, Mail, MapPin, Clock, User, FileText, Inbox } from 'lucide-react'
+import { JOB_STATUS_CONFIG, JobStatus } from '../../lib/status-config'
+import { stripEmoji, recurringConfig } from '../../lib/statusIcons'
+import { CalendarDays, ChevronDown, LayoutGrid, Columns, Map, Phone, Navigation, Ruler, RefreshCw, Mail, MapPin, Clock, User, FileText, Inbox, Scissors, Wind, TreePine, Axe, Layers, Sprout, Ban, Circle, Wheat, Grid3x3, Flower2, Droplets, Zap, Snowflake, Pipette, Trash2, Pencil, Minus, type LucideIcon } from 'lucide-react'
+
+const CAL_JOB_ICONS: Record<string, LucideIcon> = {
+  '✏️ Custom':                 Pencil,
+  '🌿 Lawn Mowing':            Scissors,
+  '✂️ Hedge Trimming':         Scissors,
+  '💨 Leaf Blowing':           Wind,
+  '🍂 Leaf Removal':           Wind,
+  '🌳 Bush Trimming':          TreePine,
+  '🪓 Tree Trimming':          TreePine,
+  '🪵 Stump Removal':          Axe,
+  '🪴 Mulching':               Layers,
+  '🌱 Fertilizing':            Sprout,
+  '🌾 Weed Control':           Ban,
+  '🕳️ Aeration':              Circle,
+  '🌻 Overseeding':            Wheat,
+  '🟩 Sod Installation':       Grid3x3,
+  '🌺 Garden Bed Maintenance': Flower2,
+  '💧 Irrigation System Check':Droplets,
+  '🚿 Pressure Washing':       Zap,
+  '❄️ Snow Removal':           Snowflake,
+  '🍃 Gutter Cleaning':        Pipette,
+  '🧹 General Cleanup':        Trash2,
+}
+
+const CAL_JOB_COLORS: Record<string, string> = {
+  '🌿 Lawn Mowing':            'text-emerald-500',
+  '✂️ Hedge Trimming':         'text-green-600',
+  '💨 Leaf Blowing':           'text-sky-400',
+  '🍂 Leaf Removal':           'text-orange-400',
+  '🌳 Bush Trimming':          'text-green-700',
+  '🪓 Tree Trimming':          'text-lime-600',
+  '🪵 Stump Removal':          'text-amber-700',
+  '🪴 Mulching':               'text-yellow-600',
+  '🌱 Fertilizing':            'text-teal-500',
+  '🌾 Weed Control':           'text-red-400',
+  '🌺 Garden Bed Maintenance': 'text-pink-500',
+  '💧 Irrigation System Check':'text-blue-400',
+  '🚿 Pressure Washing':       'text-cyan-500',
+  '❄️ Snow Removal':           'text-blue-300',
+  '🍃 Gutter Cleaning':        'text-lime-500',
+  '🧹 General Cleanup':        'text-gray-500',
+}
 
 type ViewMode = 'month' | 'week'
 
@@ -458,14 +501,16 @@ export default function CalendarPage() {
                 return (
                   <div key={job.id} className="w-full flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm text-gray-800 truncate">{job.title}</p>
+                      <p className="font-bold text-sm text-gray-800 truncate flex items-center gap-1.5">
+                        {(() => { const Icon = CAL_JOB_ICONS[job.title]; const color = CAL_JOB_COLORS[job.title] || 'text-gray-400'; return Icon ? <><Icon className={`w-4 h-4 shrink-0 ${color}`} aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
+                      </p>
                       <p className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
                         <User className="w-3 h-3 shrink-0" />{job.client_name}
                         {job.time && <><Clock className="w-3 h-3 shrink-0 ml-1" />{job.time}</>}
                       </p>
-                      {job.recurring && job.recurring !== 'one_time' && (
+                      {job.recurring && !job.recurring.toLowerCase().includes('one') && (
                         <p className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-                          <RefreshCw className="w-3 h-3 shrink-0" />{(RECURRING_CONFIG as any)[job.recurring]?.label ?? job.recurring}
+                          <RefreshCw className="w-3 h-3 shrink-0" />{recurringConfig[job.recurring]?.label ?? stripEmoji(job.recurring)}
                         </p>
                       )}
                       {statusCfg && (
