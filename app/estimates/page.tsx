@@ -795,47 +795,139 @@ export default function QuotesPage() {
             return (
               <div key={quote.id} className="bg-white rounded-2xl border border-gray-100 border-l-4 border-l-violet-600 hover:shadow-md transition-all duration-200">
 
-                {/* Compact summary — always visible */}
-                <div className="p-4 pb-3">
-                  {/* Row 1: Status + Client Name + Price */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
-                      <QuoteStatusBadge status={quote.status} />
-                      <span className="font-bold text-gray-800 text-sm">{quote.client_name}</span>
+                {/* Main content — 3 columns on sm+, stacked on mobile */}
+                <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+
+                  {/* LEFT: Status + Client + Date */}
+                  <div className="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-1.5 sm:w-44 shrink-0">
+                    <QuoteStatusBadge status={quote.status} />
+                    <div className="flex items-center gap-1 flex-wrap min-w-0">
+                      <span className="font-bold text-gray-800 text-sm leading-tight">{quote.client_name}</span>
                       {!quote.client_id && !savedClientIds.has(quote.id) && (
-                        <button onClick={() => saveAsClient(quote)} className="inline-flex items-center gap-1 text-xs font-bold text-violet-600 cursor-pointer active:opacity-70">
-                          <UserPlus className="w-3.5 h-3.5" /> Add
+                        <button onClick={() => saveAsClient(quote)} className="inline-flex items-center gap-0.5 text-xs font-bold text-violet-600 cursor-pointer active:opacity-70 shrink-0">
+                          <UserPlus className="w-3 h-3" /> Save
                         </button>
                       )}
                       {savedClientIds.has(quote.id) && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
                     </div>
-                    <p className="text-xl font-bold text-violet-700 shrink-0 leading-tight">${quote.amount.toFixed(2)}</p>
+                    <span className="text-xs text-gray-400 shrink-0">{new Date(quote.created_at).toLocaleDateString()}</span>
                   </div>
-                  {/* Row 2: Title */}
-                  <p className="text-gray-500 text-sm mt-1">{quote.title}</p>
-                  {/* Expiry warnings */}
-                  {isExpired && <span className="mt-1.5 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Expired</span>}
-                  {isExpiringSoon && <span className="mt-1.5 text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Exp {new Date(quote.expires_at!).toLocaleDateString()}</span>}
-                  {/* Date + payment badge + Details toggle */}
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-xs text-gray-400">{new Date(quote.created_at).toLocaleDateString()}</span>
+
+                  {/* MIDDLE: Title + Price + warnings */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-600 font-medium leading-snug">{quote.title}</p>
+                    <p className="text-2xl font-bold text-violet-700 mt-0.5 leading-tight">${quote.amount.toFixed(2)}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {isExpired && <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Expired</span>}
+                      {isExpiringSoon && <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Exp {new Date(quote.expires_at!).toLocaleDateString()}</span>}
                       {quote.require_payment && <span className="text-xs font-bold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded">{quote.deposit_amount ? `$${quote.deposit_amount.toFixed(2)} dep.` : 'Pay req.'}</span>}
                     </div>
                     <button
                       onClick={() => toggleExpanded(quote.id)}
-                      className="flex items-center gap-1 text-xs text-violet-600 font-semibold cursor-pointer active:opacity-70 min-h-[32px] px-1"
+                      className="flex items-center gap-1 text-xs text-violet-600 font-semibold cursor-pointer active:opacity-70 mt-2"
                     >
                       <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                       {isExpanded ? 'Hide' : 'Details'}
                     </button>
+                  </div>
+
+                  {/* RIGHT: Primary CTA + utility action bar */}
+                  <div className="flex flex-col gap-2 sm:shrink-0 sm:w-44">
+                    {/* Primary action */}
+                    {quote.status === 'draft' && (
+                      <button
+                        onClick={() => quote.client_email ? sendQuoteEmail(quote) : copyLink(quote.share_token)}
+                        disabled={sending === quote.id}
+                        className="flex flex-col items-center justify-center gap-0.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-sm px-4 py-2.5 transition-colors cursor-pointer disabled:opacity-60 shadow-sm shadow-violet-200"
+                      >
+                        <span className="flex items-center gap-1.5"><Send className="w-4 h-4" /> {sending === quote.id ? 'Sending…' : 'Send to Client'}</span>
+                        <span className="text-violet-200 text-xs font-normal">{quote.client_email ? 'via email' : 'copy link'}</span>
+                      </button>
+                    )}
+                    {quote.status === 'sent' && (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-center gap-1.5 rounded-xl bg-gray-100 text-gray-400 font-bold text-sm px-4 py-2.5 cursor-default select-none">
+                          <Clock className="w-4 h-4" /> Awaiting Client
+                        </div>
+                        <button
+                          onClick={() => quote.client_email ? sendQuoteEmail(quote) : (quote.client_phone ? sendQuoteSMS(quote) : copyLink(quote.share_token))}
+                          disabled={sending === quote.id}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-violet-200 text-violet-600 hover:bg-violet-50 active:bg-violet-100 font-semibold text-sm px-4 py-2 transition-colors cursor-pointer disabled:opacity-60"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" /> {sending === quote.id ? 'Sending…' : 'Send Reminder'}
+                        </button>
+                      </div>
+                    )}
+                    {quote.status === 'approved' && (
+                      <button
+                        onClick={() => convertToJob(quote)}
+                        className="flex flex-col items-center justify-center gap-0.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm px-4 py-2.5 transition-colors cursor-pointer shadow-sm shadow-emerald-200"
+                      >
+                        <span className="flex items-center gap-1.5"><CalendarDays className="w-4 h-4" /> Book Job</span>
+                        <span className="text-emerald-200 text-xs font-normal">add to schedule</span>
+                      </button>
+                    )}
+                    {(quote.status === 'converted' || quote.status === 'declined') && (
+                      <p className="text-xs text-gray-400 py-1 sm:text-right">{quote.status === 'converted' ? 'Converted — see Jobs' : 'Declined by client'}</p>
+                    )}
+
+                    {/* Utility action bar */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => sendQuoteEmail(quote)}
+                        disabled={!quote.client_email || sending === quote.id}
+                        title={quote.client_email ? `Email ${quote.client_email}` : 'No email on file'}
+                        className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex-1"
+                      >
+                        <Mail className="w-3.5 h-3.5 shrink-0" /> Email
+                      </button>
+                      <button
+                        onClick={() => sendQuoteSMS(quote)}
+                        disabled={!quote.client_phone}
+                        title={quote.client_phone ? `Text ${quote.client_phone}` : 'No phone on file'}
+                        className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex-1"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 shrink-0" /> Text
+                      </button>
+                      <button
+                        onClick={() => copyLink(quote.share_token)}
+                        title="Copy share link"
+                        className="flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs font-semibold transition-colors cursor-pointer flex-1"
+                      >
+                        {copiedId === quote.share_token ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600" /> : <Link2 className="w-3.5 h-3.5 shrink-0" />}
+                        {copiedId === quote.share_token ? 'Copied!' : 'Link'}
+                      </button>
+                      {(quote.status === 'sent' || quote.status === 'draft') && (
+                        <div className="relative">
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === quote.id ? null : quote.id)}
+                            className="flex items-center justify-center w-8 h-[30px] rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer"
+                          >
+                            <MoreHorizontal className="w-3.5 h-3.5" />
+                          </button>
+                          {openMenuId === quote.id && (
+                            <div className="absolute bottom-full mb-2 right-0 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-20 min-w-[160px]">
+                              <button onClick={() => { updateStatus(quote.id, 'approved'); setOpenMenuId(null) }} className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer text-left"><CheckCircle2 className="w-4 h-4" /> Mark Approved</button>
+                              <button onClick={() => { updateStatus(quote.id, 'declined'); setOpenMenuId(null) }} className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left border-t border-gray-100"><XCircle className="w-4 h-4" /> Mark Declined</button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => deleteQuote(quote.id)}
+                        aria-label="Delete estimate"
+                        className="flex items-center justify-center w-8 h-[30px] rounded-lg bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Collapsible details */}
                 {isExpanded && (
                   <>
-                    <div className="px-4 pb-2 space-y-0.5 border-t border-gray-50 pt-2">
+                    <div className="px-4 pb-2 space-y-0.5 border-t border-gray-100 pt-2">
                       {quote.client_phone && <a href={`tel:${quote.client_phone}`} className="flex items-center gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-sm"><Phone className="w-4 h-4 shrink-0 text-emerald-600" /><span>{quote.client_phone}</span></a>}
                       {quote.client_email && <a href={`mailto:${quote.client_email}`} className="flex items-center gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-sm min-w-0"><Mail className="w-4 h-4 shrink-0 text-emerald-600" /><span className="truncate">{quote.client_email}</span></a>}
                       {quote.address && <a href={`https://maps.google.com/?q=${encodeURIComponent(quote.address)}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 py-3 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-sm"><MapPin className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" /><span className="break-words">{quote.address}</span></a>}
@@ -848,7 +940,7 @@ export default function QuotesPage() {
                       {quote.description && <p className="text-gray-400 text-xs py-1 line-clamp-3">{quote.description}</p>}
                     </div>
                     {quote.line_items?.length > 0 && (
-                      <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-1">
+                      <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-1 rounded-b-2xl">
                         {quote.line_items.map((item, i) => (
                           <div key={i} className="flex justify-between text-xs text-gray-500">
                             <span className="truncate">{item.description}</span>
@@ -859,23 +951,6 @@ export default function QuotesPage() {
                     )}
                   </>
                 )}
-
-                {/* Primary CTA — always visible, full-width at bottom */}
-                <div className="border-t border-gray-100 px-4 pt-3 pb-3">
-                  {quote.status === 'draft' && <button onClick={() => quote.client_email ? sendQuoteEmail(quote) : copyLink(quote.share_token)} disabled={sending === quote.id} className="w-full min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-bold text-sm transition-colors cursor-pointer disabled:opacity-60 shadow-sm shadow-violet-200"><span className="flex items-center gap-2"><Send className="w-4 h-4" /> {sending === quote.id ? 'Sending…' : 'Send to Client'}</span><span className="text-violet-200 text-xs font-normal">{quote.client_email ? 'Emails estimate for review' : 'Copy link to share'}</span></button>}
-                  {quote.status === 'sent' && <div className="space-y-2"><div className="w-full min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-xl bg-gray-100 text-gray-400 font-bold text-sm cursor-default select-none"><span className="flex items-center gap-2"><Clock className="w-4 h-4" /> Awaiting Client</span><span className="text-gray-400 text-xs font-normal">Client hasn't responded yet</span></div><button onClick={() => quote.client_email ? sendQuoteEmail(quote) : (quote.client_phone ? sendQuoteSMS(quote) : copyLink(quote.share_token))} disabled={sending === quote.id} className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl border border-violet-200 text-violet-600 hover:bg-violet-50 active:bg-violet-100 font-semibold text-sm transition-colors cursor-pointer disabled:opacity-60"><RefreshCw className="w-3.5 h-3.5" /> {sending === quote.id ? 'Sending…' : 'Send Reminder'}</button></div>}
-                  {quote.status === 'approved' && <button onClick={() => convertToJob(quote)} className="w-full min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm transition-colors cursor-pointer shadow-sm shadow-emerald-200"><span className="flex items-center gap-2"><CalendarDays className="w-4 h-4" /> Book Job</span><span className="text-emerald-200 text-xs font-normal">Moves this to your active schedule</span></button>}
-                  {(quote.status === 'converted' || quote.status === 'declined') && <p className="text-center text-xs text-gray-400 py-1">{quote.status === 'converted' ? 'Converted — see Jobs or Invoices' : 'Declined by client'}</p>}
-                </div>
-
-                {/* Utility bar */}
-                <div className="border-t border-gray-100 px-4 py-2 rounded-b-2xl flex items-center gap-1.5">
-                  <button onClick={() => sendQuoteEmail(quote)} disabled={!quote.client_email || sending === quote.id} title={quote.client_email ? `Email ${quote.client_email}` : 'No email on file'} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"><Mail className="w-4 h-4" /></button>
-                  <button onClick={() => sendQuoteSMS(quote)} disabled={!quote.client_phone} title={quote.client_phone ? `Text ${quote.client_phone}` : 'No phone on file'} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"><MessageSquare className="w-4 h-4" /></button>
-                  <button onClick={() => copyLink(quote.share_token)} title="Copy share link" className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer">{copiedId === quote.share_token ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Link2 className="w-4 h-4" />}</button>
-                  {(quote.status === 'sent' || quote.status === 'draft') && <div className="relative"><button onClick={() => setOpenMenuId(openMenuId === quote.id ? null : quote.id)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer"><MoreHorizontal className="w-4 h-4" /></button>{openMenuId === quote.id && <div className="absolute bottom-full mb-2 right-0 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-20 min-w-[160px]"><button onClick={() => { updateStatus(quote.id, 'approved'); setOpenMenuId(null) }} className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer text-left"><CheckCircle2 className="w-4 h-4" /> Mark Approved</button><button onClick={() => { updateStatus(quote.id, 'declined'); setOpenMenuId(null) }} className="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left border-t border-gray-100"><XCircle className="w-4 h-4" /> Mark Declined</button></div>}</div>}
-                  <button onClick={() => deleteQuote(quote.id)} aria-label="Delete estimate" className="min-h-[44px] min-w-[44px] ml-auto flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-400 hover:border-red-200 active:bg-red-100 transition-colors cursor-pointer"><Trash2 className="w-4 h-4" /></button>
-                </div>
               </div>
             )
           })}
