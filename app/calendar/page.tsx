@@ -447,8 +447,8 @@ export default function CalendarPage() {
 
       {/* Selected day detail — Daily Agenda */}
       {selectedDate && (
-        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100 mb-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 mb-4 overflow-hidden">
+          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
             <h4 className="font-bold text-gray-800">
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </h4>
@@ -474,7 +474,7 @@ export default function CalendarPage() {
           </div>
 
           {selectedJobs.length === 0 && selectedVisits.length === 0 ? (
-            <div className="text-center py-6 space-y-3">
+            <div className="text-center py-8 px-5 space-y-3">
               <p className="text-gray-400">Nothing scheduled for this day</p>
               <div className="flex justify-center gap-3 flex-wrap">
                 <Link href={`/jobs?date=${selectedDate}`}>
@@ -490,7 +490,7 @@ export default function CalendarPage() {
               </div>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-gray-100">
               {selectedJobs.map((job) => {
                 const client = clients.find(c => c.id === job.client_id)
                 const address = client?.address
@@ -499,7 +499,7 @@ export default function CalendarPage() {
                 const callUrl = phone ? `tel:${phone}` : null
                 const statusCfg = JOB_STATUS_CONFIG[job.status as JobStatus]
                 return (
-                  <div key={job.id} className="w-full flex items-center gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50">
+                  <div key={job.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border-l-4 border-blue-400 hover:bg-gray-50 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm text-gray-800 truncate flex items-center gap-1.5">
                         {(() => { const Icon = CAL_JOB_ICONS[job.title]; const color = CAL_JOB_COLORS[job.title] || 'text-gray-400'; return Icon ? <><Icon className={`w-4 h-4 shrink-0 ${color}`} aria-hidden="true" />{stripEmoji(job.title)}</> : stripEmoji(job.title) })()}
@@ -542,7 +542,7 @@ export default function CalendarPage() {
                 const mapsUrl = visit.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(visit.address)}` : null
                 const callUrl = visit.client_phone ? `tel:${visit.client_phone}` : null
                 return (
-                  <div key={visit.id} className="w-full flex items-center gap-3 p-4 rounded-xl border border-purple-100 bg-purple-50">
+                  <div key={visit.id} className="w-full flex items-center gap-3 py-4 pl-4 pr-3 border-l-4 border-purple-400 hover:bg-purple-50/40 transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="flex items-center gap-1 font-bold text-sm text-purple-900 truncate">
                         <Ruler className="w-4 h-4 shrink-0" /> Estimate — {visit.service_type}
