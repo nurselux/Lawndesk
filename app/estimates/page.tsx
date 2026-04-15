@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
-import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock, CreditCard, UserPlus } from 'lucide-react'
+import { ClipboardList, Mail, MessageSquare, Link2, Trash2, Receipt, RefreshCw, FileText, Send, CheckCircle2, XCircle, MapPin, CalendarDays, Clock, CreditCard, UserPlus, Phone } from 'lucide-react'
 import { QuoteStatusBadge } from '../../lib/statusIcons'
 
 interface LineItem {
@@ -44,6 +44,11 @@ interface Client {
 }
 
 const emptyItem = (): LineItem => ({ description: '', quantity: 1, unit_price: 0 })
+
+function fmtTime(t: string) {
+  const [h, m] = t.split(':').map(Number)
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
+}
 
 export default function QuotesPage() {
   const { user } = useAuth()
@@ -716,156 +721,169 @@ export default function QuotesPage() {
       ) : (
         <div className="space-y-4">
           {filtered.map(quote => (
-            <div key={quote.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-violet-600 hover:bg-slate-50 hover:shadow-md transition-all duration-200">
+            <div key={quote.id} className="bg-white rounded-2xl border border-gray-100 border-l-4 border-l-violet-600 hover:shadow-md transition-all duration-200">
+
+              {/* Main content */}
               <div className="p-4">
-                <div className="flex justify-between items-start gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <QuoteStatusBadge status={quote.status} />
-                      {quote.require_payment && (
-                        <span className="inline-flex items-center gap-1 text-xs font-bold py-1 px-2.5 rounded-full bg-violet-100 text-violet-700">
-                          <CreditCard className="w-3 h-3" aria-hidden="true" />
-                          {quote.deposit_amount ? `$${quote.deposit_amount.toFixed(2)} deposit` : 'Full payment req.'}
-                        </span>
-                      )}
-                      {quote.expires_at && (
-                        <span className="text-xs text-gray-400">Expires {new Date(quote.expires_at).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                    <h4 className="font-bold text-gray-800 text-base truncate">{quote.title}</h4>
-                    <p className="text-gray-500 text-sm">{quote.client_name}</p>
-                    {(quote.client_email || quote.client_phone) && (
-                      <p className="text-gray-400 text-xs mt-0.5">
-                        {quote.client_email}{quote.client_email && quote.client_phone ? ' · ' : ''}{quote.client_phone}
-                      </p>
+
+                {/* Header row: status badges (top-left) + total (top-right) */}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <QuoteStatusBadge status={quote.status} />
+                    {quote.require_payment && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold py-1 px-2 rounded-full bg-violet-100 text-violet-700">
+                        <CreditCard className="w-3 h-3" aria-hidden="true" />
+                        {quote.deposit_amount ? `$${quote.deposit_amount.toFixed(2)} dep.` : 'Full pay req.'}
+                      </span>
                     )}
-                    {quote.description && <p className="text-gray-400 text-xs mt-1 truncate">{quote.description}</p>}
-                    {(quote.service_date || quote.service_time || quote.address) && (
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
-                        {quote.service_date && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <CalendarDays className="w-3 h-3 text-gray-400" aria-hidden="true" />
-                            {new Date(quote.service_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                          </span>
-                        )}
-                        {quote.service_time && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-gray-400" aria-hidden="true" />
-                            {(() => {
-                              const [h, m] = quote.service_time.split(':').map(Number)
-                              const ampm = h >= 12 ? 'PM' : 'AM'
-                              return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
-                            })()}
-                          </span>
-                        )}
-                        {quote.address && (
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-gray-400" aria-hidden="true" />
-                            {quote.address}
-                          </span>
-                        )}
-                      </div>
+                    {quote.expires_at && (
+                      <span className="text-xs text-gray-400">Exp {new Date(quote.expires_at).toLocaleDateString()}</span>
                     )}
                   </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-2xl font-bold text-violet-700">${quote.amount.toFixed(2)}</p>
-                    <p className="text-gray-400 text-xs">{new Date(quote.created_at).toLocaleDateString()}</p>
-                  </div>
+                  <p className="text-2xl font-bold text-violet-700 shrink-0 leading-none">${quote.amount.toFixed(2)}</p>
                 </div>
 
-                {quote.line_items?.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-1">
-                    {quote.line_items.map((item, i) => (
-                      <div key={i} className="flex justify-between text-sm text-gray-500">
-                        <span className="truncate">{item.description}</span>
-                        <span className="font-semibold shrink-0 ml-2">{item.quantity} × ${item.unit_price.toFixed(2)}</span>
-                      </div>
-                    ))}
+                {/* Title + client + date */}
+                <h4 className="font-bold text-gray-800 text-base mb-0.5">{quote.title}</h4>
+                <p className="text-gray-500 text-sm">
+                  {quote.client_name}
+                  <span className="text-gray-300 mx-1">·</span>
+                  <span className="text-gray-400 text-xs">{new Date(quote.created_at).toLocaleDateString()}</span>
+                </p>
+
+                {/* Touch-friendly contact links */}
+                <div className="space-y-0.5 mt-1">
+                  {quote.client_phone && (
+                    <a href={`tel:${quote.client_phone}`} className="flex items-center gap-2 py-2.5 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-sm">
+                      <Phone className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                      <span>{quote.client_phone}</span>
+                    </a>
+                  )}
+                  {quote.client_email && (
+                    <a href={`mailto:${quote.client_email}`} className="flex items-center gap-2 py-2.5 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-sm min-w-0">
+                      <Mail className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                      <span className="truncate">{quote.client_email}</span>
+                    </a>
+                  )}
+                  {quote.address && (
+                    <a href={`https://maps.google.com/?q=${encodeURIComponent(quote.address)}`} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 py-2.5 -mx-1 px-1 rounded-lg active:bg-gray-100 transition-colors text-gray-600 text-sm">
+                      <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" aria-hidden="true" />
+                      <span className="break-words">{quote.address}</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Service date / time */}
+                {(quote.service_date || quote.service_time) && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2">
+                    {quote.service_date && (
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3 text-gray-400" aria-hidden="true" />
+                        {new Date(quote.service_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    )}
+                    {quote.service_time && (
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-gray-400" aria-hidden="true" />
+                        {fmtTime(quote.service_time)}
+                      </span>
+                    )}
                   </div>
                 )}
+
+                {quote.description && <p className="text-gray-400 text-xs mt-1.5 line-clamp-2">{quote.description}</p>}
               </div>
 
+              {/* Line items — subtle gray footer */}
+              {quote.line_items?.length > 0 && (
+                <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-1">
+                  {quote.line_items.map((item, i) => (
+                    <div key={i} className="flex justify-between text-xs text-gray-500">
+                      <span className="truncate">{item.description}</span>
+                      <span className="font-semibold shrink-0 ml-2">{item.quantity} × ${item.unit_price.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Action bar */}
-              <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5 rounded-b-2xl">
-                {/* Primary action row (only for approved quotes) */}
+              <div className="border-t border-gray-100 px-4 py-3 rounded-b-2xl flex items-center gap-2">
+
+                {/* Icon-only share buttons — min 44px tap targets */}
+                <button
+                  onClick={() => sendQuoteEmail(quote)}
+                  disabled={!quote.client_email || sending === quote.id}
+                  title={quote.client_email ? `Email ${quote.client_email}` : 'No email on file'}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Mail className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <button
+                  onClick={() => sendQuoteSMS(quote)}
+                  disabled={!quote.client_phone}
+                  title={quote.client_phone ? `Text ${quote.client_phone}` : 'No phone on file'}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                </button>
+                <button
+                  onClick={() => copyLink(quote.share_token)}
+                  title="Copy share link"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer"
+                >
+                  {copiedId === quote.share_token
+                    ? <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                    : <Link2 className="w-4 h-4" aria-hidden="true" />}
+                </button>
+
+                {/* Approve — non-terminal statuses only */}
+                {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
+                  <button
+                    onClick={() => updateStatus(quote.id, 'approved')}
+                    className="min-h-[44px] flex-1 text-xs font-bold px-3 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 active:bg-emerald-200 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Approve
+                  </button>
+                )}
+
+                {/* Convert (approved only) — single select that dispatches to invoice or job */}
                 {quote.status === 'approved' && (
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      onClick={() => convertToInvoice(quote)}
-                      className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer flex items-center justify-center gap-1"
+                  <>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value === 'invoice') convertToInvoice(quote)
+                        if (e.target.value === 'job') convertToJob(quote)
+                      }}
+                      className="min-h-[44px] flex-1 text-xs font-bold px-3 rounded-lg bg-violet-600 text-white border-0 cursor-pointer text-center appearance-none"
                     >
-                      <Receipt className="w-3.5 h-3.5" aria-hidden="true" />Invoice
-                    </button>
-                    <button
-                      onClick={() => convertToJob(quote)}
-                      className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors cursor-pointer flex items-center justify-center gap-1"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />Job
-                    </button>
+                      <option value="" disabled>Convert →</option>
+                      <option value="invoice">→ Invoice</option>
+                      <option value="job">→ Job</option>
+                    </select>
                     {!quote.client_id && (
                       <button
                         onClick={() => saveAsClient(quote)}
                         disabled={savedClientIds.has(quote.id)}
-                        className="flex-1 text-xs font-bold py-2 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
+                        title={savedClientIds.has(quote.id) ? 'Already saved' : 'Save as client'}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {savedClientIds.has(quote.id)
-                          ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />Saved</>
-                          : <><UserPlus className="w-3.5 h-3.5" aria-hidden="true" />Client</>
-                        }
+                          ? <CheckCircle2 className="w-4 h-4 text-emerald-600" aria-hidden="true" />
+                          : <UserPlus className="w-4 h-4" aria-hidden="true" />}
                       </button>
                     )}
-                  </div>
+                  </>
                 )}
 
-                {/* Secondary / utility row */}
-                <div className="flex items-center gap-1.5">
-                  {/* Share actions — all same neutral gray */}
-                  <button
-                    onClick={() => sendQuoteEmail(quote)}
-                    disabled={sending === quote.id}
-                    title={quote.client_email || 'No email on file'}
-                    className={`text-xs font-semibold py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
-                      quote.client_email ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100' : 'bg-white border border-gray-100 text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    <Mail className="w-3.5 h-3.5" aria-hidden="true" /> Email
-                  </button>
-
-                  <button
-                    onClick={() => sendQuoteSMS(quote)}
-                    title={quote.client_phone || 'No phone on file'}
-                    className={`text-xs font-semibold py-1.5 px-2.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
-                      quote.client_phone ? 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100' : 'bg-white border border-gray-100 text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Text
-                  </button>
-
-                  <button
-                    onClick={() => copyLink(quote.share_token)}
-                    className="text-xs font-semibold py-1.5 px-2.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer flex items-center gap-1"
-                  >
-                    <Link2 className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === quote.share_token ? 'Copied!' : 'Link'}
-                  </button>
-
-                  {/* Mark Approved — only for non-terminal statuses */}
-                  {quote.status !== 'converted' && quote.status !== 'declined' && quote.status !== 'approved' && (
-                    <button
-                      onClick={() => updateStatus(quote.id, 'approved')}
-                      className="text-xs font-bold py-1.5 px-2.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer flex items-center gap-1"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Approve
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => deleteQuote(quote.id)}
-                    aria-label="Delete estimate"
-                    className="ml-auto text-xs font-bold py-1.5 px-2.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-400 hover:border-red-200 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                  </button>
-                </div>
+                {/* Delete */}
+                <button
+                  onClick={() => deleteQuote(quote.id)}
+                  aria-label="Delete estimate"
+                  className="min-h-[44px] min-w-[44px] ml-auto flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:text-red-400 hover:border-red-200 active:bg-red-100 transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                </button>
               </div>
             </div>
           ))}
