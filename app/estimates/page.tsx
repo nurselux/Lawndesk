@@ -454,8 +454,8 @@ export default function QuotesPage() {
         </div>
       </div>
 
-      {/* Sticky search + sort + tabs */}
-      <div className="sticky top-0 z-50 bg-gray-50 border-b border-gray-200 shadow-sm pb-2">
+      {/* Search + sort + tabs */}
+      <div className="pb-2">
         {/* Search + Sort row */}
         <div className="flex gap-2 px-4 pt-2 pb-2">
           <div className="relative flex-1">
