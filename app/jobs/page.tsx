@@ -517,6 +517,43 @@ export default function JobsPage() {
     return (data?.[0]?.invoice_number || 0) + 1
   }
 
+  // Generates a draft invoice from a completed job.
+  // For recurring jobs, appends the service date to the description so clients
+  // know exactly which visit they're paying for (e.g. "Lawn Mowing — April 15").
+  const generateInvoiceFromJob = async (
+    job: Job,
+    clientData: { name: string; phone: string | null; email: string | null }
+  ) => {
+    const nextNum = await getNextInvoiceNumber()
+    const dueDate = new Date()
+    dueDate.setDate(dueDate.getDate() + 7)
+
+    const isRecurring = job.recurring && job.recurring !== '🔂 One-time'
+    const serviceLabel = stripEmoji(job.title)
+    const formattedDate = job.date
+      ? new Date(job.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+      : null
+    const description = isRecurring && formattedDate
+      ? `${serviceLabel} — ${formattedDate}`
+      : serviceLabel
+
+    const { data: newInv } = await supabase.from('Invoices').insert([{
+      client_name: clientData.name,
+      client_id: job.client_id,
+      client_email: clientData.email || null,
+      client_phone: clientData.phone || null,
+      amount: 0,
+      status: '🟡 Unpaid',
+      due_date: dueDate.toISOString().split('T')[0],
+      description,
+      line_items: [],
+      invoice_number: nextNum,
+      user_id: user?.id,
+    }] as any).select().single()
+
+    return { invoice: newInv as any, nextNum }
+  }
+
   const handleStatusChange = async (id: string, newStatus: string) => {
     await supabase.from('Jobs').update({ status: newStatus }).eq('id', id)
     fetchJobs()
@@ -538,25 +575,15 @@ export default function JobsPage() {
 
       let invoice = invoicesData?.[0]
 
-      // Auto-create invoice if none exists for this client
+      // Auto-draft invoice when none exists for this client
       if (!invoice) {
-        const nextNum = await getNextInvoiceNumber()
-        const dueDate = new Date()
-        dueDate.setDate(dueDate.getDate() + 7)
-        const { data: newInv } = await supabase.from('Invoices').insert([{
-          client_name: clientData?.name || '',
-          client_id: job.client_id,
-          client_email: clientData?.email || null,
-          client_phone: clientData?.phone || null,
-          amount: 0,
-          status: '🟡 Unpaid',
-          due_date: dueDate.toISOString().split('T')[0],
-          description: job.title,
-          invoice_number: nextNum,
-          user_id: user?.id,
-        }] as any).select().single()
-        invoice = newInv
-        setSuccessMessage(`Job complete! Invoice #${String(nextNum).padStart(3, '0')} created — set the amount in Invoices.`)
+        const result = await generateInvoiceFromJob(job, {
+          name: clientData?.name || '',
+          phone: clientData?.phone || null,
+          email: clientData?.email || null,
+        })
+        invoice = result.invoice
+        setSuccessMessage(`Job complete! Invoice #${String(result.nextNum).padStart(3, '0')} drafted — set the amount in Invoices.`)
         setTimeout(() => setSuccessMessage(''), 6000)
       }
 
@@ -568,9 +595,7 @@ export default function JobsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ to: clientData.phone, message }),
         })
-        if (!invoicesData?.[0]) {
-          // message already set above
-        } else {
+        if (invoicesData?.[0]) {
           setSuccessMessage(`Job complete! Invoice text sent to ${clientData.name}.`)
           setTimeout(() => setSuccessMessage(''), 5000)
         }

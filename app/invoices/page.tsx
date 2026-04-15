@@ -8,7 +8,7 @@ import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
 import {
   Receipt, Mail, MessageSquare, Link2, Pencil, Trash2, Search,
   CheckCircle2, Plus, Minus, Copy, ExternalLink, ArrowUpDown,
-  FileText, AlertTriangle, Clock, DollarSign, X, CreditCard
+  FileText, AlertTriangle, Clock, DollarSign, X, CreditCard, MoreVertical
 } from 'lucide-react'
 import { InvoiceStatusBadge } from '../../lib/statusIcons'
 
@@ -86,6 +86,7 @@ function InvoicesContent() {
   const [recordingPaymentId, setRecordingPaymentId] = useState<string | null>(null)
   const [recordPaymentInput, setRecordPaymentInput] = useState('')
   const [recordingSaving, setRecordingSaving] = useState(false)
+  const [openMoreMenuId, setOpenMoreMenuId] = useState<string | null>(null)
 
   // Form state
   const [clientId, setClientId] = useState('')
@@ -830,33 +831,35 @@ function InvoicesContent() {
                 key={inv.id}
                 className={`bg-white rounded-2xl shadow-sm border-l-4 overflow-hidden ${borderColor} ${selectedIds.has(inv.id) ? 'ring-2 ring-emerald-400' : ''}`}
               >
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-start gap-2.5 min-w-0">
-                      {!isPaid && !isDraft && (
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(inv.id)}
-                          onChange={() => toggleSelect(inv.id)}
-                          className="mt-1 accent-emerald-600 cursor-pointer shrink-0 w-4 h-4"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-400 font-mono leading-none mb-0.5">
-                          INV-{String(inv.invoice_number).padStart(3, '0')}
-                        </p>
-                        <p className="font-bold text-gray-900 text-base leading-tight">{inv.client_name}</p>
-                        {inv.description && (
-                          <p className="text-gray-400 text-xs truncate mt-0.5 max-w-[200px]">{inv.description}</p>
-                        )}
+                {/* Header: Status badge + invoice ID + client + amount + More menu */}
+                <div className="px-4 pt-3 pb-2 flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    {!isPaid && !isDraft && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(inv.id)}
+                        onChange={() => toggleSelect(inv.id)}
+                        className="accent-emerald-600 cursor-pointer shrink-0 w-4 h-4 mt-1"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <InvoiceStatusBadge status={inv.status} />
+                        <span className="text-xs text-gray-400 font-mono">INV-{String(inv.invoice_number).padStart(3, '0')}</span>
                       </div>
+                      <p className="font-bold text-gray-900 text-base leading-tight">{inv.client_name}</p>
+                      {inv.description && (
+                        <p className="text-gray-400 text-xs truncate mt-0.5 max-w-[220px]">{inv.description}</p>
+                      )}
                     </div>
-                    <div className="text-right shrink-0">
+                  </div>
+                  <div className="flex items-start gap-1 shrink-0">
+                    <div className="text-right">
                       <p className={`text-2xl font-black leading-none ${isPaid ? 'text-emerald-600' : isOverdue ? 'text-red-500' : isDraft ? 'text-gray-400' : isPartial ? 'text-orange-600' : 'text-amber-600'}`}>
                         ${inv.amount.toFixed(2)}
                       </p>
                       {isPartial && amountPaid > 0 && (
-                        <p className="text-xs text-orange-500 font-semibold mt-0.5">${remaining.toFixed(2)} remaining</p>
+                        <p className="text-xs text-orange-500 font-semibold mt-0.5">${remaining.toFixed(2)} due</p>
                       )}
                       {inv.due_date && (
                         <p className={`text-xs mt-0.5 font-medium flex items-center justify-end gap-1 ${isOverdue ? 'text-red-400' : 'text-gray-400'}`}>
@@ -865,140 +868,133 @@ function InvoicesContent() {
                         </p>
                       )}
                     </div>
+                    {/* More dropdown: View, Edit, Duplicate, Delete */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setOpenMoreMenuId(openMoreMenuId === inv.id ? null : inv.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+                        aria-label="More options"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {openMoreMenuId === inv.id && (
+                        <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-20 min-w-[150px]">
+                          <a
+                            href={getInvoiceLink(inv.share_token)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setOpenMoreMenuId(null)}
+                            className="flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4 text-gray-400" aria-hidden="true" /> View
+                          </a>
+                          <button
+                            onClick={() => { openEdit(inv); setOpenMoreMenuId(null) }}
+                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-left border-t border-gray-100"
+                          >
+                            <Pencil className="w-4 h-4 text-gray-400" aria-hidden="true" /> Edit
+                          </button>
+                          <button
+                            onClick={() => { duplicateInvoice(inv); setOpenMoreMenuId(null) }}
+                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-left border-t border-gray-100"
+                          >
+                            <FileText className="w-4 h-4 text-gray-400" aria-hidden="true" /> Duplicate
+                          </button>
+                          <button
+                            onClick={() => { handleDelete(inv.id); setOpenMoreMenuId(null) }}
+                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left border-t border-gray-100"
+                          >
+                            <Trash2 className="w-4 h-4" aria-hidden="true" /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
+                </div>
 
-                  {/* Status + Mark Paid + Record Payment */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <select
-                      value={inv.status}
-                      onChange={e => handleStatusChange(inv.id, e.target.value)}
-                      className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer ${
-                        isPaid ? 'bg-emerald-100 text-emerald-700' :
-                        isOverdue ? 'bg-red-100 text-red-700' :
-                        isDraft ? 'bg-gray-100 text-gray-600' :
-                        isPartial ? 'bg-orange-100 text-orange-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}
+                {/* Record partial payment inline form */}
+                {recordingPaymentId === inv.id && (
+                  <div className="mx-4 mb-3 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">$</span>
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        max={remaining}
+                        placeholder={remaining.toFixed(2)}
+                        value={recordPaymentInput}
+                        onChange={e => setRecordPaymentInput(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-gray-800 text-sm focus:border-blue-400 outline-none"
+                        inputMode="decimal"
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={() => recordPayment(inv)}
+                      disabled={recordingSaving || !recordPaymentInput}
+                      className="bg-blue-600 text-white font-bold text-xs py-2 px-4 rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-50 transition-colors"
                     >
-                      {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                    {!isPaid && !isDraft && (
+                      {recordingSaving ? '…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => setRecordingPaymentId(null)}
+                      className="text-gray-400 hover:text-gray-600 cursor-pointer text-xs font-bold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {/* Primary payment action */}
+                <div className="px-4 pb-3">
+                  {isPaid ? (
+                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" /> Payment Received
+                    </div>
+                  ) : isDraft ? (
+                    <p className="text-xs text-gray-400 italic py-1">Draft — send to client when ready</p>
+                  ) : (
+                    <div className="flex gap-2">
                       <button
                         onClick={() => markPaid(inv.id)}
-                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors cursor-pointer flex items-center gap-1"
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-sm py-2.5 rounded-xl transition-colors cursor-pointer shadow-sm shadow-emerald-200"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> Mark Paid
+                        <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> Mark Paid
                       </button>
-                    )}
-                    {!isPaid && !isDraft && (
                       <button
                         onClick={() => { setRecordingPaymentId(inv.id); setRecordPaymentInput('') }}
-                        className="text-xs font-bold py-1.5 px-3 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors cursor-pointer flex items-center gap-1"
+                        className="flex items-center justify-center gap-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors cursor-pointer"
                       >
-                        <DollarSign className="w-3.5 h-3.5" aria-hidden="true" /> Record Payment
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Record Payment inline form */}
-                  {recordingPaymentId === inv.id && (
-                    <div className="mt-3 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">$</span>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          max={remaining}
-                          placeholder={remaining.toFixed(2)}
-                          value={recordPaymentInput}
-                          onChange={e => setRecordPaymentInput(e.target.value)}
-                          className="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-gray-800 text-sm focus:border-blue-400 outline-none"
-                          inputMode="decimal"
-                          autoFocus
-                        />
-                      </div>
-                      <button
-                        onClick={() => recordPayment(inv)}
-                        disabled={recordingSaving || !recordPaymentInput}
-                        className="bg-blue-600 text-white font-bold text-xs py-2 px-4 rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                      >
-                        {recordingSaving ? '…' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => setRecordingPaymentId(null)}
-                        className="text-gray-400 hover:text-gray-600 cursor-pointer text-xs font-bold"
-                      >
-                        Cancel
+                        <DollarSign className="w-4 h-4" aria-hidden="true" /> Partial
                       </button>
                     </div>
                   )}
-                  {isPartial && amountPaid > 0 && (
-                    <p className="text-xs text-gray-400 mt-1.5">
-                      ${amountPaid.toFixed(2)} paid · ${remaining.toFixed(2)} remaining
-                    </p>
-                  )}
                 </div>
 
-                {/* Action bar */}
-                <div className="border-t border-gray-100 bg-gray-50 px-3 py-2.5 flex items-center gap-1.5 flex-wrap">
+                {/* Communication bar */}
+                <div className="border-t border-gray-100 bg-gray-50 px-3 py-2 flex items-center gap-1.5 rounded-b-2xl">
                   <button
                     onClick={() => handleSendEmail(inv)}
-                    disabled={isSendingEmail}
-                    className={`flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                      inv.client_email ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
+                    disabled={isSendingEmail || !inv.client_email}
+                    title={inv.client_email || 'No email on file'}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex-1 justify-center ${inv.client_email ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                   >
-                    <Mail className="w-3.5 h-3.5" aria-hidden="true" /> {isSendingEmail ? 'Sending…' : 'Email'}
+                    <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {isSendingEmail ? 'Sending…' : 'Email'}
                   </button>
-
                   <button
                     onClick={() => handleSendSMS(inv)}
-                    disabled={isSendingSMS}
-                    className={`flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg transition-colors cursor-pointer ${
-                      inv.client_phone ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
+                    disabled={isSendingSMS || !inv.client_phone}
+                    title={inv.client_phone || 'No phone on file'}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex-1 justify-center ${inv.client_phone ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                   >
-                    <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> {isSendingSMS ? 'Sending…' : 'Text'}
+                    <MessageSquare className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {isSendingSMS ? 'Sending…' : 'Text'}
                   </button>
-
                   <button
                     onClick={() => copyLink(inv)}
-                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 text-xs font-semibold transition-colors cursor-pointer flex-1 justify-center"
                   >
-                    <Copy className="w-3.5 h-3.5" aria-hidden="true" /> {copiedId === inv.id ? 'Copied!' : 'Link'}
-                  </button>
-
-                  <a
-                    href={getInvoiceLink(inv.share_token)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" /> View
-                  </a>
-
-                  <button
-                    onClick={() => duplicateInvoice(inv)}
-                    className="flex items-center gap-1.5 text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-                  >
-                    <FileText className="w-3.5 h-3.5" aria-hidden="true" /> Dupe
-                  </button>
-
-                  <button
-                    onClick={() => openEdit(inv)}
-                    aria-label="Edit invoice"
-                    className="ml-auto text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer"
-                  >
-                    <Pencil className="w-4 h-4" aria-hidden="true" />
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(inv.id)}
-                    aria-label="Delete invoice"
-                    className="text-xs font-bold py-2 px-3 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" aria-hidden="true" />
+                    <Copy className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {copiedId === inv.id ? 'Copied!' : 'Link'}
                   </button>
                 </div>
               </div>
