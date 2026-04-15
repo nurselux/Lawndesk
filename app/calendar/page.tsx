@@ -158,7 +158,7 @@ export default function CalendarPage() {
     if (viewMode === 'month') setCurrentDate(new Date(year, month + 1, 1))
     else setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7))
   }
-  const goToToday = () => setCurrentDate(new Date())
+
 
   const selectedJobs = selectedDate ? (jobsByDate[selectedDate] || []) : []
   const selectedVisits = selectedDate ? (visitsByDate[selectedDate] || []) : []
@@ -288,15 +288,7 @@ export default function CalendarPage() {
           className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xl font-bold cursor-pointer transition"
           aria-label="Previous"
         >‹</button>
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-bold text-gray-800">{viewMode === 'month' ? monthLabel : weekLabel}</h3>
-          <button
-            onClick={goToToday}
-            className="text-xs font-bold px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition cursor-pointer border border-indigo-100"
-          >
-            Today
-          </button>
-        </div>
+        <h3 className="text-lg font-bold text-gray-800">{viewMode === 'month' ? monthLabel : weekLabel}</h3>
         <button
           onClick={goToNext}
           className="w-11 h-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xl font-bold cursor-pointer transition"
