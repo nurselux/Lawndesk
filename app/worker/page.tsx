@@ -225,10 +225,6 @@ export default function WorkerPage() {
   const handleStatusChange = async (jobId: string, newStatus: string) => {
     setSaving(jobId)
     const updates: Partial<Job> = { status: newStatus }
-    if (newStatus === 'in_progress') {
-      const job = [...jobs, ...weekJobs].find(j => j.id === jobId)
-      if (!job?.clocked_in_at) updates.clocked_in_at = new Date().toISOString()
-    }
     await supabase.from('Jobs').update(updates).eq('id', jobId)
     applyJobUpdate(jobId, updates)
     setSaving(null)
@@ -237,8 +233,8 @@ export default function WorkerPage() {
   const handleClockIn = async (jobId: string) => {
     setSaving(jobId)
     const now = new Date().toISOString()
-    await supabase.from('Jobs').update({ clocked_in_at: now, status: 'in_progress' }).eq('id', jobId)
-    applyJobUpdate(jobId, { clocked_in_at: now, status: 'in_progress' })
+    await supabase.from('Jobs').update({ clocked_in_at: now }).eq('id', jobId)
+    applyJobUpdate(jobId, { clocked_in_at: now })
     setSaving(null)
   }
 
@@ -391,7 +387,6 @@ export default function WorkerPage() {
         key={job.id}
         className={`bg-white rounded-2xl shadow-md overflow-hidden border-l-4 ${
           job.status === 'completed' ? 'border-green-500' :
-          job.status === 'in_progress' ? 'border-yellow-500' :
           job.status === 'cancelled' ? 'border-red-500' :
           'border-blue-500'
         }`}
@@ -409,13 +404,11 @@ export default function WorkerPage() {
               disabled={saving === job.id}
               className={`shrink-0 text-xs font-bold py-1.5 px-2 rounded-full border-0 cursor-pointer ${
                 job.status === 'completed' ? 'bg-green-100 text-green-700' :
-                job.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
                 job.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                 'bg-blue-100 text-blue-700'
               }`}
             >
               <option value="scheduled">Scheduled</option>
-              <option value="in_progress">In Progress</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -490,7 +483,7 @@ export default function WorkerPage() {
           </div>
 
           {/* On My Way button */}
-          {client?.phone && (job.status === 'scheduled' || job.status === 'in_progress') && (
+          {client?.phone && job.status === 'scheduled' && (
             <button
               onClick={() => handleOnMyWay(job)}
               disabled={onMyWaySending === job.id || onMyWaySent.has(job.id)}

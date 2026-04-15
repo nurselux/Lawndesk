@@ -30,12 +30,7 @@ export const jobStatusConfig: Record<string, StatusConfig> = {
     bg: 'bg-blue-100',
     label: 'Scheduled',
   },
-  '🟡 In Progress': {
-    icon: Loader2,
-    color: 'text-amber-700',
-    bg: 'bg-amber-100',
-    label: 'In Progress',
-  },
+
   '🟢 Completed': {
     icon: CheckCircle2,
     color: 'text-emerald-700',

@@ -1,12 +1,11 @@
 import { Circle, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react'
 
 // Job statuses
-export const JOB_STATUSES = ['scheduled', 'in_progress', 'completed', 'cancelled'] as const
+export const JOB_STATUSES = ['scheduled', 'completed', 'cancelled'] as const
 export type JobStatus = typeof JOB_STATUSES[number]
 
 export const JOB_STATUS_CONFIG: Record<JobStatus, { label: string; color: string; bgColor: string; icon: React.ComponentType<any> }> = {
   scheduled:   { label: 'Scheduled',   color: 'text-blue-600',   bgColor: 'bg-blue-100',   icon: Circle },
-  in_progress: { label: 'In Progress', color: 'text-yellow-600', bgColor: 'bg-yellow-100', icon: Clock },
   completed:   { label: 'Completed',   color: 'text-green-600',  bgColor: 'bg-green-100',  icon: CheckCircle },
   cancelled:   { label: 'Cancelled',   color: 'text-red-600',    bgColor: 'bg-red-100',    icon: XCircle },
 }

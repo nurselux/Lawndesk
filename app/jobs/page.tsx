@@ -450,8 +450,7 @@ export default function JobsPage() {
   }
 
   const handleStartFinishJob = async (job: Job) => {
-    const newStatus = job.status === '🔵 Scheduled' ? '🟡 In Progress' : '🟢 Completed'
-    await handleStatusChange(job.id, newStatus)
+    await handleStatusChange(job.id, '🟢 Completed')
   }
 
   const handleSendEta = async (job: Job) => {
@@ -604,7 +603,7 @@ export default function JobsPage() {
   const completedToday = todayActiveJobs.filter(j => j.status === '🟢 Completed').length
   const totalToday = todayActiveJobs.length
   const nextJob = todayActiveJobs
-    .filter(j => j.status === '🔵 Scheduled' || j.status === '🟡 In Progress')
+    .filter(j => j.status === '🔵 Scheduled')
     .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))[0] ?? null
 
   const filteredJobs = jobs.filter((j) => {
@@ -747,7 +746,6 @@ export default function JobsPage() {
         >
           <option value="All">All</option>
           <option value="🔵 Scheduled">Scheduled</option>
-          <option value="🟡 In Progress">In Progress</option>
           <option value="🟢 Completed">Completed</option>
           <option value="🔴 Cancelled">Cancelled</option>
         </select>
@@ -1011,7 +1009,6 @@ export default function JobsPage() {
                 <div className="flex gap-2 flex-wrap">
                   {[
                     { value: '🔵 Scheduled', label: 'Scheduled', active: 'bg-blue-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300' },
-                    { value: '🟡 In Progress', label: 'In Progress', active: 'bg-amber-500 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-amber-300' },
                     { value: '🟢 Completed', label: 'Completed', active: 'bg-emerald-600 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-emerald-300' },
                     { value: '🔴 Cancelled', label: 'Cancelled', active: 'bg-red-500 text-white', inactive: 'bg-white border border-gray-200 text-gray-600 hover:border-red-300' },
                   ].map(({ value, label, active, inactive }) => (
@@ -1120,7 +1117,6 @@ export default function JobsPage() {
             </select>
             <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="border border-gray-300 rounded-lg p-3 text-gray-800">
               <option value="🔵 Scheduled">Scheduled</option>
-              <option value="🟡 In Progress">In Progress</option>
               <option value="🟢 Completed">Completed</option>
               <option value="🔴 Cancelled">Cancelled</option>
             </select>
@@ -1210,9 +1206,6 @@ export default function JobsPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full uppercase tracking-wide">Next Up</span>
-                {nextJob.status === '🟡 In Progress' && (
-                  <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">In Progress</span>
-                )}
               </div>
               {nextJob.time && <span className="text-sm font-bold text-gray-500">{nextJob.time}</span>}
             </div>
@@ -1295,17 +1288,9 @@ export default function JobsPage() {
               {/* Start / Finish */}
               <button
                 onClick={() => handleStartFinishJob(nextJob)}
-                className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl font-bold text-xs transition-colors cursor-pointer ${
-                  nextJob.status === '🟡 In Progress'
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                    : 'bg-amber-500 text-white hover:bg-amber-600'
-                }`}
+                className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl font-bold text-xs transition-colors cursor-pointer bg-emerald-500 text-white hover:bg-emerald-600"
               >
-                {nextJob.status === '🟡 In Progress' ? (
-                  <><CheckCheck className="w-5 h-5" aria-hidden="true" />Finish Job</>
-                ) : (
-                  <><Zap className="w-5 h-5" aria-hidden="true" />Start Job</>
-                )}
+                <CheckCheck className="w-5 h-5" aria-hidden="true" />Complete Job
               </button>
             </div>
 
@@ -1389,7 +1374,6 @@ export default function JobsPage() {
               className={[
                 'bg-white rounded-2xl p-5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-t-4',
                 job.status === '🟢 Completed' ? 'border-green-500' :
-                job.status === '🟡 In Progress' ? 'border-yellow-500' :
                 job.status === '🔴 Cancelled' ? 'border-red-500' :
                 'border-blue-500',
                 rainCheckMode && job.date === todayStr && job.status !== '🟢 Completed' && job.status !== '🔴 Cancelled'
@@ -1474,18 +1458,16 @@ export default function JobsPage() {
                 onChange={(e) => handleStatusChange(job.id, e.target.value)}
                 className={`text-xs font-bold py-1.5 px-3 rounded-full border-0 cursor-pointer w-full ${
                   job.status === '🟢 Completed' ? 'bg-green-100 text-green-700' :
-                  job.status === '🟡 In Progress' ? 'bg-yellow-100 text-yellow-700' :
                   job.status === '🔴 Cancelled' ? 'bg-red-100 text-red-700' :
                   'bg-blue-100 text-blue-700'
                 }`}
               >
                 <option value="🔵 Scheduled">Scheduled</option>
-                <option value="🟡 In Progress">In Progress</option>
                 <option value="🟢 Completed">Completed</option>
                 <option value="🔴 Cancelled">Cancelled</option>
               </select>
               <div className="flex gap-2 mt-2 flex-wrap">
-                {(job.status === '🔵 Scheduled' || job.status === '🟡 In Progress') && (clients.find(c => c.id === job.client_id)?.phone || clients.find(c => c.id === job.client_id)?.email) && (
+                {job.status === '🔵 Scheduled' && (clients.find(c => c.id === job.client_id)?.phone || clients.find(c => c.id === job.client_id)?.email) && (
                   <button
                     onClick={() => handleNotifyClient(job)}
                     disabled={notifyingJob === job.id}
