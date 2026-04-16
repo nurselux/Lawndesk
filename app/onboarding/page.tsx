@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { Leaf, CheckCircle2, XCircle, Loader2, Star, CreditCard, Building2 } from 'lucide-react'
 
@@ -10,7 +10,6 @@ type Step = typeof STEPS[number]
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [step, setStep] = useState<Step>('welcome')
   const [saving, setSaving] = useState(false)
   const [connectLoading, setConnectLoading] = useState(false)
@@ -37,7 +36,7 @@ export default function OnboardingPage() {
         .single()
       if (data?.onboarding_complete) { router.replace('/dashboard'); return }
       // Returning from Stripe Connect onboarding
-      if (searchParams.get('connect') === 'success') {
+      if (typeof window !== 'undefined' && window.location.search.includes('connect=success')) {
         setPayoutsLinked(true)
         setStep('payouts')
       }
