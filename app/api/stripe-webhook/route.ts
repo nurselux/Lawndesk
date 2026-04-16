@@ -169,6 +169,18 @@ export async function POST(req: Request) {
         if (error) throw new Error(error.message)
         break
       }
+
+      case 'account.updated': {
+        const account = event.data.object as Stripe.Account
+        if (account.payouts_enabled) {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ payouts_enabled: true })
+            .eq('stripe_connect_id', account.id)
+          if (error) throw new Error(error.message)
+        }
+        break
+      }
     }
   }, 3)
 

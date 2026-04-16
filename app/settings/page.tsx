@@ -15,6 +15,8 @@ interface Profile {
   subscription_status: string | null
   subscription_plan: string | null
   stripe_customer_id: string | null
+  stripe_connect_id: string | null
+  payouts_enabled: boolean | null
   google_review_link: string | null
   booking_username: string | null
   business_name: string | null
@@ -71,6 +73,8 @@ export default function SettingsPage() {
   const [pwError, setPwError] = useState('')
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState('')
+  const [connectLoading, setConnectLoading] = useState(false)
+  const [connectError, setConnectError] = useState('')
   const [reviewLink, setReviewLink] = useState('')
   const [bookingUsername, setBookingUsername] = useState('')
   const [businessName, setBusinessName] = useState('')
@@ -124,7 +128,7 @@ export default function SettingsPage() {
       setUserEmail(user.email || '')
       supabase
         .from('profiles')
-        .select('subscription_status, subscription_plan, stripe_customer_id, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days, booking_min_lead_hours, booking_ask_fence, booking_ask_pets, booking_allow_frequency, booking_arrival_windows, booking_service_zip, booking_service_radius, booking_cancellation_policy, booking_photo_url, quote_notify_email, quote_notify_sms')
+        .select('subscription_status, subscription_plan, stripe_customer_id, stripe_connect_id, payouts_enabled, google_review_link, booking_username, business_name, booking_enabled, booking_notify_sms, booking_notify_email, booking_welcome_message, twilio_number, ai_receptionist_enabled, ai_notify_owner, ai_text_caller, name, phone, invoice_due_days, booking_min_lead_hours, booking_ask_fence, booking_ask_pets, booking_allow_frequency, booking_arrival_windows, booking_service_zip, booking_service_radius, booking_cancellation_policy, booking_photo_url, quote_notify_email, quote_notify_sms')
         .eq('id', user.id)
         .single()
         .then(({ data }) => {
@@ -403,6 +407,48 @@ export default function SettingsPage() {
       setPortalError('Something went wrong. Please try again.')
     }
     setPortalLoading(false)
+  }
+
+  const handleLinkBankAccount = async () => {
+    setConnectError('')
+    setConnectLoading(true)
+    try {
+      const res = await fetch('/api/create-connect-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        setConnectError(data.error || 'Could not start bank account setup.')
+      }
+    } catch {
+      setConnectError('Something went wrong. Please try again.')
+    }
+    setConnectLoading(false)
+  }
+
+  const handleViewStripeDashboard = async () => {
+    setConnectError('')
+    setConnectLoading(true)
+    try {
+      const res = await fetch('/api/create-connect-dashboard-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id }),
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.open(data.url, '_blank')
+      } else {
+        setConnectError(data.error || 'Could not open Stripe dashboard.')
+      }
+    } catch {
+      setConnectError('Something went wrong. Please try again.')
+    }
+    setConnectLoading(false)
   }
 
   if (checking) return (
@@ -724,6 +770,42 @@ export default function SettingsPage() {
                     </button>
                   </Link>
                 )}
+              </div>
+
+              {/* Payouts */}
+              <div className="bg-white rounded-xl p-6 shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-green-700" aria-hidden="true" />Payouts
+                </h3>
+                <p className="text-gray-500 text-sm mb-4">Lawndesk uses Stripe to securely send payments to your bank account.</p>
+                {profile?.payouts_enabled ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-sm font-semibold px-3 py-1 rounded-full">
+                        <CheckCircle2 className="w-4 h-4" aria-hidden="true" />Status: Active
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleViewStripeDashboard}
+                      disabled={connectLoading}
+                      className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                    >
+                      {connectLoading ? 'Opening...' : 'View Stripe Dashboard'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">Link your bank account to receive direct deposits when clients pay invoices.</p>
+                    <button
+                      onClick={handleLinkBankAccount}
+                      disabled={connectLoading}
+                      className="bg-green-700 text-white font-bold py-3 px-6 rounded-lg hover:scale-105 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                    >
+                      {connectLoading ? 'Setting up...' : 'Link Bank Account'}
+                    </button>
+                  </div>
+                )}
+                {connectError && <p className="text-red-500 text-sm mt-2">{connectError}</p>}
               </div>
 
               {/* Invoicing */}
