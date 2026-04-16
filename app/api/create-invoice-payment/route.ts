@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   const { data: invoice, error } = await supabase
     .from('Invoices')
-    .select('id, invoice_number, client_name, amount, amount_paid, status, share_token')
+    .select('id, invoice_number, client_name, amount, amount_paid, status, share_token, user_id')
     .eq('id', invoiceId)
     .eq('share_token', token)
     .single()
@@ -39,12 +39,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invoice already paid in full' }, { status: 400 })
   }
 
+  // Look up the landscaper's Stripe Connect account (if they've linked one)
+  const { data: ownerProfile } = await supabase
+    .from('profiles')
+    .select('stripe_connect_id, payouts_enabled')
+    .eq('id', invoice.user_id)
+    .single()
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   const invoiceNum = `INV-${String(invoice.invoice_number).padStart(3, '0')}`
-  const origin = req.headers.get('origin') || 'https://lawndesk.pro'
+  const origin = req.headers.get('origin') || 'https://www.lawndesk.pro'
   const label = amountPaid > 0
     ? `${invoiceNum} — Balance due ($${amountPaid.toFixed(2)} already paid)`
     : `${invoiceNum} — Lawn Services`
+
+  // Route payment to landscaper's Connect account if they've completed onboarding,
+  // otherwise fall back to platform account (money stays in your Stripe account)
+  const connectId = ownerProfile?.stripe_connect_id && ownerProfile?.payouts_enabled
+    ? ownerProfile.stripe_connect_id
+    : null
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -69,6 +82,9 @@ export async function POST(req: Request) {
     },
     success_url: `${origin}/invoice/${token}?paid=true`,
     cancel_url: `${origin}/invoice/${token}`,
+    ...(connectId && {
+      transfer_data: { destination: connectId },
+    }),
   })
 
   return NextResponse.json({ url: session.url })
