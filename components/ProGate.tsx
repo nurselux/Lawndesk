@@ -22,7 +22,7 @@ interface ProGateProps {
 export default function ProGate({ featureName, description, page, children }: ProGateProps) {
   const { isPro, checking } = usePlan()
 
-  if (checking) return null
+  if (checking) return <div className="animate-pulse h-32 bg-gray-100 rounded-xl" />
   if (isPro) return <>{children}</>
 
   if (page) {

@@ -36,9 +36,10 @@ export function useSubscriptionGate() {
           return
         }
 
-        // No role set — user signed up without an invite link; send to join page
-        if (!data.role) {
-          router.replace('/join')
+        // Admins have full access — skip subscription check
+        if (data.role === 'admin') {
+          setProfile(data as GateProfile)
+          setChecking(false)
           return
         }
 

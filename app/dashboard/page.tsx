@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
-import { BarChart2, Users, CalendarDays, AlertCircle, TrendingUp } from 'lucide-react'
+import { BarChart2, Users, CalendarDays, AlertCircle, TrendingUp, Clock, User, CheckCircle2, FileText, UserPlus, CalendarPlus, Receipt, TrendingDown, Minus } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/useAuth'
 import { useSubscriptionGate } from '../../lib/useSubscriptionGate'
@@ -200,7 +200,8 @@ function DashboardContent() {
 
   const statCards = [
     {
-      gradient: 'from-green-500 to-emerald-600',
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-700',
       Icon: Users,
       label: 'Total Clients',
       display: String(animatedClients),
@@ -210,7 +211,8 @@ function DashboardContent() {
       trend: null,
     },
     {
-      gradient: 'from-blue-500 to-cyan-500',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-700',
       Icon: CalendarDays,
       label: 'Jobs This Week',
       display: String(animatedJobs),
@@ -220,7 +222,8 @@ function DashboardContent() {
       trend: jobsTrend,
     },
     {
-      gradient: 'from-amber-400 to-orange-500',
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-700',
       Icon: AlertCircle,
       label: 'Unpaid Invoices',
       display: String(animatedUnpaid),
@@ -230,7 +233,8 @@ function DashboardContent() {
       trend: null,
     },
     {
-      gradient: 'from-purple-500 to-violet-600',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-700',
       Icon: TrendingUp,
       label: 'Total Revenue',
       display: `$${animatedRevenue.toLocaleString()}`,
@@ -247,14 +251,14 @@ function DashboardContent() {
       <div className="p-6 pb-6 min-h-dvh bg-gray-50">
       {stripeSuccess && (
         <div className="bg-green-100 text-green-800 font-bold p-4 rounded-xl mb-6 flex items-center gap-3">
-          <span aria-hidden="true">🎉</span> You're all set! Your 14-day free trial has started. No charge until your trial ends.
+          <CheckCircle2 className="w-5 h-5 shrink-0" aria-hidden="true" /> You're all set! Your 14-day free trial has started. No charge until your trial ends.
         </div>
       )}
 
       {subscriptionStatus === 'trialing' && !stripeSuccess && (
         <div className="bg-blue-50 border border-blue-200 text-blue-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span>
-            <span aria-hidden="true">🎁</span> You&apos;re on a free trial —{' '}
+          <span className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" /> You&apos;re on a free trial —{' '}
             {trialEndsAt
               ? (() => {
                   const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000)
@@ -270,7 +274,7 @@ function DashboardContent() {
 
       {subscriptionStatus === 'past_due' && (
         <div className="bg-red-50 border border-red-200 text-red-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span><span aria-hidden="true">⚠️</span> Your payment failed. Please update your billing info to keep access.</span>
+          <span className="flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" /> Your payment failed. Please update your billing info to keep access.</span>
           <Link href="/pricing" className="text-xs font-bold bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
             Update Billing
           </Link>
@@ -279,7 +283,7 @@ function DashboardContent() {
 
       {subscriptionStatus === 'cancelled' && (
         <div className="bg-amber-50 border border-amber-200 text-amber-700 font-semibold p-4 rounded-xl mb-6 flex items-center justify-between">
-          <span><span aria-hidden="true">⚠️</span> Your subscription has been cancelled. Reactivate to keep using LawnDesk.</span>
+          <span className="flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" /> Your subscription has been cancelled. Reactivate to keep using LawnDesk.</span>
           <Link href="/pricing" className="text-xs font-bold bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors">
             Reactivate
           </Link>
@@ -306,7 +310,7 @@ function DashboardContent() {
           style={{ animation: 'fadeUp 0.5s ease-out both', animationDelay: '100ms' }}
         >
           <div className="flex justify-between items-start mb-1">
-            <h3 className="text-xl font-bold text-gray-800">Welcome to LawnDesk! 🌿</h3>
+            <h3 className="text-xl font-bold text-gray-800">Welcome to LawnDesk!</h3>
             <button
               onClick={() => { setOnboardingDismissed(true); localStorage.setItem('onboarding_dismissed', '1') }}
               className="text-gray-400 hover:text-gray-600 text-sm cursor-pointer"
@@ -317,14 +321,14 @@ function DashboardContent() {
           <p className="text-gray-500 mb-5">Let's get your business set up. Follow these steps to get started:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { step: '1', icon: '👥', title: 'Add Your First Client', desc: 'Store their name, phone, and address.', href: '/clients', label: 'Add Client' },
-              { step: '2', icon: '📅', title: 'Schedule a Job', desc: 'Set a date, time, and job type.', href: '/jobs', label: 'Schedule Job' },
-              { step: '3', icon: '📄', title: 'Create an Invoice', desc: 'Send it and get paid faster.', href: '/invoices', label: 'Create Invoice' },
+              { step: '1', Icon: Users, title: 'Add Your First Client', desc: 'Store their name, phone, and address.', href: '/clients', label: 'Add Client' },
+              { step: '2', Icon: CalendarDays, title: 'Schedule a Job', desc: 'Set a date, time, and job type.', href: '/jobs', label: 'Schedule Job' },
+              { step: '3', Icon: FileText, title: 'Create an Invoice', desc: 'Send it and get paid faster.', href: '/invoices', label: 'Create Invoice' },
             ].map((item) => (
               <div key={item.step} className="bg-white rounded-xl p-4 border border-green-100 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="bg-green-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">{item.step}</span>
-                  <span className="text-xl" aria-hidden="true">{item.icon}</span>
+                  <item.Icon className="w-4 h-4 text-green-600" aria-hidden="true" />
                   <p className="font-bold text-gray-800 text-sm">{item.title}</p>
                 </div>
                 <p className="text-gray-400 text-xs mb-3">{item.desc}</p>
@@ -342,23 +346,26 @@ function DashboardContent() {
         {statCards.map((card) => (
           <div
             key={card.label}
-            className={`bg-gradient-to-br ${card.gradient} rounded-xl p-4 sm:p-6 shadow text-center text-white spring-in`}
+            className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100 spring-in"
             style={{
               animation: 'springIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both',
               animationDelay: `${card.delay}ms`,
             }}
           >
-            <div className="flex justify-center mb-1">
-              <card.Icon className="w-8 h-8 opacity-90" aria-hidden="true" />
+            <div className="flex items-center justify-between mb-3">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${card.iconBg}`}>
+                <card.Icon className={`w-5 h-5 ${card.iconColor}`} aria-hidden="true" />
+              </div>
+              {card.trend !== null && (
+                <span className={`flex items-center gap-0.5 text-xs font-semibold ${card.trend > 0 ? 'text-green-600' : card.trend < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {card.trend > 0 ? <TrendingUp className="w-3 h-3" /> : card.trend < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                  {Math.abs(card.trend)}%
+                </span>
+              )}
             </div>
-            <p className="text-white/80 mb-1 text-xs sm:text-sm">{card.label}</p>
-            <p className="text-3xl sm:text-4xl font-bold tabular-nums">{card.display}</p>
-            {card.trend !== null && (
-              <p className={`text-xs mt-0.5 font-semibold ${card.trend >= 0 ? 'text-white/90' : 'text-white/70'}`}>
-                {card.trend >= 0 ? '↑' : '↓'} {Math.abs(card.trend)}% vs last mo
-              </p>
-            )}
-            <Link href={card.href} className="text-xs text-white/70 hover:text-white mt-1 inline-block">
+            <p className="text-2xl sm:text-3xl font-bold text-gray-800 tabular-nums">{card.display}</p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-0.5">{card.label}</p>
+            <Link href={card.href} className="text-xs text-green-600 hover:text-green-700 mt-2 inline-block font-medium">
               {card.linkLabel}
             </Link>
           </div>
@@ -378,7 +385,7 @@ function DashboardContent() {
           </div>
           {upcomingJobs.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-3xl mb-2">📅</p>
+              <CalendarDays className="w-10 h-10 text-gray-200 mx-auto mb-2" aria-hidden="true" />
               <p className="text-gray-400">No upcoming jobs</p>
             </div>
           ) : (
@@ -395,9 +402,17 @@ function DashboardContent() {
                   <div>
                     <p className="font-semibold text-gray-800">{job.title}</p>
                     <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                      <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full">📅 {job.date}</span>
-                      <span className="text-xs text-gray-500">👤 {job.client_name}</span>
-                      {job.time && <span className="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full">🕐 {job.time}</span>}
+                      <span className="text-xs bg-green-100 text-green-700 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CalendarDays className="w-3 h-3" aria-hidden="true" />{job.date}
+                      </span>
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <User className="w-3 h-3" aria-hidden="true" />{job.client_name}
+                      </span>
+                      {job.time && (
+                        <span className="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Clock className="w-3 h-3" aria-hidden="true" />{job.time}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className={`text-xs font-bold py-1 px-3 rounded-full ${statusColor(job.status)}`}>
@@ -414,19 +429,19 @@ function DashboardContent() {
 
           {/* Quick Actions */}
           <div
-            className="bg-amber-50 rounded-2xl p-6 shadow-md"
+            className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
             style={{ animation: 'fadeUp 0.45s ease-out both', animationDelay: '360ms' }}
           >
             <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
-              <Link href="/clients" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
-                + Add Client
+              <Link href="/clients" className="w-full flex items-center justify-center gap-2 bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors duration-200 text-sm">
+                <UserPlus className="w-4 h-4" aria-hidden="true" /> Add Client
               </Link>
-              <Link href="/jobs" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
-                + Schedule Job
+              <Link href="/jobs" className="w-full flex items-center justify-center gap-2 bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors duration-200 text-sm">
+                <CalendarPlus className="w-4 h-4" aria-hidden="true" /> Schedule Job
               </Link>
-              <Link href="/invoices" className="w-full block bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity duration-200 text-center">
-                + Create Invoice
+              <Link href="/invoices" className="w-full flex items-center justify-center gap-2 bg-green-700 text-white font-bold py-3 rounded-lg hover:bg-green-800 transition-colors duration-200 text-sm">
+                <Receipt className="w-4 h-4" aria-hidden="true" /> Create Invoice
               </Link>
             </div>
           </div>
@@ -442,7 +457,7 @@ function DashboardContent() {
             </div>
             {overdueInvoices.length === 0 ? (
               <div className="text-center py-4">
-                <p className="text-2xl mb-1">✅</p>
+                <CheckCircle2 className="w-8 h-8 text-green-300 mx-auto mb-1" aria-hidden="true" />
                 <p className="text-gray-400 text-sm">Nothing overdue</p>
               </div>
             ) : (
