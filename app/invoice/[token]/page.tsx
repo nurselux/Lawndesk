@@ -59,6 +59,21 @@ export default function PublicInvoicePage() {
     fetchInvoice()
   }, [token])
 
+  // When returning from Stripe with ?paid=true, re-fetch after a short delay
+  // so the page picks up the webhook-updated status
+  useEffect(() => {
+    if (!justPaid) return
+    const timer = setTimeout(async () => {
+      const { data } = await supabase
+        .from('Invoices')
+        .select('id, invoice_number, client_name, amount, amount_paid, status, due_date, description, notes, tax_rate, line_items, created_at')
+        .eq('share_token', token)
+        .single()
+      if (data) setInvoice(data as Invoice)
+    }, 3000)
+    return () => clearTimeout(timer)
+  }, [justPaid, token])
+
   if (notFound) {
     return (
       <main className="min-h-dvh bg-gray-100 flex items-center justify-center p-6">
@@ -138,7 +153,7 @@ export default function PublicInvoicePage() {
 
           {/* Status badge */}
           <div className="flex justify-end mb-6">
-            <InvoiceStatusBadge status={invoice.status} />
+            <InvoiceStatusBadge status={justPaid ? '🟢 Paid' : invoice.status} />
           </div>
 
           {/* Bill to / dates */}
@@ -223,8 +238,17 @@ export default function PublicInvoicePage() {
             </div>
           )}
 
+          {/* Paid confirmation UI (shown immediately on return from Stripe) */}
+          {justPaid && invoice.status !== '🟢 Paid' && (
+            <div className="mb-6 print:hidden">
+              <div className="w-full bg-green-50 border-2 border-green-300 text-green-800 font-bold py-4 rounded-xl text-lg text-center flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-6 h-6" aria-hidden="true" />Paid — Thank you!
+              </div>
+            </div>
+          )}
+
           {/* Pay Now button */}
-          {invoice.status !== '🟢 Paid' && invoice.status !== '📝 Draft' && remaining > 0 && (
+          {!justPaid && invoice.status !== '🟢 Paid' && invoice.status !== '📝 Draft' && remaining > 0 && (
             <div className="mb-6 print:hidden">
               <button
                 onClick={async () => {
