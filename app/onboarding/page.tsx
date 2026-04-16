@@ -95,7 +95,7 @@ export default function OnboardingPage() {
       .eq('id', session.user.id)
 
     if (updateError) {
-      setError('Something went wrong. Please try again.')
+      setError(`Error: ${updateError.message} (code: ${updateError.code})`)
       setSaving(false)
       return
     }
