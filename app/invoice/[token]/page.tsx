@@ -26,12 +26,14 @@ interface Invoice {
   tax_rate: number | null
   line_items: LineItem[] | null
   created_at: string
+  user_id: string
 }
 
 export default function PublicInvoicePage() {
   const params = useParams()
   const token = params.token as string
   const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [payoutsEnabled, setPayoutsEnabled] = useState<boolean | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [payLoading, setPayLoading] = useState(false)
   const [justPaid, setJustPaid] = useState(false)
@@ -46,7 +48,7 @@ export default function PublicInvoicePage() {
     const fetchInvoice = async () => {
       const { data, error } = await supabase
         .from('Invoices')
-        .select('id, invoice_number, client_name, amount, amount_paid, status, due_date, description, notes, tax_rate, line_items, created_at')
+        .select('id, invoice_number, client_name, amount, amount_paid, status, due_date, description, notes, tax_rate, line_items, created_at, user_id')
         .eq('share_token', token)
         .single()
 
@@ -54,6 +56,13 @@ export default function PublicInvoicePage() {
         setNotFound(true)
       } else {
         setInvoice(data as Invoice)
+        // Check if the landscaper has linked their bank account
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('payouts_enabled')
+          .eq('id', data.user_id)
+          .single()
+        setPayoutsEnabled(profile?.payouts_enabled ?? false)
       }
     }
     fetchInvoice()
@@ -250,31 +259,40 @@ export default function PublicInvoicePage() {
           {/* Pay Now button */}
           {!justPaid && invoice.status !== '🟢 Paid' && invoice.status !== '📝 Draft' && remaining > 0 && (
             <div className="mb-6 print:hidden">
-              <button
-                onClick={async () => {
-                  setPayLoading(true)
-                  try {
-                    const res = await fetch('/api/create-invoice-payment', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ invoiceId: invoice.id, token }),
-                    })
-                    const data = await res.json()
-                    if (data.url) window.location.href = data.url
-                  } catch {
-                    alert('Something went wrong. Please try again.')
-                  }
-                  setPayLoading(false)
-                }}
-                disabled={payLoading}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-4 rounded-xl hover:opacity-90 transition cursor-pointer text-lg shadow-md disabled:opacity-50"
-              >
-                {payLoading
-                  ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Redirecting...</>
-                  : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${remaining.toFixed(2)} Now</>
-                }
-              </button>
-              <p className="text-center text-gray-400 text-xs mt-2">Secure payment powered by Stripe</p>
+              {payoutsEnabled ? (
+                <>
+                  <button
+                    onClick={async () => {
+                      setPayLoading(true)
+                      try {
+                        const res = await fetch('/api/create-invoice-payment', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ invoiceId: invoice.id, token }),
+                        })
+                        const data = await res.json()
+                        if (data.url) window.location.href = data.url
+                      } catch {
+                        alert('Something went wrong. Please try again.')
+                      }
+                      setPayLoading(false)
+                    }}
+                    disabled={payLoading}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-4 rounded-xl hover:opacity-90 transition cursor-pointer text-lg shadow-md disabled:opacity-50"
+                  >
+                    {payLoading
+                      ? <><Loader2 className="w-5 h-5 animate-spin inline mr-2" aria-hidden="true" />Redirecting...</>
+                      : <><CreditCard className="w-5 h-5 inline mr-2" aria-hidden="true" />Pay ${remaining.toFixed(2)} Now</>
+                    }
+                  </button>
+                  <p className="text-center text-gray-400 text-xs mt-2">Secure payment powered by Stripe</p>
+                </>
+              ) : payoutsEnabled === false ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                  <p className="text-gray-600 font-semibold text-sm mb-1">Online payment not available</p>
+                  <p className="text-gray-400 text-xs">Please contact your landscaper to arrange payment by cash or check.</p>
+                </div>
+              ) : null}
             </div>
           )}
 

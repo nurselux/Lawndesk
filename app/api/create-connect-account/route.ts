@@ -8,7 +8,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing env vars' }, { status: 500 })
     }
 
-    const { userId } = await req.json()
+    const { userId, returnPath } = await req.json()
     if (!userId) return NextResponse.json({ error: 'Missing userId' }, { status: 400 })
 
     const supabase = createClient(
@@ -38,10 +38,18 @@ export async function POST(req: Request) {
       if (error) throw new Error(error.message)
     }
 
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.lawndesk.pro'
+    const returnUrl = returnPath
+      ? `${base}${returnPath}`
+      : `${base}/settings?tab=billing&connect=success`
+    const refreshUrl = returnPath
+      ? `${base}${returnPath}&connect=refresh`
+      : `${base}/settings?tab=billing&connect=refresh`
+
     const accountLink = await stripe.accountLinks.create({
       account: connectId,
-      refresh_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://lawndesk.pro'}/settings?tab=billing&connect=refresh`,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://lawndesk.pro'}/settings?tab=billing&connect=success`,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
       type: 'account_onboarding',
     })
 

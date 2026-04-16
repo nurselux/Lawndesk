@@ -1,17 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
-import { Leaf, CheckCircle2, XCircle, Loader2, Star } from 'lucide-react'
+import { Leaf, CheckCircle2, XCircle, Loader2, Star, CreditCard, Building2 } from 'lucide-react'
 
-const STEPS = ['welcome', 'business', 'contact', 'booking', 'done'] as const
+const STEPS = ['welcome', 'business', 'contact', 'booking', 'payouts', 'done'] as const
 type Step = typeof STEPS[number]
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [step, setStep] = useState<Step>('welcome')
   const [saving, setSaving] = useState(false)
+  const [connectLoading, setConnectLoading] = useState(false)
   const [error, setError] = useState('')
 
   // Form fields
@@ -21,21 +23,27 @@ export default function OnboardingPage() {
   const [bookingUsername, setBookingUsername] = useState('')
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
   const [checkingUsername, setCheckingUsername] = useState(false)
+  const [payoutsLinked, setPayoutsLinked] = useState(false)
 
-  // Check if already onboarded
+  // Check if already onboarded, or returning from Stripe Connect
   useEffect(() => {
     const check = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.replace('/login'); return }
       const { data } = await (supabase as any)
         .from('profiles')
-        .select('onboarding_complete')
+        .select('onboarding_complete, payouts_enabled')
         .eq('id', session.user.id)
         .single()
-      if (data?.onboarding_complete) router.replace('/dashboard')
+      if (data?.onboarding_complete) { router.replace('/dashboard'); return }
+      // Returning from Stripe Connect onboarding
+      if (searchParams.get('connect') === 'success') {
+        setPayoutsLinked(true)
+        setStep('payouts')
+      }
     }
     check()
-  }, [router])
+  }, [router, searchParams])
 
   // Slugify booking username as user types
   const handleUsernameChange = (val: string) => {
@@ -91,6 +99,23 @@ export default function OnboardingPage() {
     setSaving(false)
   }
 
+  const handleLinkBank = async () => {
+    setConnectLoading(true)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/create-connect-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: session?.user.id, returnPath: '/onboarding?connect=success' }),
+    })
+    const data = await res.json()
+    if (data.url) {
+      window.location.href = data.url
+    } else {
+      setError('Could not start bank setup. You can do this later in Settings.')
+      setConnectLoading(false)
+    }
+  }
+
   const stepIndex = STEPS.indexOf(step)
   const totalSteps = STEPS.length - 2 // exclude 'welcome' and 'done' from progress
 
@@ -138,7 +163,7 @@ export default function OnboardingPage() {
           {step === 'business' && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 1 of 3</p>
+                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 1 of 4</p>
                 <h2 className="text-xl font-bold text-gray-800">What's your business called?</h2>
                 <p className="text-gray-400 text-sm mt-1">This will show on your invoices, estimates, and booking page.</p>
               </div>
@@ -183,7 +208,7 @@ export default function OnboardingPage() {
           {step === 'contact' && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 2 of 3</p>
+                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 2 of 4</p>
                 <h2 className="text-xl font-bold text-gray-800">What's your phone number?</h2>
                 <p className="text-gray-400 text-sm mt-1">Used to send you SMS alerts when you get a new booking request.</p>
               </div>
@@ -221,7 +246,7 @@ export default function OnboardingPage() {
           {step === 'booking' && (
             <div className="space-y-5">
               <div>
-                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 3 of 3</p>
+                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Step 3 of 4</p>
                 <h2 className="text-xl font-bold text-gray-800">Create your booking link</h2>
                 <p className="text-gray-400 text-sm mt-1">Clients will use this link to request your services.</p>
               </div>
@@ -258,22 +283,96 @@ export default function OnboardingPage() {
                     if (usernameAvailable === false) { setError('That username is already taken.'); return }
                     if (bookingUsername && bookingUsername.length < 3) { setError('Username must be at least 3 characters.'); return }
                     setError('')
-                    handleFinish()
+                    setStep('payouts')
                   }}
-                  disabled={saving}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3.5 rounded-xl cursor-pointer hover:scale-[1.01] transition-all disabled:opacity-50"
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3.5 rounded-xl cursor-pointer hover:scale-[1.01] transition-all"
                 >
-                  {saving ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" aria-hidden="true" />Saving...</> : 'Finish Setup →'}
+                  Continue →
                 </button>
               </div>
               <button
-                onClick={() => { setError(''); handleFinish() }}
-                disabled={saving}
+                onClick={() => { setError(''); setStep('payouts') }}
                 className="w-full text-sm text-gray-400 cursor-pointer hover:text-gray-600 transition-all py-1"
               >
                 Skip for now
               </button>
               {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            </div>
+          )}
+
+          {/* ── Step: Payouts ── */}
+          {step === 'payouts' && (
+            <div className="space-y-5">
+              <div>
+                <p className="text-xs text-green-600 font-bold uppercase tracking-widest mb-1">Last Step</p>
+                <h2 className="text-xl font-bold text-gray-800">Get paid directly to your bank</h2>
+                <p className="text-gray-400 text-sm mt-1">Link your bank account so clients can pay invoices online and the money goes straight to you.</p>
+              </div>
+
+              {payoutsLinked ? (
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0 mt-0.5" aria-hidden="true" />
+                  <div>
+                    <p className="font-bold text-green-800">Bank account linked!</p>
+                    <p className="text-green-700 text-sm mt-0.5">Clients can now pay your invoices online and funds will deposit directly to your bank.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-100 rounded-xl p-2.5">
+                        <CreditCard className="w-5 h-5 text-green-700" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">Online invoice payments</p>
+                        <p className="text-gray-400 text-xs">Clients pay by card — money goes to your bank</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-100 rounded-xl p-2.5">
+                        <Building2 className="w-5 h-5 text-green-700" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800 text-sm">Powered by Stripe</p>
+                        <p className="text-gray-400 text-xs">Bank-level security, used by millions of businesses</p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLinkBank}
+                    disabled={connectLoading}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3.5 rounded-xl cursor-pointer hover:scale-[1.01] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {connectLoading
+                      ? <><Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />Opening Stripe...</>
+                      : <><CreditCard className="w-4 h-4" aria-hidden="true" />Link Bank Account</>
+                    }
+                  </button>
+                  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                {!payoutsLinked && (
+                  <button
+                    onClick={() => setStep('booking')}
+                    className="px-5 py-3.5 rounded-xl font-semibold text-gray-500 bg-gray-100 cursor-pointer"
+                  >
+                    ← Back
+                  </button>
+                )}
+                <button
+                  onClick={() => { setError(''); handleFinish() }}
+                  disabled={saving}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-3.5 rounded-xl cursor-pointer hover:scale-[1.01] transition-all disabled:opacity-50"
+                >
+                  {saving
+                    ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" aria-hidden="true" />Saving...</>
+                    : payoutsLinked ? 'Go to Dashboard →' : 'Skip for now →'
+                  }
+                </button>
+              </div>
             </div>
           )}
 
