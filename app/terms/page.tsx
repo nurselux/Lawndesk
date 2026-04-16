@@ -72,7 +72,14 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-3">10. Contact</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">10. Payment Processing</h2>
+            <p className="mb-3">Online invoice payments made through LawnDesk are processed by Stripe, Inc., a third-party payment processor. By paying an invoice online, you agree to Stripe&apos;s <a href="https://stripe.com/legal/ssa" className="text-green-700 hover:underline" target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>
+            <p className="mb-3">Standard payment processing fees charged by Stripe apply to all transactions (currently 2.9% + $0.30 for card payments; 0.8%, capped at $5.00, for ACH bank transfers). These fees are deducted from the payment and are not charged by LawnDesk. LawnDesk does not charge additional transaction or platform fees beyond your subscription.</p>
+            <p>Landscaping businesses using LawnDesk to accept client payments may connect a Stripe Express account to receive funds directly to their bank account. LawnDesk is not responsible for delays in fund settlement, which are governed by Stripe&apos;s payout schedule.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">11. Contact</h2>
             <p>Questions about these terms? Reach us at <a href="mailto:support@lawndesk.com" className="text-green-700 hover:underline">support@lawndesk.com</a>.</p>
           </section>
         </div>
