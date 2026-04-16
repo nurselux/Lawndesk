@@ -42,7 +42,7 @@ export default function OnboardingPage() {
       }
     }
     check()
-  }, [router, searchParams])
+  }, [router])
 
   // Slugify booking username as user types
   const handleUsernameChange = (val: string) => {
