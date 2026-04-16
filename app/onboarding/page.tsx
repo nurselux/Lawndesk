@@ -23,6 +23,7 @@ export default function OnboardingPage() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
   const [checkingUsername, setCheckingUsername] = useState(false)
   const [payoutsLinked, setPayoutsLinked] = useState(false)
+  const [existingSubscription, setExistingSubscription] = useState(false)
 
   // Check if already onboarded, or returning from Stripe Connect
   useEffect(() => {
@@ -31,10 +32,11 @@ export default function OnboardingPage() {
       if (!session) { router.replace('/login'); return }
       const { data } = await (supabase as any)
         .from('profiles')
-        .select('onboarding_complete, payouts_enabled')
+        .select('onboarding_complete, payouts_enabled, subscription_status')
         .eq('id', session.user.id)
         .single()
       if (data?.onboarding_complete) { router.replace('/dashboard'); return }
+      if (data?.subscription_status) setExistingSubscription(true)
       // Returning from Stripe Connect onboarding
       if (typeof window !== 'undefined' && window.location.search.includes('connect=success')) {
         setPayoutsLinked(true)
@@ -71,15 +73,18 @@ export default function OnboardingPage() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
 
-    const trialEnd = new Date()
-    trialEnd.setDate(trialEnd.getDate() + 14)
+    const updates: Record<string, unknown> = { onboarding_complete: true }
 
-    const updates: Record<string, unknown> = {
-      onboarding_complete: true,
-      subscription_status: 'trialing',
-      subscription_plan: 'pro',
-      trial_ends_at: trialEnd.toISOString(),
+    // Only set trial fields for brand-new users with no subscription yet
+    if (!existingSubscription) {
+      const trialEnd = new Date()
+      trialEnd.setDate(trialEnd.getDate() + 14)
+      updates.subscription_status = 'trialing'
+      updates.subscription_plan = 'pro'
+      updates.trial_ends_at = trialEnd.toISOString()
     }
+
+    if (ownerName) updates.name = ownerName
     if (businessName) updates.business_name = businessName
     if (phone) updates.phone = phone
     if (bookingUsername && usernameAvailable !== false) updates.booking_username = bookingUsername
